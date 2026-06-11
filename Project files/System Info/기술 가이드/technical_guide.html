@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>기술 가이드 - Hansoll AI Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #0f172a; }
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); }
+    </style>
+</head>
+<body class="min-h-screen p-8">
+    <div class="max-w-5xl mx-auto space-y-8 animate-fade-in-up">
+        <!-- Header -->
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+            <div class="absolute inset-0 bg-white/10 opacity-50 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
+            <div class="relative z-10 flex items-center gap-4 mb-4">
+                <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                    <i data-lucide="cpu" class="w-8 h-8 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight">주요 기술 가이드</h1>
+                    <p class="text-blue-100 mt-1 font-medium">Hansoll AI Portal을 구동하는 핵심 기술 스택 및 구조 안내</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Tech Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Frontend Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-blue-100 text-blue-600 rounded-xl">
+                        <i data-lucide="layout" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">프론트엔드 (Frontend)</h2>
+                </div>
+                <ul class="space-y-3 relative z-10">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-slate-700">Tailwind CSS:</span>
+                            <p class="text-sm text-slate-500 mt-0.5">유틸리티 기반의 CSS 프레임워크를 사용하여 빠르고 일관된 반응형 디자인 및 Glassmorphism 효과를 구현했습니다.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-slate-700">Vanilla JS & React (CDN):</span>
+                            <p class="text-sm text-slate-500 mt-0.5">가벼운 화면 렌더링은 순수 자바스크립트를, 복잡한 상태관리나 애니메이션(파티클 등)에는 React CDN 방식을 채택하여 유연성을 높였습니다.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Backend Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                        <i data-lucide="server" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">백엔드 및 시스템 (Backend)</h2>
+                </div>
+                <ul class="space-y-3 relative z-10">
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-slate-700">Node.js & Express:</span>
+                            <p class="text-sm text-slate-500 mt-0.5">로컬 환경에서 빠르고 가벼운 API 서버를 구동하며, 파일 업로드와 JSON 데이터 읽기/쓰기를 처리합니다.</p>
+                        </div>
+                    </li>
+                    <li class="flex items-start gap-2">
+                        <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold text-slate-700">JSON 기반 로컬 DB:</span>
+                            <p class="text-sm text-slate-500 mt-0.5">복잡한 RDBMS 대신 가벼운 JSON 파일을 데이터베이스로 활용하여 메뉴 설정 및 카테고리 상태를 영구 저장합니다.</p>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Interaction Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group md:col-span-2">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-purple-100 text-purple-600 rounded-xl">
+                        <i data-lucide="sparkles" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">인터랙션 및 애니메이션 (Animations)</h2>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                    <div class="bg-white/50 rounded-xl p-4 border border-slate-100">
+                        <span class="font-bold text-slate-700 block mb-2">HTML5 Canvas 물리 엔진</span>
+                        <p class="text-sm text-slate-600">브랜드 트랜지션에 사용된 파티클(점) 애니메이션은 Canvas 2D API와 자체 물리 엔진(Spring & Friction)을 결합하여 구현했습니다. 이미지를 픽셀 단위로 분석하여 수백 개의 파티클을 부드럽게 재구성합니다.</p>
+                    </div>
+                    <div class="bg-white/50 rounded-xl p-4 border border-slate-100">
+                        <span class="font-bold text-slate-700 block mb-2">Cross-Origin 안전 통신</span>
+                        <p class="text-sm text-slate-600">iframe 간의 통신 시 발생하는 CORS 에러를 우회하기 위해 URL Search Parameters와 postMessage API를 조합하여 로컬 환경(file://)에서도 완벽하게 동작하는 보안 구조를 구축했습니다.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Detailed Guide Section -->
+        <div class="mt-16 space-y-8">
+            <div class="flex items-center gap-3 border-b-2 border-slate-200 pb-3">
+                <i data-lucide="book-open" class="w-7 h-7 text-blue-600"></i>
+                <h2 class="text-2xl font-extrabold text-slate-800">상세 시스템 동작 가이드 (비전문가용 쉽게 풀이)</h2>
+            </div>
+
+            <!-- 1. .bat file -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-blue-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="terminal-square" class="w-5 h-5 text-blue-500"></i>
+                    1. 실행기(.bat)와 npm run dev의 역할
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-blue-50 px-2 py-0.5 rounded">비유하자면:</strong> 자동차의 '스마트키'와 '엔진'의 관계입니다.</p>
+                        <p><strong class="text-slate-700">npm run dev (엔진):</strong> 포털 사이트가 껍데기뿐인 그림이 아니라 실제로 작동하도록 뒤에서 데이터 톱니바퀴를 돌려주는 엔진(백엔드 서버)입니다. 이 엔진이 켜져 있어야만 엑셀 파일을 업로드하고 메뉴 이름을 수정/저장할 수 있습니다.</p>
+                        <p><strong class="text-slate-700">실행기.bat (스마트키):</strong> 매번 까만 화면을 열어 복잡한 명령어를 치고 엔진을 켜는 것은 매우 불편합니다. <code>.bat</code> 파일은 더블클릭 한 번만 하면 <span class="font-bold text-blue-600">1) 엔진(npm run dev)을 알아서 켜주고</span>, <span class="font-bold text-blue-600">2) 곧바로 크롬 브라우저를 열어 포털 화면까지 띄워주는</span> 똑똑한 원터치 자동화 로봇입니다.</p>
+                    </div>
+                    <div class="bg-white rounded-xl p-5 flex items-center justify-center gap-3 min-w-[300px] shrink-0 border border-slate-200 shadow-sm">
+                        <div class="text-center"><div class="bg-slate-100 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2"><i data-lucide="play" class="w-6 h-6 text-slate-700"></i></div><span class="text-xs font-bold text-slate-600">.bat 더블클릭</span></div>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-300"></i>
+                        <div class="text-center"><div class="bg-blue-50 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2"><i data-lucide="server-cog" class="w-6 h-6 text-blue-600"></i></div><span class="text-xs font-bold text-blue-600">엔진 가동 (npm)</span></div>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-slate-300"></i>
+                        <div class="text-center"><div class="bg-emerald-50 w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-2"><i data-lucide="monitor" class="w-6 h-6 text-emerald-600"></i></div><span class="text-xs font-bold text-emerald-600">포털 화면 열림</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. DB 없이 데이터 저장하기 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-emerald-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="database" class="w-5 h-5 text-emerald-500"></i>
+                    2. DB가 없는데 데이터는 어떻게 저장될까? (JSON 방식)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-4 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">비유하자면:</strong> 거대한 '물류 창고(DB 프로그램)'를 빌리는 대신, 책상 서랍의 '비밀 장부(JSON 파일)'에 글씨를 써넣는 것과 같습니다.</p>
+                        
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="hard-drive" class="w-4 h-4 text-emerald-600"></i> 물리적 저장 공간 및 저장 형태 (JSON)</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-emerald-100">
+                                이 장부는 허공(메모리)에만 존재하는 것이 아니라, 포털이 설치된 하드디스크의 <strong>정확한 폴더 경로(<code>.data/menuData.json</code>)</strong>에 물리적인 파일로 존재합니다. (현재 기준 <code>d:\0 Hansoll AI\Hansoll AI Portal TEST2\.data\menuData.json</code>)<br>
+                                <strong>저장 형태:</strong> 일반 메모장(txt)이나 엑셀(csv)처럼 내용이 글자로 저장되는 텍스트 파일이지만, 컴퓨터와 사람이 모두 쉽게 구조를 파악할 수 있도록 중괄호 <code>{}</code> 와 대괄호 <code>[]</code> 규칙을 사용해 작성된 <strong>JSON(제이슨)</strong> 포맷의 파일입니다.
+                            </p>
+                        </div>
+
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="power-off" class="w-4 h-4 text-emerald-600"></i> PC(서버) 재부팅 시의 영향</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-emerald-100">
+                                우리가 엑셀이나 메모장(.txt) 파일을 D드라이브에 저장하고 컴퓨터를 껐다 켜도 파일이 날아가지 않듯, 이 방식도 완벽히 동일합니다. 데이터가 하드디스크 경로에 영구적인 텍스트 파일 형태로 꾹꾹 눌러 쓰여 있기 때문에, <strong>PC나 서버가 예기치 않게 꺼지거나 재부팅되어도 기존에 세팅한 메뉴와 설정값들은 100% 안전하게 보존</strong>됩니다. 재부팅 후 엔진(npm run dev)을 다시 켜기만 하면, 엔진이 해당 경로의 <code>.json</code> 파일을 찾아 그대로 읽어들입니다.
+                            </p>
+                        </div>
+
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="save" class="w-4 h-4 text-emerald-600"></i> 데이터 유지를 위한 내부 작업</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-emerald-100">관리자가 화면에서 '저장' 버튼을 누르는 즉시, 엔진(Node.js 서버)은 내부적으로 <strong>'파일 덮어쓰기(File System Write)'</strong>라는 작업을 수행합니다. 장부를 조용히 열어서 지우개로 지우고 새 이름으로 고쳐 쓴 뒤 곧바로 하드디스크에 저장해버립니다. 복잡한 DB 프로그램(오라클, MySQL 등) 없이도, 단지 이 파일 하나만 잘 복사해두면 언제든 전체 시스템이 그대로 백업되는 엄청난 장점이 있습니다.</p>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800 rounded-xl p-4 flex flex-col gap-2 min-w-[300px] shrink-0 shadow-inner">
+                        <div class="text-xs font-mono text-emerald-400 p-2 leading-relaxed">
+                            [<br>
+                            &nbsp;&nbsp;{ "title": "사업 3부", "status": "Y" },<br>
+                            &nbsp;&nbsp;{ "title": "HR부", "status": "N" }<br>
+                            ]
+                        </div>
+                        <div class="text-center text-xs font-bold text-slate-400 mt-2 border-t border-slate-700 pt-2">▲ menuData.json 파일 (장부) 내부 모습</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 메뉴 등록과 토글 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-purple-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="toggle-right" class="w-5 h-5 text-purple-500"></i>
+                    3. 메뉴 등록, 그리고 "사용/숨김" 토글의 저장 원리
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-4 text-slate-600 text-sm leading-relaxed">
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="file-plus" class="w-4 h-4"></i> 카테고리/메뉴 신규 등록 시</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-slate-200">새 메뉴를 만들고 엑셀/HTML 파일을 첨부하여 저장하면, 1) 첨부된 파일은 <code>Project files</code> 폴더 내부의 자기 자리에 안전하게 복사되어 저장되고, 2) 장부(JSON 파일) 맨 아랫줄에는 해당 메뉴의 이름, 파일명, 아이콘 정보가 새롭게 한 줄 추가됩니다.</p>
+                        </div>
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="power" class="w-4 h-4"></i> 사용 유무 토글 방식</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-slate-200">장부 안에는 각 메뉴마다 <code>"status"</code>(상태)라는 이름표가 붙어 있습니다. 스위치(토글)를 켜면 이 이름표가 <strong>"Y"</strong>(Yes)로 바뀌며 즉시 화면에 나타나고, 끄면 <strong>"N"</strong>(No)으로 바뀌며 화면에서만 쏙 숨겨집니다. 데이터를 삭제하는 것이 아니기 때문에 나중에 언제든 다시 살릴 수 있는 안전한 방식입니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 비밀번호 관리 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-rose-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="lock" class="w-5 h-5 text-rose-500"></i>
+                    4. 관리자 페이지 비밀번호는 어디에 저장되나?
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-rose-50 px-2 py-0.5 rounded">비유하자면:</strong> 접속 중인 인터넷 브라우저(크롬, 엣지 등) 내부에 마련된 '나만의 개인용 금고'에 보관됩니다.</p>
+                        <p>비밀번호는 앞서 말한 파일 장부(JSON)나 서버로 전송되지 않습니다. 브라우저가 기본적으로 제공하는 <strong>로컬 스토리지(Local Storage)</strong>라는 브라우저 자체 메모리 공간에 암호화되어 조용히 저장됩니다.</p>
+                        <p>이 방식은 외부에서 파일 형태로 빼내거나 해킹할 위험이 원천 차단되며, 사용자의 PC 브라우저 안에서만 신원을 확인하므로 접속이 매우 빠르고 안전합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 카운팅 방식 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-amber-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="calculator" class="w-5 h-5 text-amber-500"></i>
+                    5. 화면 상단에 나오는 '메뉴 건수'는 어떻게 계산될까?
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-amber-50 px-2 py-0.5 rounded">계산 방식:</strong> '실시간 숫자 세기' 입니다.</p>
+                        <p>어딘가에 "총 15개" 라고 고정된 숫자를 적어놓는 것이 아닙니다. 화면이 새로고침될 때마다 엔진이 장부(JSON)를 빠르게 처음부터 끝까지 훑어봅니다.</p>
+                        <p>이때 숨김 처리된 메뉴("status"가 "N"인 것)는 제외하고, <strong>현재 사용 중("status"가 "Y"인 것)인 카테고리와 하부 메뉴만 그 자리에서 하나, 둘, 셋 하고 직접 센 다음</strong> 화면에 "O건" 이라고 뿌려줍니다. 따라서 누군가 메뉴를 추가하거나 숨기면, 다음 순간 바로 계산기가 다시 돌아가 무조건 100% 정확한 숫자를 보여주는 똑똑한 방식입니다.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- 6. Vercel 배포 시 파이썬 실행 불가 이유 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-purple-500">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="server-crash" class="w-5 h-5 text-purple-500"></i>
+                    6. Vercel에 배포하면 왜 파이썬(Python) 프로그램이 실행되지 않을까?
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-purple-50 px-2 py-0.5 rounded">비유하자면:</strong> Vercel은 그림을 걸어두는 '미술관'이지, 무거운 기계를 돌리는 '공장'이 아니기 때문입니다.</p>
+                        
+                        <p><strong>1) Vercel의 역할 (정적 호스팅)</strong><br>
+                        Vercel은 HTML, CSS, JavaScript처럼 모니터 화면에 '보여주는' 문서들을 전 세계 사람들에게 아주 빠르게 전달하는 데 특화된 서비스입니다. 반면 파이썬(Python)은 단순히 화면을 그리는 것이 아니라, 컴퓨터 뒷단에서 스스로 연산을 하고, 엑셀 파일을 열어 데이터를 분석하거나 수정하는 등 무거운 '실제 작업'을 수행하는 프로그램입니다.</p>
+
+                        <p><strong>2) 로컬(내 컴퓨터)에서만 파이썬이 돌아가는 이유</strong><br>
+                        여러분이 사용하시는 업무용 PC에는 파이썬(Python) 프로그램이 이미 설치되어 있습니다. 그래서 바탕화면의 <code>실행기.bat</code> 파일로 포털을 켜면, 포털이 내 컴퓨터 안에 있는 파이썬에게 "이 데이터 좀 처리해줘!" 하고 직접 명령을 내릴 수 있습니다.</p>
+
+                        <p><strong>3) 결론적으로</strong><br>
+                        Vercel이라는 외국 서버에 포털을 배포하면, 사람들에게 화면(버튼)은 똑같이 보여줄 수 있습니다. 하지만 막상 파이썬 실행 버튼을 누르면, <strong>Vercel 서버 안에는 작업을 대신 해줄 '파이썬 직원'이 아예 존재하지 않으며 권한도 없기 때문에 작동하지 못하고 실패</strong>하게 됩니다. 따라서 CMPH Recap Tool 같이 파이썬 스크립트를 직접 가동하는 도구는 반드시 개인 PC(로컬 서버) 환경에서 <code>실행기.bat</code> 등을 통해 실행하셔야 정상적으로 작동합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7. Vercel 배포 시 관리자 페이지 저장 불가 이유 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-indigo-500 mt-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="cloud-off" class="w-5 h-5 text-indigo-500"></i>
+                    7. Vercel에서 관리자 페이지 '저장'이 적용되지 않는 이유 (로컬 파일 시스템의 한계)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-indigo-50 px-2 py-0.5 rounded">비유하자면:</strong> Vercel은 '인쇄가 끝난 책'을 사람들에게 보여주는 곳이지, 관람객이 책의 내용을 그 자리에서 '지우개로 지우고 고쳐 쓸 수 있는 공책'이 아닙니다.</p>
+                        
+                        <p><strong>1) Vercel은 '읽기 전용(Read-Only)' 환경입니다</strong><br>
+                        현재 이 포털은 메뉴의 설정값(사용/숨김 여부 등)을 <code>.data/menuData.json</code> 이라는 텍스트 파일에 적어서 저장하는 <strong>'로컬 파일 시스템'</strong> 방식을 사용합니다. 하지만 Vercel과 같은 클라우드 호스팅 서버는 보안 및 최적화를 위해, 배포된 서버 내부에 있는 파일을 실시간으로 덮어쓰거나 영구적으로 수정하는 행위를 원천적으로 차단하고 있습니다.</p>
+
+                        <p><strong>2) 저장을 눌러도 원래대로 돌아오는 현상의 원인</strong><br>
+                        Vercel 링크에 접속하여 관리자 페이지에서 메뉴 스위치를 켜고 '저장' 버튼을 누르면, 시스템은 어떻게든 텍스트 파일을 수정해보려고 시도합니다. 하지만 Vercel 서버가 "여기는 파일 수정 금지 구역입니다!" 하고 튕겨내거나, 일회용 임시 공간에 잠깐 썼다가 곧바로 삭제해버립니다. 이 때문에 화면이 새로고침 되면, Vercel이 맨 처음 배포될 때 가지고 있던 원본(과거) 데이터를 그대로 다시 불러와서 보여주게 되는 것입니다.</p>
+
+                        <p><strong>3) 올바른 메뉴 관리 방법</strong><br>
+                        이러한 한계 때문에, 포털의 메뉴를 추가하거나 숨기는 등의 <strong>'관리자 기능'은 반드시 로컬(내 컴퓨터) 환경에서 바탕화면의 <code>실행기.bat</code>를 통해 띄운 창에서만 진행</strong>하셔야 합니다. 개인 PC에서는 파일 덮어쓰기가 자유로우므로 저장이 정상적으로 처리됩니다. 로컬에서 수정을 완료하신 후, 터미널(CMD) 창에서 <code>vercel --prod</code> 명령어를 입력하여 <strong>최신 장부를 Vercel에 통째로 덮어쓰기(배포)</strong> 하셔야만 모든 사용자에게 변경된 메뉴가 완벽하게 노출됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

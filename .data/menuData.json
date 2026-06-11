@@ -1,0 +1,153 @@
+[
+  {
+    "title": "사업 3부",
+    "slug": "사업-3부",
+    "imageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+    "icon": "briefcase",
+    "status": "Y",
+    "subItems": [
+      {
+        "title": "CMPH recap 작성",
+        "showHelpIcon": true,
+        "description": "테크팩 PDF에서 데이터를 추출하여 리캡 엑셀 자동 작성",
+        "status": "Y",
+        "fileName": "CMPH_Recap_Tool.py"
+      },
+      {
+        "title": "Chico's CPO파일 비교",
+        "showHelpIcon": true,
+        "description": "PO 파일과 CPO 파일 간의 데이터 변경 내역 자동 검토",
+        "status": "Y",
+        "fileName": "PO_Diff_Analyzer_Chico's.html"
+      },
+      {
+        "title": "부자재 공임차트 비교",
+        "showHelpIcon": true,
+        "description": "공임 차트와 부자재 시트 데이터 간의 수량/단가 교차 검증",
+        "status": "Y",
+        "fileName": "trim_verification_tool_v2.html"
+      }
+    ],
+    "displayPhrase": "Sales 3",
+    "bgColor": "#050505",
+    "textColor": "#ffffff"
+  },
+  {
+    "title": "사업 4부",
+    "slug": "사업-4부",
+    "imageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+    "icon": "folder",
+    "status": "N",
+    "subItems": [],
+    "displayPhrase": "Sales 4",
+    "bgColor": "#050505",
+    "textColor": "#ffffff"
+  },
+  {
+    "title": "사업 7부",
+    "slug": "사업-7부",
+    "imageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+    "icon": "briefcase",
+    "status": "N",
+    "subItems": [],
+    "displayPhrase": "Sales 7",
+    "bgColor": "#82d0e3",
+    "textColor": "#58c21e"
+  },
+  {
+    "title": "HR부",
+    "slug": "hr부",
+    "imageUrl": "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=1200",
+    "icon": "users",
+    "status": "N",
+    "subItems": [],
+    "displayPhrase": "Human\\nRelations",
+    "bgColor": "#72b2e4",
+    "textColor": "#ffffff"
+  },
+  {
+    "title": "총무부",
+    "slug": "총무부",
+    "imageUrl": "https://images.unsplash.com/photo-1555529771-835f59bfc50c?auto=format&fit=crop&q=80&w=1200",
+    "icon": "clipboard",
+    "status": "Y",
+    "subItems": [
+      {
+        "title": "한솔섬유 좌석배치도",
+        "showHelpIcon": false,
+        "description": "본사 좌석 배치도",
+        "status": "Y",
+        "fileName": "한솔섬유_좌석배치도.html"
+      }
+    ],
+    "displayPhrase": "General\\nAffairs",
+    "bgColor": "#050505",
+    "textColor": "#ffffff"
+  },
+  {
+    "title": "IT부",
+    "slug": "it부",
+    "imageUrl": "https://images.unsplash.com/photo-1604719312566-8fa2461e1b12?auto=format&fit=crop&q=80&w=1200",
+    "icon": "laptop",
+    "status": "Y",
+    "subItems": [
+      {
+        "title": "IT부 뉴스레터",
+        "description": "IT부 뉴스레터",
+        "showHelpIcon": true,
+        "status": "Y",
+        "fileName": "IT부 뉴스레터.txt"
+      },
+      {
+        "title": "mainPage",
+        "showHelpIcon": false,
+        "description": "캐러셀 카드 뷰",
+        "status": "N",
+        "fileName": "mainPage.html"
+      },
+      {
+        "title": "main page 2nd",
+        "showHelpIcon": false,
+        "description": "포털 갤러리 뷰 2",
+        "status": "N",
+        "fileName": "Hansoll Vibe coding Gallery2.html"
+      },
+      {
+        "title": "mainPageTest",
+        "showHelpIcon": false,
+        "description": "그리드 카드 뷰",
+        "status": "N",
+        "fileName": "mainPageTest.html"
+      },
+      {
+        "title": "dot page test",
+        "showHelpIcon": false,
+        "description": "인터랙티브 파티클 노드 뷰",
+        "status": "N",
+        "fileName": "main page dot1.html"
+      }
+    ],
+    "displayPhrase": "Information\\nTechnology",
+    "bgColor": "#050505",
+    "textColor": "#ffffff"
+  },
+  {
+    "title": "System Info",
+    "displayPhrase": "System\\nInfo.",
+    "bgColor": "#ffffff",
+    "textColor": "#8a6cd0",
+    "slug": "system-info",
+    "imageUrl": "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+    "icon": "folder",
+    "status": "N",
+    "subItems": [
+      {
+        "title": "기술 가이드",
+        "description": "주요 기술에 대한 설명",
+        "showHelpIcon": true,
+        "status": "Y",
+        "fileName": "technical_guide.html"
+      }
+    ]
+  }
+]

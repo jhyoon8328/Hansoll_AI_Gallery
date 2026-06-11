@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ko" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사업 3부 AI 혁신 쇼케이스 | AI Playground</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            cream: '#FAF9F6',
+                            creamDark: '#F3EFE9',
+                            slateBg: '#0B0F19',
+                            slateCard: '#1E293B',
+                            accentBlue: '#3B82F6',
+                            accentSky: '#06B6D4',
+                            accentMint: '#10B981',
+                            accentPurple: '#8B5CF6',
+                            accentPink: '#EC4899'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'sans-serif'],
+                        display: ['Gowun Dodum', 'NanumSquareRound', 'sans-serif']
+                    },
+                    animation: {
+                        'float-slow': 'floatSlow 6s ease-in-out infinite',
+                        'float-delayed': 'floatDelayed 7s ease-in-out infinite',
+                        'pulse-subtle': 'pulseSubtle 3s ease-in-out infinite',
+                        'spin-slow': 'spin 12s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Fonts -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            transition: background-color 0.5s ease, color 0.5s ease;
+        }
+        .font-display {
+            font-family: 'Gowun Dodum', 'Pretendard', sans-serif;
+        }
+        
+        /* Custom Animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+        }
+        @keyframes floatDelayed {
+            0%, 100% { transform: translateY(-10px) rotate(-1deg); }
+            50% { transform: translateY(10px) rotate(1deg); }
+        }
+        @keyframes pulseSubtle {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.05); }
+        }
+        
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+        }
+        .dark .bg-grid-pattern {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        /* Flowing Dash Line */
+        .flow-line {
+            stroke-dasharray: 8, 8;
+            animation: dash 30s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+        
+        /* Smooth Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CBD5E1;
+            border-radius: 999px;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+    </style>
+</head>
+<body class="bg-brand-cream text-slate-800 dark:bg-brand-slateBg dark:text-slate-100 min-h-screen overflow-x-hidden relative selection:bg-brand-accentSky/30">
+
+    <!-- Background Elements -->
+    <div class="absolute inset-0 bg-grid-pattern pointer-events-none z-0"></div>
+    
+    <!-- Floating Blobs -->
+    <div class="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-to-br from-brand-accentSky/20 to-brand-accentPurple/20 rounded-full blur-[120px] pointer-events-none z-0 animate-pulse-subtle"></div>
+    <div class="absolute top-[40%] right-[-10%] w-[45vw] h-[45vw] bg-gradient-to-br from-brand-accentMint/10 to-brand-accentBlue/20 rounded-full blur-[100px] pointer-events-none z-0 animate-pulse-subtle" style="animation-delay: 1.5s;"></div>
+    <div class="absolute bottom-[-5%] left-[10%] w-[50vw] h-[50vw] bg-gradient-to-br from-brand-accentPink/10 to-brand-accentPurple/15 rounded-full blur-[130px] pointer-events-none z-0 animate-pulse-subtle" style="animation-delay: 3s;"></div>
+
+    <!-- Navigation Header -->
+    <header class="sticky top-0 z-50 bg-brand-cream/80 dark:bg-brand-slateBg/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3 group">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-accentBlue to-brand-accentMint flex items-center justify-center text-white font-bold shadow-md shadow-brand-accentBlue/20 group-hover:scale-105 transition-transform">
+                    <span class="text-lg">3</span>
+                </div>
+                <div>
+                    <span class="font-bold text-slate-900 dark:text-white tracking-tight">사업 3부</span>
+                    <span class="text-xs block text-slate-500 dark:text-slate-400 font-medium">AI Innovation Hub</span>
+                </div>
+            </div>
+            
+            <!-- Stickers / Badges on Nav -->
+            <div class="hidden md:flex items-center space-x-4">
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-accentBlue/10 text-brand-accentBlue dark:bg-brand-accentBlue/20 border border-brand-accentBlue/20 animate-pulse">
+                    ⚡ Live AI Playground
+                </span>
+                <span class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-accentMint/10 text-brand-accentMint dark:bg-brand-accentMint/20 border border-brand-accentMint/20">
+                    ✨ Vibe Coding Built
+                </span>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center space-x-4">
+                <!-- Theme Toggle Button -->
+                <button id="themeToggle" class="p-2.5 rounded-xl bg-white dark:bg-brand-slateCard border border-slate-200 dark:border-slate-700 shadow-sm text-slate-600 dark:text-slate-300 hover:scale-105 transition-transform" aria-label="화면 모드 변경">
+                    <!-- Sun Icon -->
+                    <svg id="themeSun" class="w-5 h-5 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"/></svg>
+                    <!-- Moon Icon -->
+                    <svg id="themeMoon" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>
+                </button>
+                <a href="#showcase" class="px-4 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-semibold text-sm hover:shadow-lg transition-all hover:-translate-y-0.5">
+                    혁신 보러가기 →
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="relative max-w-7xl mx-auto px-6 pt-12 pb-24 md:pt-20 md:pb-32 z-10">
+        <!-- Floating Emotional Badges -->
+        <div class="absolute top-[15%] left-[5%] transform -rotate-6 hidden lg:block animate-float-slow">
+            <span class="bg-white dark:bg-brand-slateCard px-4 py-2 rounded-2xl shadow-xl border border-brand-accentSky/30 text-sm font-semibold flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-brand-accentSky animate-ping"></span>
+                <span>🤖 Connected Office</span>
+            </span>
+        </div>
+        <div class="absolute bottom-[20%] right-[3%] transform rotate-6 hidden lg:block animate-float-delayed">
+            <span class="bg-white dark:bg-brand-slateCard px-4 py-2 rounded-2xl shadow-xl border border-brand-accentPink/30 text-sm font-semibold flex items-center space-x-2">
+                <span>🎨 Human + AI Lab</span>
+                <span class="text-brand-accentPink">❤</span>
+            </span>
+        </div>
+
+        <div class="text-center max-w-4xl mx-auto">
+            <!-- Super friendly sub-badge -->
+            <div class="inline-flex items-center space-x-2 bg-gradient-to-r from-brand-accentBlue/10 to-brand-accentPurple/10 dark:from-brand-accentBlue/20 dark:to-brand-accentPurple/20 px-4 py-2 rounded-full border border-brand-accentBlue/20 mb-6 transform hover:scale-105 transition-transform cursor-default">
+                <span class="text-xl">🚀</span>
+                <span class="text-sm font-bold tracking-wide text-brand-accentBlue dark:text-brand-accentSky">사업 3부 AI 혁신 쇼케이스</span>
+            </div>
+
+            <!-- Title with beautiful font accent -->
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15] mb-8">
+                작은 노력이 연결되어<br>
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-accentBlue via-brand-accentSky to-brand-accentMint font-display font-medium px-2 block sm:inline">하나의 거대한 업무 혁신으로</span>
+            </h1>
+            
+            <p class="text-base sm:text-lg md:text-xl text-slate-600 dark:text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed mb-10">
+                AI는 사람을 대체하는 것이 아닌, 우리 모두가 <span class="text-brand-accentBlue dark:text-brand-accentSky font-bold underline decoration-wavy decoration-brand-accentSky/50">더 중요하고 가치 있는 일에 집중</span>하도록 돕습니다. 여러 부서의 다채로운 바이브코딩 아이디어가 모여 완성된 스마트 플레이그라운드를 만나보세요!
+            </p>
+
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a href="#connect-hub" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-accentBlue to-brand-accentSky text-white font-bold shadow-lg shadow-brand-accentBlue/20 hover:shadow-xl hover:shadow-brand-accentBlue/30 hover:-translate-y-1 transition-all text-center">
+                    🎯 연결된 플랫폼 확인하기
+                </a>
+                <a href="#workflow" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-white dark:bg-brand-slateCard border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold hover:bg-slate-50 dark:hover:bg-slate-800 hover:-translate-y-1 transition-all text-center">
+                    ⚡ 자동화 프로세스 보기
+                </a>
+            </div>
+        </div>
+
+        <!-- Hero Feature Mockup: Realtime Interactive Animation Simulation -->
+        <div class="mt-16 md:mt-24 max-w-5xl mx-auto bg-white/70 dark:bg-brand-slateCard/70 backdrop-blur-md rounded-3xl p-6 md:p-8 shadow-2xl border border-slate-200/60 dark:border-slate-700/60 relative">
+            <div class="absolute -top-3 left-6 bg-slate-900 text-white dark:bg-brand-accentPurple text-xs font-mono px-3 py-1 rounded-md tracking-wider shadow-md">
+                LIVE_WORKFLOW_PREVIEW
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                <!-- Step 1: Input -->
+                <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div class="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] bg-brand-accentPink/10 text-brand-accentPink font-mono">STEP_01</div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-accentPink/10 text-brand-accentPink">
+                            <!-- File Icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">복잡한 원시 정산 데이터</h3>
+                            <p class="text-xs text-slate-400">PDF, 이미지, 이메일 스크랩</p>
+                        </div>
+                    </div>
+                    <!-- Mock Document File Display -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800 font-mono text-[10px] space-y-1.5 opacity-8s0 text-slate-500">
+                        <div class="flex justify-between border-b pb-1 border-slate-100 dark:border-slate-800"><span class="font-bold text-brand-accentPink">[UNSTRUCTURED]</span><span>v3_final.pdf</span></div>
+                        <div class="truncate">발주번호: PO-99214A-T | 수량: 4,500</div>
+                        <div class="truncate">품목: Fabric Premium Silk (Mixed Colors)</div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 h-1 rounded animate-pulse"></div>
+                    </div>
+                </div>
+
+                <!-- Step 2: AI Core Agent (Center Transformer) -->
+                <div class="flex flex-col items-center justify-center py-4 relative">
+                    <!-- SVG Connecting Indicator Lines for interactive mood -->
+                    <div class="w-full hidden lg:flex items-center justify-between absolute px-12 pointer-events-none">
+                        <svg class="w-full h-8" fill="none" viewBox="0 0 200 32">
+                            <path d="M0,16 H200" stroke="url(#heroGrad)" stroke-width="3" stroke-dasharray="6,6" class="flow-line"/>
+                            <defs>
+                                <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stop-color="#EC4899" />
+                                    <stop offset="50%" stop-color="#8B5CF6" />
+                                    <stop offset="100%" stop-color="#10B981" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+
+                    <!-- AI Hub Sphere -->
+                    <div class="w-20 h-20 rounded-full bg-gradient-to-tr from-brand-accentBlue via-brand-accentPurple to-brand-accentSky p-0.5 shadow-xl shadow-brand-accentPurple/20 animate-spin-slow z-10">
+                        <div class="w-full h-full bg-white dark:bg-brand-slateBg rounded-full flex items-center justify-center">
+                            <span class="text-2xl animate-bounce">🤖</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Live Status Badge -->
+                    <div class="mt-4 px-3 py-1 rounded-full bg-brand-accentPurple/10 text-brand-accentPurple dark:bg-brand-accentPurple/20 border border-brand-accentPurple/20 text-xs font-bold font-mono tracking-wider flex items-center space-x-1.5 z-10">
+                        <span class="w-1.5 h-1.5 bg-brand-accentPurple rounded-full animate-ping"></span>
+                        <span>ANALYZING_&_LINKING...</span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Clean Dashboard/Excel Output -->
+                <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 relative overflow-hidden group hover:shadow-md transition-all">
+                    <div class="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] bg-brand-accentMint/10 text-brand-accentMint font-mono">STEP_02</div>
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="p-2.5 rounded-xl bg-brand-accentMint/10 text-brand-accentMint">
+                            <!-- Spreadsheet Icon -->
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 002-2V5a2 2 0 00-2-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 00-2 2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200">자동 검증 및 표준화 완료</h3>
+                            <p class="text-xs text-brand-accentMint font-medium">Smart Excel & UI 정렬</p>
+                        </div>
+                    </div>
+                    <!-- Mock Structured Table -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-3 border border-slate-200/60 dark:border-slate-800 text-[10px] font-sans space-y-1.5">
+                        <div class="flex items-center justify-between text-brand-accentMint font-bold border-b pb-1 border-slate-100 dark:border-slate-800">
+                            <span>✓ 검증 성공 (100%)</span>
+                            <span class="bg-brand-accentMint/10 text-[9px] px-1 rounded">Verified</span>
+                        </div>
+                        <div class="grid grid-cols-3 text-slate-400 font-mono text-[9px]">
+                            <span>CODE</span><span>QTY</span><span>STATUS</span>
+                        </div>
+                        <div class="grid grid-cols-3 border-b border-slate-50 dark:border-slate-800 text-slate-600 dark:text-slate-300">
+                            <span class="font-mono">PO-99214A</span><span>4,500</span><span class="text-brand-accentMint font-medium">완료됨</span>
+                        </div>
+                        <div class="grid grid-cols-3 text-slate-600 dark:text-slate-300">
+                            <span class="font-mono">TR-00412B</span><span>1,250</span><span class="text-brand-accentMint font-medium">완료됨</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Floating Automation Metrics -->
+            <div class="mt-6 pt-4 border-t border-slate-200/60 dark:border-slate-700/60 flex flex-wrap items-center justify-around text-center gap-4">
+                <div>
+                    <span class="text-xs text-slate-400 block">문서 처리 속도</span>
+                    <span class="text-sm font-bold text-slate-800 dark:text-white">평균 3초 이내</span>
+                </div>
+                <div class="w-px h-6 bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+                <div>
+                    <span class="text-xs text-slate-400 block">반복 수작업 비용</span>
+                    <span class="text-sm font-bold text-brand-accentPink">0원 (완전 자동화)</span>
+                </div>
+                <div class="w-px h-6 bg-slate-200 dark:bg-slate-700 hidden sm:block"></div>
+                <div>
+                    <span class="text-xs text-slate-400 block">데이터 정합성</span>
+                    <span class="text-sm font-bold text-brand-accentMint">99.98% 자동 교정 완료</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Core Concept Section: "작은 노력 → 하나의 큰 혁신" -->
+    <section id="connect-hub" class="py-20 relative bg-slate-100/40 dark:bg-slate-900/20 border-y border-slate-200/50 dark:border-slate-800/50 overflow-hidden">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-xs uppercase tracking-widest font-mono text-brand-accentPurple font-bold bg-brand-accentPurple/10 px-3 py-1 rounded-full">CONNECTED ARCHITECTURE</span>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mt-3 mb-4">
+                    따로 또 같이, 결국 하나로 통합니다
+                </h2>
+                <p class="text-slate-600 dark:text-slate-300 font-medium">
+                    6개의 개별 부서 맞춤형 인공지능 모듈이 하나의 거대한 <strong>‘Business Division 3 AI Platform’</strong> 통합 허브로 모여, 완벽하게 맞물린 하나의 에코시스템을 창조합니다.
+                </p>
+            </div>
+
+            <!-- Central Hub Diagram (Interactive Feel) -->
+            <div class="relative max-w-4xl mx-auto min-h-[500px] flex items-center justify-center">
+                
+                <!-- Central Master Hub Component -->
+                <div class="absolute z-20 bg-gradient-to-tr from-brand-accentBlue via-brand-accentPurple to-brand-accentPink p-1 rounded-3xl shadow-2xl transform hover:scale-105 transition-all duration-500 group cursor-pointer" id="centralHub">
+                    <div class="bg-white dark:bg-brand-slateBg px-8 py-10 rounded-[22px] text-center max-w-xs">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-tr from-brand-accentBlue to-brand-accentPink rounded-2xl flex items-center justify-center text-white text-3xl shadow-md group-hover:rotate-12 transition-transform">
+                            👑
+                        </div>
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-brand-accentSky/10 text-brand-accentSky border border-brand-accentSky/20">CORE ENGINE</span>
+                        <h3 class="font-black text-lg text-slate-900 dark:text-white mt-2 leading-tight">
+                            Business Division 3<br>AI Platform
+                        </h3>
+                        <p class="text-xs text-slate-400 dark:text-slate-400 mt-2 font-medium">
+                            전 부서 집단지성 통합 연계 데이터 베이스 실시간 동기화 완료
+                        </p>
+                        <div class="mt-4 inline-flex items-center space-x-1 text-xs font-bold text-brand-accentMint">
+                            <span class="w-2 h-2 rounded-full bg-brand-accentMint animate-ping"></span>
+                            <span>ALL SYSTEMS READY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SVG Connecting Lines Layout (Hidden on Mobile for cleaner responsive flow) -->
+                <svg class="absolute inset-0 w-full h-full hidden md:block pointer-events-none z-10" viewBox="0 0 800 500">
+                    <!-- Line 1: Production AI -->
+                    <path id="line-prod" d="M 120,100 Q 250,150 400,250" fill="none" stroke="#3B82F6" stroke-width="2.5" class="flow-line opacity-60"/>
+                    <!-- Line 2: Fabric AI -->
+                    <path id="line-fab" d="M 120,250 Q 250,250 400,250" fill="none" stroke="#06B6D4" stroke-width="2.5" class="flow-line opacity-60"/>
+                    <!-- Line 3: PO Analyzer -->
+                    <path id="line-po" d="M 120,400 Q 250,350 400,250" fill="none" stroke="#10B981" stroke-width="2.5" class="flow-line opacity-60"/>
+                    
+                    <!-- Line 4: Trim Verify -->
+                    <path id="line-trim" d="M 680,100 Q 550,150 400,250" fill="none" stroke="#8B5CF6" stroke-width="2.5" class="flow-line opacity-60"/>
+                    <!-- Line 5: Smart Excel -->
+                    <path id="line-excel" d="M 680,250 Q 550,250 400,250" fill="none" stroke="#EC4899" stroke-width="2.5" class="flow-line opacity-60"/>
+                    <!-- Line 6: Internal Auto -->
+                    <path id="line-auto" d="M 680,400 Q 550,350 400,250" fill="none" stroke="#F59E0B" stroke-width="2.5" class="flow-line opacity-60"/>
+                </svg>
+
+                <!-- Floating Department Nodes surrounding the Hub (Responsive Grid/Absolute Hybrid) -->
+                <!-- Left Side Nodes -->
+                <div class="absolute md:left-4 md:top-12 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-brand-accentBlue transition-all cursor-pointer node-card" data-line="line-prod">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">🏭</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">Production AI</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">생산 라인 수율 및 실시간 스케줄링 최적화</p>
+                    <span class="mt-2 block text-[10px] font-mono text-brand-accentBlue font-semibold">● CONNECTED</span>
+                </div>
+
+                <div class="absolute md:left-0 md:top-1/2 md:-translate-y-1/2 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-brand-accentSky transition-all cursor-pointer node-card" data-line="line-fab">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">🧵</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">Fabric AI</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">원단 매칭 및 실시간 소요량 예측 인공지능</p>
+                    <span class="mt-2 block text-[10px] font-mono text-brand-accentSky font-semibold">● CONNECTED</span>
+                </div>
+
+                <div class="absolute md:left-4 md:bottom-12 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-brand-accentMint transition-all cursor-pointer node-card" data-line="line-po">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">📋</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">PO Analyzer</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">발주서 텍스트 마이닝 및 실시간 리스크 탐지</p>
+                    <span class="mt-2 block text-[10px] font-mono text-brand-accentMint font-semibold">● CONNECTED</span>
+                </div>
+
+                <!-- Right Side Nodes -->
+                <div class="absolute md:right-4 md:top-12 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-brand-accentPurple transition-all cursor-pointer node-card" data-line="line-trim">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">🔍</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">Trim Verify</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">부자재 단가 실시간 검증 및 오차 분석</p>
+                    <span class="mt-2 block text-[10px] font-mono text-brand-accentPurple font-semibold">● CONNECTED</span>
+                </div>
+
+                <div class="absolute md:right-0 md:top-1/2 md:-translate-y-1/2 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-brand-accentPink transition-all cursor-pointer node-card" data-line="line-excel">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">📊</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">Smart Excel</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">정산 파일 수식 및 오류 자동 매핑 보정기</p>
+                    <span class="mt-2 block text-[10px] font-mono text-brand-accentPink font-semibold">● CONNECTED</span>
+                </div>
+
+                <div class="absolute md:right-4 md:bottom-12 z-20 w-44 p-4 rounded-xl bg-white dark:bg-brand-slateCard shadow-xl border border-slate-100 dark:border-slate-700/60 transform hover:-translate-y-1 hover:border-amber-500 transition-all cursor-pointer node-card" data-line="line-auto">
+                    <div class="flex items-center space-x-2 mb-1.5">
+                        <span class="text-base">⚙</span>
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-slate-200">Internal Auto</h4>
+                    </div>
+                    <p class="text-[11px] text-slate-400">부서 간 단순 반복 행정 워크플로우 자동화</p>
+                    <span class="mt-2 block text-[10px] font-mono text-amber-500 font-semibold">● CONNECTED</span>
+                </div>
+
+                <!-- Small Info Helper for Mobile view instead of raw lines -->
+                <div class="block md:hidden mt-[480px] text-center text-xs bg-white dark:bg-brand-slateCard p-3 rounded-xl shadow-md border">
+                    💡 각 개별 카드를 탭하시면 중앙 통합 플랫폼 허브로 실시간 연동 가동됩니다.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 1: AI Workflow Visualization (Deep Interactive Showcase) -->
+    <section id="workflow" class="py-24 max-w-7xl mx-auto px-6 relative">
+        <div class="flex flex-col lg:flex-row items-start justify-between gap-12">
+            <!-- Left Sticky Text Panel -->
+            <div class="w-full lg:w-2/5 lg:sticky lg:top-24 space-y-6">
+                <span class="px-3 py-1 text-xs font-mono font-bold bg-brand-accentMint/10 text-brand-accentMint dark:bg-brand-accentMint/20 rounded-full border border-brand-accentMint/20">
+                    INTERACTIVE WORKFLOW VISUALIZATION
+                </span>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white leading-tight">
+                    번거로웠던 대량 문서,<br>
+                    <span class="text-brand-accentMint font-display font-medium">눈 깜짝할 사이에 정교하게</span>
+                </h2>
+                <p class="text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    수백 페이지짜리 거래처 정산 PDF와 규격이 불일치하는 Excel 원본 데이터를 업로드만 하세요. AI Agent가 레이아웃을 파악하고 핵심 파라미터를 자동 추출하여 이상 유무 검증까지 한 번에 완료합니다.
+                </p>
+                
+                <!-- Status Stickies -->
+                <div class="flex flex-wrap gap-2 pt-2">
+                    <span class="bg-white dark:bg-brand-slateCard px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300">#Automation</span>
+                    <span class="bg-white dark:bg-brand-slateCard px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300">#AI_Analyze</span>
+                    <span class="bg-white dark:bg-brand-slateCard px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm border border-slate-200/60 dark:border-slate-700 text-slate-600 dark:text-slate-300">#Verification</span>
+                </div>
+            </div>
+
+            <!-- Right Interactive Board Simulator Container -->
+            <div class="w-full lg:w-3/5 bg-white dark:bg-brand-slateCard border border-slate-200/60 dark:border-slate-700/60 rounded-3xl p-6 md:p-8 shadow-xl relative overflow-hidden">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-6">
+                    <div class="flex items-center space-x-2">
+                        <span class="w-3 h-3 rounded-full bg-rose-400"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+                        <span class="text-xs font-mono text-slate-400 ml-2">Sandbox-Environment-v2.html</span>
+                    </div>
+                    <button onclick="restartWorkflowSimulation()" class="text-xs font-bold text-brand-accentBlue hover:underline flex items-center space-x-1">
+                        <span>🔄 시뮬레이션 다시 재생</span>
+                    </button>
+                </div>
+
+                <!-- Simulation Elements Content Box -->
+                <div class="space-y-6">
+                    <!-- Workflow Node Card 1 -->
+                    <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/40 flex items-center justify-between transition-all" id="wfNode1">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 text-red-500 dark:bg-red-950/40 dark:text-red-400 flex items-center justify-center font-bold text-xs shadow-sm">
+                                PDF
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">불규칙 원본 인보이스 스캔본</h4>
+                                <p class="text-xs text-slate-400">매월 말 입고되는 정산자료 취합본.pdf</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-mono px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400" id="wfStatus1">로드 완료</span>
+                    </div>
+
+                    <!-- Flow Link Indicator Vector 1 -->
+                    <div class="flex justify-center -my-2 h-6">
+                        <div class="w-0.5 bg-gradient-to-b from-brand-accentBlue to-brand-accentPurple h-full transition-all" id="wfLine1"></div>
+                    </div>
+
+                    <!-- Workflow Node Card 2 (Core AI Analyzer Engine Status) -->
+                    <div class="p-4 rounded-xl border border-brand-accentPurple/30 bg-gradient-to-r from-brand-accentPurple/5 to-transparent flex items-center justify-between transition-all relative overflow-hidden" id="wfNode2">
+                        <div class="absolute inset-0 bg-gradient-to-r from-brand-accentPurple/5 via-brand-accentSky/5 to-transparent animate-pulse pointer-events-none"></div>
+                        <div class="flex items-center space-x-4 z-10">
+                            <div class="w-10 h-10 rounded-xl bg-brand-accentPurple text-white flex items-center justify-center font-bold text-base shadow-lg shadow-brand-accentPurple/20 animate-bounce">
+                                🧠
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">AI 실시간 파싱 & 문맥 매핑</h4>
+                                <p class="text-xs text-brand-accentPurple dark:text-brand-accentSky font-medium font-mono" id="wfStatusText2">Analyzing context structure...</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-mono px-2 py-1 rounded bg-brand-accentPurple/10 text-brand-accentPurple font-bold animate-pulse" id="wfStatus2">분석 중...</span>
+                    </div>
+
+                    <!-- Flow Link Indicator Vector 2 -->
+                    <div class="flex justify-center -my-2 h-6">
+                        <div class="w-0.5 bg-slate-200 dark:bg-slate-700 h-full transition-all" id="wfLine2"></div>
+                    </div>
+
+                    <!-- Workflow Node Card 3 -->
+                    <div class="p-4 rounded-xl border border-slate-100 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-900/40 flex items-center justify-between transition-all opacity-40" id="wfNode3">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-400 flex items-center justify-center font-bold text-xs shadow-sm">
+                                XLS
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-800 dark:text-slate-200">정렬된 단가 검증 대시보드 주입</h4>
+                                <p class="text-xs text-slate-400">규격 매핑 데이터 표준 대형 행렬 변환 완료</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-mono px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-500" id="wfStatus3">대기 중</span>
+                    </div>
+                </div>
+
+                <!-- Custom Script embedded logic for this simulator block -->
+                <script>
+                    function restartWorkflowSimulation() {
+                        const n1 = document.getElementById('wfNode1');
+                        const n2 = document.getElementById('wfNode2');
+                        const n3 = document.getElementById('wfNode3');
+                        const s1 = document.getElementById('wfStatus1');
+                        const s2 = document.getElementById('wfStatus2');
+                        const s3 = document.getElementById('wfStatus3');
+                        const st2 = document.getElementById('wfStatusText2');
+                        const l1 = document.getElementById('wfLine1');
+                        const l2 = document.getElementById('wfLine2');
+
+                        // Reset
+                        n2.classList.remove('border-brand-accentMint', 'from-brand-accentMint/5');
+                        n2.classList.add('border-brand-accentPurple', 'from-brand-accentPurple/5');
+                        n3.classList.add('opacity-40');
+                        s2.className = "text-xs font-mono px-2 py-1 rounded bg-brand-accentPurple/10 text-brand-accentPurple font-bold animate-pulse";
+                        s2.innerText = "분석 중...";
+                        st2.innerText = "Analyzing context structure...";
+                        st2.classList.remove('text-brand-accentMint');
+                        st2.classList.add('text-brand-accentPurple');
+                        s3.className = "text-xs font-mono px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-slate-500";
+                        s3.innerText = "대기 중";
+
+                        setTimeout(() => {
+                            // Phase 2: Complete
+                            n2.classList.remove('border-brand-accentPurple', 'from-brand-accentPurple/5');
+                            n2.classList.add('border-brand-accentMint', 'from-brand-accentMint/5');
+                            s2.className = "text-xs font-mono px-2 py-1 rounded bg-brand-accentMint/10 text-brand-accentMint font-bold";
+                            s2.innerText = "분석 완료";
+                            st2.innerText = "자동 검증 및 교정 성공 (정합성 100%)";
+                            st2.classList.remove('text-brand-accentPurple');
+                            st2.classList.add('text-brand-accentMint');
+                            
+                            // Phase 3: Active
+                            n3.classList.remove('opacity-40');
+                            s3.className = "text-xs font-mono px-2 py-1 rounded bg-brand-accentMint text-white font-bold";
+                            s3.innerText = "대시보드 반영 완료";
+                        }, 2500);
+                    }
+                    // Auto run on load
+                    window.addEventListener('DOMContentLoaded', () => {
+                        setTimeout(restartWorkflowSimulation, 1000);
+                        setInterval(restartWorkflowSimulation, 7000);
+                    });
+                </script>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2: Department Collaboration Section (High Quality Grid Cards) -->
+    <section id="showcase" class="py-20 bg-white/40 dark:bg-slate-900/40 relative border-t border-slate-200/50 dark:border-slate-800/50">
+        <div class="max-w-7xl mx-auto px-6">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <span class="text-xs uppercase tracking-widest font-mono text-brand-accentSky font-bold bg-brand-accentSky/10 px-3 py-1 rounded-full">DEPARTMENT INNOVATION</span>
+                <h2 class="text-3xl md:text-4xl font-black text-slate-900 dark:text-white mt-3 mb-4">
+                    사업 3부 현업 부서별 맞춤 AI 도구
+                </h2>
+                <p class="text-slate-600 dark:text-slate-300 font-medium">
+                    현업 담당자들이 실제 당면한 허들을 해결하기 위해 개발한 자랑스러운 결과물들입니다. 손끝에서 피어난 현업 맞춤형 AI Playground 솔루션을 탐색해보세요.
+                </p>
+            </div>
+
+            <!-- Cards Grid Layout -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                
+                <!-- Card 1: Production AI -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-brand-accentBlue"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-accentBlue/10 text-brand-accentBlue flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            🏭
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-accentBlue/10 text-brand-accentBlue">PRODUCTION</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>Production AI</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        실시간 공장 생산 라인의 수율 변동을 즉각 추적하고 기계 학습 모델을 통해 지연 리스크를 사전에 예측하여 최적의 오더 스케줄을 산출해냅니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentMint">Active</strong></span>
+                        <span class="text-brand-accentBlue font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Fabric AI -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-brand-accentSky"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-accentSky/10 text-brand-accentSky flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            🧵
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-accentSky/10 text-brand-accentSky">MATERIAL</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>Fabric AI</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        원자재 및 복잡한 원단 스펙 매칭을 비전 모델과 거대 언어 모델(LLM)을 병합하여 정확하게 분석하고 실시간 재고 연동 소요량을 다각도로 추정합니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentMint">AI Ready</strong></span>
+                        <span class="text-brand-accentSky font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: PO Analyzer -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-brand-accentMint"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-accentMint/10 text-brand-accentMint flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            📋
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-accentMint/10 text-brand-accentMint">MANAGEMENT</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>PO Analyzer</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        다양한 해외 거래처로부터 인입되는 수많은 포맷의 발주서(PO) 항목을 파싱하여, 단가 미스매칭이나 일정 충돌 오류를 사전에 필터링합니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentMint">Verified</strong></span>
+                        <span class="text-brand-accentMint font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Trim Verify -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-brand-accentPurple"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-accentPurple/10 text-brand-accentPurple flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            🔍
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-accentPurple/10 text-brand-accentPurple">VALIDATION</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>Trim Verify</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        단가 변동성이 극심한 미세 부자재(Trim) 목록의 거래 히스토리를 대조하여 정밀한 기준가 검증 과정을 100% 자동 지능화 구조로 마이그레이션했습니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentPurple">Success</strong></span>
+                        <span class="text-brand-accentPurple font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+                <!-- Card 5: Smart Excel -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-brand-accentPink"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-brand-accentPink/10 text-brand-accentPink flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            📊
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-brand-accentPink/10 text-brand-accentPink">FINANCE</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>Smart Excel Optimizer</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        사람의 눈으로 확인하기 힘든 정산 시트 상의 깨진 수식, 크로스 레퍼런스 무결성 오류 등을 실시간 탐지하여 깨끗하게 자동 정렬 가공을 처리합니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentMint">Active</strong></span>
+                        <span class="text-brand-accentPink font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+                <!-- Card 6: Internal Automation -->
+                <div class="bg-white dark:bg-brand-slateCard rounded-2xl p-6 shadow-lg hover:shadow-xl border border-slate-100 dark:border-slate-800 transform hover:-translate-y-1.5 transition-all duration-300 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1.5 bg-amber-500"></div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                            ⚙
+                        </div>
+                        <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-500">ADMIN</span>
+                    </div>
+                    <h3 class="text-lg font-black text-slate-800 dark:text-white mb-2 flex items-center space-x-1.5">
+                        <span>Internal Automation</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+                        각 유관 부서 간 복잡하게 얽혀 있던 ERP 마감 승인 절차 및 수동 데이터 이관 루틴 업무를 부드럽게 원스톱 완전 자동화 파이프라인으로 구축했습니다.
+                    </p>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800 text-[11px] font-mono">
+                        <span class="text-slate-400">상태값: <strong class="text-brand-accentMint">Verified</strong></span>
+                        <span class="text-amber-500 font-bold">Connected ✓</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3: Impact Section (Emotional Infographics style) -->
+    <section class="py-24 relative max-w-6xl mx-auto px-6 z-10">
+        <div class="bg-gradient-to-tr from-slate-900 to-slate-800 dark:from-brand-slateCard dark:to-slate-900 rounded-[32px] p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+            <!-- Decorative Light Circles inside the card -->
+            <div class="absolute -right-16 -bottom-16 w-64 h-64 bg-brand-accentSky/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute left-[-5%] top-[-10%] w-48 h-48 bg-brand-accentPurple/20 rounded-full blur-2xl pointer-events-none"></div>
+
+            <div class="text-center max-w-xl mx-auto mb-14">
+                <span class="text-xs uppercase tracking-widest font-mono text-brand-accentSky font-bold">NUMBERS & IMPACT</span>
+                <h2 class="text-3xl font-black tracking-tight mt-2 mb-3">AI와 사람이 함께 일할 때 생기는 변화</h2>
+                <p class="text-sm text-slate-300">딱딱하고 지루한 숫자 대신, 실무 현장의 행복 지수로 가치를 증명합니다.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                <!-- Stat 1 -->
+                <div class="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                    <div class="text-3xl mb-2">⏳</div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">반복 업무 감소</h4>
+                    <div class="text-4xl font-extrabold font-mono text-brand-accentSky mt-1.5 mb-1">-84%</div>
+                    <p class="text-[11px] text-slate-300">지루한 복사 붙여넣기 탈출</p>
+                </div>
+                
+                <!-- Stat 2 -->
+                <div class="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">검토 속도 향상</h4>
+                    <div class="text-4xl font-extrabold font-mono text-brand-accentMint mt-1.5 mb-1">10x Fast</div>
+                    <p class="text-[11px] text-slate-300">평균 마감 대기시간 극적 단축</p>
+                </div>
+
+                <!-- Stat 3 -->
+                <div class="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                    <div class="text-3xl mb-2">🥰</div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">실무 만족도</h4>
+                    <div class="text-4xl font-extrabold font-mono text-brand-accentPink mt-1.5 mb-1">98 / 100</div>
+                    <p class="text-[11px] text-slate-300">스트레스가 눈에 띄게 줄었어요</p>
+                </div>
+
+                <!-- Stat 4 -->
+                <div class="p-4 bg-white/5 backdrop-blur-sm rounded-2xl border border-white/10 hover:bg-white/10 transition-colors">
+                    <div class="text-3xl mb-2">🎯</div>
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">본질 집중도</h4>
+                    <div class="text-4xl font-extrabold font-mono text-brand-accentPurple mt-1.5 mb-1">Concentrate</div>
+                    <p class="text-[11px] text-slate-300">더 창의적이고 가치 있는 기획에 투자</p>
+                </div>
+            </div>
+
+            <!-- Review quote widget inside impact area -->
+            <div class="mt-12 pt-8 border-t border-white/10 max-w-2xl mx-auto text-center">
+                <p class="italic text-sm sm:text-base text-slate-200">
+                    "매달 마감철만 되면 수천 줄의 엑셀과 정산용 인보이스 대조하느라 온 팀원이 밤을 새우곤 했는데, 각 부서의 AI가 연결된 이후로는 버튼 한 번에 매핑이 완벽히 끝나 정말 신세계입니다!"
+                </p>
+                <span class="text-xs block text-brand-accentSky font-bold mt-3 font-mono">— 사업3부 운영 총괄 실무 담당자 일동</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Area -->
+    <footer class="bg-slate-200/50 dark:bg-brand-slateBg border-t border-slate-300/40 dark:border-slate-800/60 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-6 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-accentBlue to-brand-accentMint flex items-center justify-center text-white font-bold text-sm">
+                    3
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400">
+                    <strong class="text-slate-700 dark:text-slate-200 font-semibold block">Business Division 3 AI Lab Workspace</strong>
+                    © 2026 사업 3부 AI 혁신 연동 프로젝트. All rights reserved.
+                </p>
+            </div>
+            
+            <div class="flex items-center space-x-4 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <span class="hover:text-brand-accentBlue cursor-default transition-colors">Internal AI Playground</span>
+                <span>•</span>
+                <span class="hover:text-brand-accentMint cursor-default transition-colors">Vibe Coding Platform</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Interactive JS Functionality for Diagram Lines Highlight and Light/Dark Mode Switcher -->
+    <script>
+        // Theme Switcher Logic
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('themeSun');
+        const moonIcon = document.getElementById('themeMoon');
+        const htmlElement = document.documentElement;
+
+        themeToggleBtn.addEventListener('click', () => {
+            if (htmlElement.classList.contains('dark')) {
+                htmlElement.classList.remove('dark');
+                htmlElement.classList.add('light');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                htmlElement.classList.remove('light');
+                htmlElement.classList.add('dark');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Initialize theme based on preference or local storage
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.remove('light');
+            htmlElement.classList.add('dark');
+            moonIcon.classList.add('hidden');
+            sunIcon.classList.remove('hidden');
+        } else {
+            htmlElement.classList.remove('dark');
+            htmlElement.classList.add('light');
+            sunIcon.classList.add('hidden');
+            moonIcon.classList.remove('hidden');
+        }
+
+        // Central Diagram Interactivity Logic
+        const nodeCards = document.querySelectorAll('.node-card');
+        const centralHub = document.getElementById('centralHub');
+
+        nodeCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const lineId = card.getAttribute('data-line');
+                const targetLine = document.getElementById(lineId);
+                if (targetLine) {
+                    targetLine.setAttribute('stroke-width', '4');
+                    targetLine.style.opacity = '1';
+                }
+                centralHub.classList.add('scale-105', 'shadow-brand-accentPurple/40');
+            });
+
+            card.addEventListener('mouseleave', () => {
+                const lineId = card.getAttribute('data-line');
+                const targetLine = document.getElementById(lineId);
+                if (targetLine) {
+                    targetLine.setAttribute('stroke-width', '2.5');
+                    targetLine.style.opacity = '0.6';
+                }
+                centralHub.classList.remove('scale-105', 'shadow-brand-accentPurple/40');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hansoll Textile AI Gallery</title>
+  <!-- Empty favicon to prevent 404 -->
+  <link rel="icon" href="data:,">
+  <!-- Suppress Tailwind CDN warning -->
+  <script>
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
+      originalWarn.apply(console, args);
+    };
+  </script>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Google Fonts & Custom Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    @font-face {
+      font-family: 'Cafe24Ssurround';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/Cafe24Ssurround.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'Inter', 'sans-serif'],
+            cafe24: ['Cafe24Ssurround', 'sans-serif'],
+            nanum: ['"Nanum Pen Script"', 'cursive']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .animate-fade-in-up {
+      animation: fadeInUp 0.5s ease-out forwards;
+    }
+  </style>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            blue: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="h-screen bg-[#f5f7fb] text-slate-900 overflow-hidden flex">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside
+    class="w-[280px] flex-shrink-0 flex flex-col bg-white border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-40 transition-transform duration-300">
+    <!-- Header / Logo -->
+    <div class="flex h-[70px] shrink-0 items-center border-b border-slate-100 px-6" onclick="renderDashboard()">
+      <div class="flex items-center gap-3 group w-full cursor-pointer">
+        <div
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white text-white shadow-md transition-transform duration-300 group-hover:scale-105 group-hover:rotate-3">
+          <img src="imgFile/HS_logo.ico" alt="Hansoll Logo" class="h-6 w-6 object-contain" />
+        </div>
+        <div class="flex flex-col overflow-hidden">
+          <span class="truncate text-xs font-bold uppercase tracking-wider text-slate-500">Hansoll Textile</span>
+          <span
+            class="truncate text-[17px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors duration-200">AI GALLERY</span>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Navigation Menu (Dynamically populated by JS) -->
+    <nav class="flex-1 overflow-y-auto p-4 custom-scrollbar">
+      <div class="space-y-1">
+        <p class="px-4 pb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Menu</p>
+        <div id="menu-container"></div>
+      </div>
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="border-t border-slate-100 p-4 shrink-0 bg-slate-50/50 flex justify-center items-center">
+      <img src="imgFile/HS_logo5.png" alt="Hansoll Textile Logo" class="w-4/5 h-auto object-contain opacity-80 hover:opacity-100 transition-opacity">
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT AREA ==================== -->
+  <div class="flex-1 flex flex-col min-w-0 transition-all duration-300">
+
+    <!-- Header -->
+    <header
+      class="h-[70px] flex-shrink-0 flex items-center justify-between bg-white border-b border-slate-200/80 px-4 sm:px-8 z-30">
+      <div class="flex items-center gap-4">
+        <div class="flex items-center text-sm font-medium text-slate-500" id="breadcrumb">
+          <span class="hover:text-blue-600 cursor-pointer transition-colors" onclick="renderDashboard()">시스템 관리</span>
+          <span class="mx-2 text-slate-300">/</span>
+          <span class="text-slate-900 font-semibold">대시보드</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-4">
+        <div class="relative hidden sm:block">
+          <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-blue-500 transition-colors" onclick="triggerSearch()"></i>
+          <input type="text" id="global-search-input" onkeydown="handleSearch(event)" oninput="document.getElementById('search-clear-btn').classList.toggle('hidden', !this.value)" placeholder="메뉴 검색..."
+            class="h-9 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500">
+          <button id="search-clear-btn" onclick="clearSearch()" class="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
+            <i data-lucide="x" class="h-3.5 w-3.5"></i>
+          </button>
+        </div>
+        <div class="h-6 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+        <button id="header-admin-btn" onclick="promptAdminAuth()"
+          class="ml-1 flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-3 hover:bg-slate-50 transition-colors">
+          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <i data-lucide="user" class="h-4 w-4"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-700 hidden sm:block">관리자</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar flex relative">
+      <!-- Global Back Button -->
+      <button id="global-back-btn" onclick="goBack()" class="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 hidden group">
+        <i data-lucide="arrow-left" class="w-5 h-5 transition-transform group-hover:-translate-x-1"></i>
+      </button>
+
+      <div id="main-content" class="w-full flex-1 flex flex-col relative z-0">
+        <!-- Content gets rendered here via JS -->
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript for dynamic routing and rendering -->
+  <script>
+    // Menu Data
+    const defaultMenuData = [
+      {
+        title: "사업 3부",
+        slug: "business-3",
+        imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+        icon: "briefcase",
+        subItems: [
+          { title: "CMPH recap 작성", showHelpIcon: true, description: "테크팩 PDF에서 데이터를 추출하여 리캡 엑셀 자동 작성", status: "Y", fileName: "CMPH_Recap_Tool.py" },
+          { title: "Chico's CPO파일 비교", showHelpIcon: true, description: "PO 파일과 CPO 파일 간의 데이터 변경 내역 자동 검토", status: "Y", fileName: "PO_Diff_Analyzer_Chico's.html" },
+          { title: "부자재 공임차트 비교", showHelpIcon: true, description: "공임 차트와 부자재 시트 데이터 간의 수량/단가 교차 검증", status: "Y", fileName: "trim_verification_tool_v2.html" }
+        ]
+      },
+      {
+        title: "사업 7부",
+        slug: "business-7",
+        imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200",
+        icon: "briefcase",
+        subItems: []
+      },
+      {
+        title: "HR부",
+        slug: "hr",
+        imageUrl: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&q=80&w=1200",
+        icon: "users",
+        subItems: []
+      },
+      {
+        title: "총무부",
+        slug: "general",
+        imageUrl: "https://images.unsplash.com/photo-1555529771-835f59bfc50c?auto=format&fit=crop&q=80&w=1200",
+        icon: "clipboard",
+        subItems: [
+          { title: "한솔섬유 좌석배치도", showHelpIcon: false, description: "본사 좌석 배치도", status: "Y", fileName: "한솔섬유_좌석배치도.html" }
+        ]
+      },
+      {
+        title: "IT부",
+        slug: "it",
+        imageUrl: "https://images.unsplash.com/photo-1604719312566-8fa2461e1b12?auto=format&fit=crop&q=80&w=1200",
+        icon: "laptop",
+        subItems: [
+          { title: "IT부 뉴스레터", showHelpIcon: true, description: "IT부 뉴스레터", status: "Y", fileName: "IT부 뉴스레터.txt" },
+          { title: "mainPage", showHelpIcon: false, description: "캐러셀 카드 뷰", status: "N", fileName: "mainPage.html" },
+          { title: "Hansoll Vibe coding Gallery2", showHelpIcon: false, description: "포털 갤러리 뷰 2", status: "Y", fileName: "Hansoll Vibe coding Gallery2.html" },
+          { title: "mainPageTest", showHelpIcon: false, description: "그리드 카드 뷰", status: "N", fileName: "mainPageTest.html" },
+          { title: "main page dot1", showHelpIcon: false, description: "인터랙티브 파티클 노드 뷰", status: "Y", fileName: "main page dot1.html" }
+        ]
+      }
+    ];
+    let menuData = defaultMenuData.filter(cat => (cat.status || 'Y') === 'Y').map(cat => ({
+      ...cat,
+      subItems: cat.subItems.filter(sub => {
+        if (typeof sub === 'string') return true;
+        return (sub.status || 'Y') === 'Y';
+      }).map(sub => {
+        if (typeof sub === 'object' && !sub.menuId) {
+          return { ...sub, menuId: sub.title };
+        }
+        return sub;
+      })
+    }));
+    window.menuData = menuData;
+
+    async function loadMenuData(isQuietRefresh) {
+      try {
+        const SUPABASE_URL_LOCAL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+        const SUPABASE_ANON_KEY_LOCAL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+
+        const res = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/MenuSetting?select=*`, {
+          headers: {
+            'apikey': SUPABASE_ANON_KEY_LOCAL,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY_LOCAL}`
+          },
+          cache: 'no-store'
+        });
+
+        if(res.ok) {
+          const flatData = await res.json();
+          if (flatData && flatData.length > 0) {
+            const categories = flatData.filter(d => d.menu_type === 'category' || d.menu_type === '카테고리');
+            
+            const reconstructedData = categories.map(cat => {
+              const meta = cat.menu_meta || {};
+              const subItems = flatData.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === cat.menu_name)).map(sub => {
+                const subMeta = sub.menu_meta || {};
+                return {
+                  title: sub.menu_name,
+                  description: subMeta.description || "",
+                  status: sub.YN_use ? 'Y' : 'N',
+                  fileName: sub.file_path || "",
+                  menuId: sub.MenuId || sub.menu_name,
+                  urlAddress: sub.url_address || ""
+                };
+              });
+              
+              return {
+                title: cat.menu_name,
+                slug: meta.slug || "",
+                imageUrl: meta.imageUrl || "",
+                icon: meta.icon || "",
+                status: cat.YN_use ? 'Y' : 'N',
+                displayPhrase: meta.displayPhrase || "",
+                bgColor: meta.bgColor || "",
+                textColor: meta.textColor || "",
+                subItems: subItems
+              };
+            });
+
+            menuData = reconstructedData.filter(cat => (cat.status || 'Y') === 'Y').map(cat => ({
+              ...cat,
+              subItems: cat.subItems.filter(sub => (sub.status || 'Y') === 'Y')
+            }));
+            window.menuData = menuData;
+          }
+        }
+        
+        // MenualPage (말풍선/매뉴얼) 데이터 전체 로드 (MenuId 컬럼 부재 우회 및 검색 기능용)
+        try {
+          const manualRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/MenualPage?select=*`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY_LOCAL,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY_LOCAL}`
+            },
+            cache: 'no-store'
+          });
+          if(manualRes.ok) {
+            window.globalMenualData = await manualRes.json();
+          } else {
+            window.globalMenualData = [];
+          }
+        } catch(e) {
+          window.globalMenualData = [];
+        }
+      } catch(e) {
+        console.error("Failed to load menu data", e);
+        // Alert if running locally without the server
+        if (window.location.protocol === 'file:') {
+          alert("서버(npm run dev)가 꺼져 있어 데이터를 불러오지 못했습니다.\n\n새로 만들어진 'Hansoll AI Portal 실행기.bat' 파일을 더블클릭하여 실행하시면 서버가 자동으로 켜지고 포털이 열립니다.");
+        }
+      }
+      initMenu();
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      await loadMenuData(true);
+      const savedStateStr = sessionStorage.getItem('savedNavState');
+      if (savedStateStr) {
+        try {
+          const savedState = JSON.parse(savedStateStr);
+          restoreState(savedState);
+        } catch(e) {
+          renderDashboard();
+        }
+      } else {
+        renderDashboard();
+      }
+    });
+
+    // Global state
+    let currentBrandSlug = null;
+    let openMenuSlug = null;
+    let openSubMenus = {};
+
+    function initMenu() {
+      const menuContainer = document.getElementById('menu-container');
+      menuContainer.innerHTML = '';
+
+      menuData.forEach((item) => {
+        const isOpen = openMenuSlug === item.slug;
+        const isActive = currentBrandSlug === item.slug;
+
+        const wrapper = document.createElement('div');
+        wrapper.className = "mb-2 last:mb-0";
+
+        const btn = document.createElement('button');
+        btn.className = `flex w-full items-center justify-between rounded-lg px-4 py-3 text-left transition-colors duration-200 ${isActive || isOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600'}`;
+        btn.innerHTML = `
+          <div class="flex items-center gap-3">
+            ${item.logoUrl ? `<img src="${item.logoUrl}" class="h-5 w-5 object-contain" alt="${item.title} logo" />` : `<i data-lucide="${item.icon}" class="h-5 w-5"></i>`}
+            <span class="text-[15px] font-semibold">${item.title}</span>
+          </div>
+          <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 text-slate-400"></i>
+        `;
+
+        const subContainer = document.createElement('div');
+        subContainer.className = `overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`;
+
+        const subList = document.createElement('div');
+        subList.className = "mt-1 flex flex-col space-y-1 pl-11 pr-3 pb-2 pt-1";
+
+        item.subItems.forEach((sub) => {
+          const isObj = typeof sub === 'object';
+          const subTitle = isObj ? sub.title : sub;
+          const isHeader = isObj && sub.isHeader;
+          const showHelp = isObj && sub.showHelpIcon;
+
+          const children = isObj ? sub.children : null;
+
+          if (isHeader) {
+            const headerDiv = document.createElement('div');
+            headerDiv.className = "mt-2 flex flex-col first:mt-0";
+
+            const isSubOpen = openSubMenus[subTitle]; // Track state globally
+
+            const headerBtn = document.createElement('button');
+            headerBtn.className = "relative flex items-center justify-between px-3 py-2 text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors select-none w-full text-left rounded-md hover:bg-slate-50";
+            headerBtn.innerHTML = `
+              <span class="truncate">${subTitle}</span>
+              ${children && children.length > 0 ? `<i data-lucide="${isSubOpen ? 'chevron-up' : 'chevron-down'}" class="h-3.5 w-3.5 text-slate-400"></i>` : ''}
+            `;
+
+            headerDiv.appendChild(headerBtn);
+
+            if (children && children.length > 0) {
+              const childrenContainer = document.createElement('div');
+              childrenContainer.className = `flex flex-col space-y-1 pl-4 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`;
+
+              children.forEach(child => {
+                const childTitle = child.title;
+                const childDesc = child.description || "이 메뉴에 대한 설명입니다. 현재 테스트를 위해 200자 내외로 작성된 임시 텍스트입니다. 추후 각 메뉴의 실제 기능 및 용도에 맞는 상세한 설명으로 업데이트될 예정입니다.";
+                const childMenuId = child.menuId || childTitle;
+                const childBtn = document.createElement('a');
+                childBtn.href = "#";
+                childBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 text-slate-500 hover:bg-slate-50 hover:text-blue-600 pl-6 text-[13px]`;
+                childBtn.innerHTML = `
+                  <span class="truncate">${childTitle}</span>
+                  <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${childMenuId.replace(/'/g, "\\'")}', '${childTitle.replace(/'/g, "\\'")}', '${childDesc.replace(/'/g, "\\'")}')">
+                    <i data-lucide="help-circle" class="h-3.5 w-3.5"></i>
+                  </div>
+                `;
+                childBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  openSubMenu(item.title, childTitle);
+                };
+                childrenContainer.appendChild(childBtn);
+              });
+
+              headerDiv.appendChild(childrenContainer);
+            }
+
+            headerBtn.onclick = (e) => {
+              e.stopPropagation();
+              openSubMenus[subTitle] = !isSubOpen;
+              initMenu(); // Re-render to show/hide
+
+              if (subTitle === "사업 3부") {
+                renderDept3Showcase();
+              }
+            };
+
+            subList.appendChild(headerDiv);
+            return;
+          }
+
+          const subDesc = (isObj ? sub.description : null) || "이 메뉴에 대한 설명입니다. 현재 테스트를 위해 200자 내외로 작성된 임시 텍스트입니다. 추후 각 메뉴의 실제 기능 및 용도에 맞는 상세한 설명으로 업데이트될 예정입니다.";
+          const subMenuId = (isObj ? sub.menuId : null) || subTitle;
+          const subBtn = document.createElement('a');
+          subBtn.href = "#";
+          subBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 text-slate-500 hover:bg-slate-50 hover:text-blue-600 pl-6 text-[13px]`;
+          subBtn.innerHTML = `
+            <span class="truncate">${subTitle}</span>
+            <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${subMenuId.replace(/'/g, "\\'")}', '${subTitle.replace(/'/g, "\\'")}', '${subDesc.replace(/'/g, "\\'")}')">
+              <i data-lucide="help-circle" class="h-3.5 w-3.5"></i>
+            </div>
+          `;
+          subBtn.onclick = (e) => {
+            e.stopPropagation();
+            openSubMenu(item.title, subTitle);
+          };
+          subList.appendChild(subBtn);
+        });
+
+        subContainer.appendChild(subList);
+
+        btn.onclick = () => {
+          if (isOpen) {
+            openMenuSlug = null;
+            initMenu();
+          } else {
+            openMenuSlug = item.slug;
+            const iframe = document.querySelector('iframe[title="Admin Page"]');
+            if (iframe) {
+              // Admin page is open, just toggle the accordion without navigating away
+              initMenu();
+            } else {
+              startBrandTransition(item.slug);
+            }
+          }
+        };
+
+        wrapper.appendChild(btn);
+        wrapper.appendChild(subContainer);
+        menuContainer.appendChild(wrapper);
+      });
+
+      lucide.createIcons();
+    }
+
+    function updateBreadcrumb(primary, secondary) {
+      document.getElementById('breadcrumb').innerHTML = `
+        <span class="hover:text-blue-600 cursor-pointer transition-colors" onclick="renderDashboard()">${primary}</span>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-900 font-semibold">${secondary}</span>
+      `;
+    }
+
+    let navHistory = [];
+    let isNavigatingBack = false;
+
+    function pushNavState(state) {
+      if (isNavigatingBack) {
+        isNavigatingBack = false;
+        return;
+      }
+      const last = navHistory[navHistory.length - 1];
+      if (last && JSON.stringify(last) === JSON.stringify(state)) return;
+      navHistory.push(state);
+      sessionStorage.setItem('savedNavState', JSON.stringify(state));
+      updateBackButtonVisibility();
+    }
+
+    function goBack() {
+      if (navHistory.length <= 1) return;
+      navHistory.pop(); // discard current
+      const prevState = navHistory[navHistory.length - 1]; // peek
+      isNavigatingBack = true;
+      restoreState(prevState);
+      updateBackButtonVisibility();
+    }
+
+    function updateBackButtonVisibility() {
+      const btn = document.getElementById('global-back-btn');
+      if (!btn) return;
+      if (navHistory.length > 1) {
+        btn.classList.remove('hidden');
+      } else {
+        btn.classList.add('hidden');
+      }
+    }
+
+    function setBackButtonTheme(theme) {
+      const btn = document.getElementById('global-back-btn');
+      if (!btn) return;
+      btn.className = "absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 group " + (navHistory.length > 1 ? "" : "hidden");
+      
+      if (theme === 'dark') { // Light background -> Dark button
+        btn.classList.add('bg-white', 'text-slate-800', 'border', 'border-slate-200', 'hover:bg-slate-100');
+      } else { // Dark background -> Light button
+        btn.classList.add('bg-slate-800/50', 'text-white', 'border', 'border-white/10', 'hover:bg-slate-800/80', 'backdrop-blur-md');
+      }
+    }
+
+    function restoreState(state) {
+      if (!state) return;
+      if (state.type === 'dashboard') {
+        renderDashboard();
+      } else if (state.type === 'brand') {
+        renderBrandPage(state.slug, true);
+      } else if (state.type === 'submenu') {
+        openSubMenu(state.brand, state.sub);
+      } else if (state.type === 'dept3') {
+        renderDept3Showcase();
+      } else if (state.type === 'search') {
+        renderSearchResults(state.keyword);
+      } else if (state.type === 'admin') {
+        openAdminPage();
+      }
+    }
+
+    function canNavigate() {
+      const iframe = document.querySelector('iframe[title="Admin Page"]');
+      if (iframe) {
+        if(confirm("관리자 페이지에서 나가시겠습니까?\n작업 중이던 내용이 유실될 수 있습니다.")) {
+          updateAdminButtonState(false);
+          return true;
+        } else {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function updateAdminButtonState(isLoggedIn) {
+      const btn = document.getElementById('header-admin-btn');
+      if (!btn) return;
+      if (isLoggedIn) {
+        btn.innerHTML = `
+          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+            <i data-lucide="log-out" class="h-4 w-4"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-700 hidden sm:block">나가기</span>
+        `;
+        btn.onclick = exitAdminPage;
+        btn.classList.replace('hover:bg-slate-50', 'hover:bg-rose-50');
+      } else {
+        btn.innerHTML = `
+          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+            <i data-lucide="user" class="h-4 w-4"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-700 hidden sm:block">관리자</span>
+        `;
+        btn.onclick = promptAdminAuth;
+        btn.classList.replace('hover:bg-rose-50', 'hover:bg-slate-50');
+      }
+      lucide.createIcons();
+    }
+
+    function exitAdminPage() {
+      renderDashboard();
+    }
+
+    function openAdminPage(isRestore = false) {
+      if (!isRestore) {
+        pushNavState({ type: 'admin' });
+      }
+      updateAdminButtonState(true);
+      setBackButtonTheme('dark');
+      updateBreadcrumb("시스템 관리", "관리자 대시보드");
+      
+      const content = document.getElementById('main-content');
+      content.innerHTML = `
+        <div class="w-full h-full relative bg-slate-50">
+          <iframe src="adminPage.html" class="w-full h-full border-none absolute inset-0" title="Admin Page"></iframe>
+        </div>
+      `;
+    }
+
+    function triggerSearch() {
+      const input = document.getElementById('global-search-input');
+      if (!input) return;
+      const keyword = input.value.trim().toLowerCase();
+      if (!keyword) {
+         renderDashboard();
+         return;
+      }
+      renderSearchResults(keyword);
+    }
+
+    function handleSearch(event) {
+      // isComposing prevents duplicate Enter events during Korean IME typing
+      if (event.key === 'Enter' && !event.isComposing) {
+        event.preventDefault();
+        triggerSearch();
+      }
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('global-search-input');
+      input.value = '';
+      document.getElementById('search-clear-btn').classList.add('hidden');
+      
+      const breadcrumb = document.getElementById('breadcrumb');
+      if (breadcrumb && breadcrumb.innerText.includes('검색 결과')) {
+        renderDashboard();
+      }
+    }
+
+    function renderSearchResults(keyword) {
+      if (!canNavigate()) return;
+      pushNavState({ type: 'search', keyword: keyword });
+      setBackButtonTheme('dark');
+      updateBreadcrumb("검색 결과", '"' + keyword + '" 검색 결과');
+      
+      const content = document.getElementById('main-content');
+      
+      let allSubItems = [];
+      menuData.forEach(dept => {
+        if (dept.subItems) {
+          dept.subItems.forEach(item => {
+            if (item.isHeader && item.children) {
+              item.children.forEach(child => {
+                allSubItems.push({ brand: dept.title, item: child });
+              });
+            } else {
+              allSubItems.push({ brand: dept.title, item: item });
+            }
+          });
+        }
+      });
+
+      const results = allSubItems.filter(entry => {
+        const subTitle = entry.item.title;
+        const subMenuId = entry.item.menuId || subTitle;
+        
+        // 전역 로드된 MenualPage 데이터에서 MenuId가 일치하는 최신 항목을 찾음
+        const manualEntries = (window.globalMenualData || []).filter(m => m.MenuId === subMenuId);
+        manualEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const manualEntry = manualEntries[0] || {};
+        
+        // 자체 로컬 저장소 캐시 (수정 직후 반영용)
+        const localData = (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subMenuId] || (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subTitle] || {};
+        
+        const customTitle = (localData.title || manualEntry.Title || subTitle).toLowerCase();
+        const customKeywords = (localData.keywords || manualEntry.KeyWord || "").toLowerCase();
+        
+        return customTitle.includes(keyword) || customKeywords.includes(keyword);
+      });
+
+      if (results.length === 0) {
+        content.innerHTML = `
+          <div class="w-full h-full flex flex-col items-center justify-center p-8 bg-slate-50">
+            <i data-lucide="search-x" class="w-16 h-16 text-slate-300 mb-4"></i>
+            <h3 class="text-xl font-bold text-slate-700 mb-2">검색 결과가 없습니다.</h3>
+            <p class="text-slate-500 text-sm">다른 키워드로 다시 검색해 보세요.</p>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      let resultsHTML = results.map(entry => {
+        const subTitle = entry.item.title;
+        const subMenuId = entry.item.menuId || subTitle;
+        
+        const manualEntries = (window.globalMenualData || []).filter(m => m.MenuId === subMenuId);
+        manualEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        const manualEntry = manualEntries[0] || {};
+        
+        const localData = (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subMenuId] || (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subTitle] || {};
+        
+        const displayTitle = localData.title || manualEntry.Title || subTitle;
+        const desc = localData.description || manualEntry.HowToUse || entry.item.description || "(설명 없음)";
+        
+        return `
+          <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer flex flex-col items-start text-left hover:-translate-y-0.5"
+               onclick="openSubMenu('${entry.brand}', '${subTitle.replace(/'/g, "\\\\'")}')">
+            <div class="flex items-center gap-2 mb-2 w-full">
+              <span class="text-xs font-bold px-2 py-1 bg-slate-100 text-slate-500 rounded-md shrink-0">${entry.brand}</span>
+              <h4 class="text-lg font-bold text-slate-800 truncate">${displayTitle}</h4>
+            </div>
+            <p class="text-sm text-slate-500 line-clamp-2 leading-relaxed">${desc}</p>
+          </div>
+        `;
+      }).join('');
+
+      content.innerHTML = `
+        <div class="flex flex-col w-full h-full bg-slate-50 p-8 overflow-y-auto custom-scrollbar">
+          <div class="max-w-5xl w-full mx-auto">
+            <h2 class="text-2xl font-extrabold text-slate-800 mb-6 flex items-center gap-2">
+              <i data-lucide="search" class="w-6 h-6 text-blue-600"></i>
+              검색 결과 (${results.length}건)
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              ${resultsHTML}
+            </div>
+          </div>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // Render Original Dashboard -> Now: Main Landing Showcase
+    function renderDashboard() {
+      if (!canNavigate()) return;
+      pushNavState({ type: 'dashboard' });
+      setBackButtonTheme('dark');
+
+      currentBrandSlug = null;
+      openMenuSlug = null;
+      updateBreadcrumb("홈", "AI 업무 혁신 플랫폼");
+      initMenu(); // Refresh menu highlighting
+
+      const content = document.getElementById('main-content');
+      content.innerHTML = `
+        <div class="w-full flex-1 flex flex-col bg-white overflow-hidden">
+          <iframe src="Project files/IT부/main page test/mainPage.html" class="w-full h-full flex-1 border-0 overflow-hidden"></iframe>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // --- DOT TRANSITION LOGIC ---
+    window.currentTransitionData = null;
+    window.onDotTransitionComplete = null;
+    
+    // Listen for postMessage from the iframe to bypass CORS restrictions
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'DOT_TRANSITION_COMPLETE') {
+        if (window.onDotTransitionComplete) {
+          window.onDotTransitionComplete();
+        }
+      }
+      if (event.data && event.data.type === 'RELOAD_PORTAL') {
+        window.location.reload();
+      }
+    });
+
+    function startBrandTransition(brandSlug) {
+      if (!canNavigate()) return;
+
+      const brandData = menuData.find(b => b.slug === brandSlug);
+      if (!brandData) return;
+
+      currentBrandSlug = brandSlug;
+      if (openMenuSlug !== brandSlug) openMenuSlug = brandSlug;
+      initMenu();
+
+      window.currentTransitionData = {
+        text: brandData.displayPhrase || brandData.title,
+        bgColor: brandData.bgColor || '#050505',
+        textColor: brandData.textColor || '#ffffff'
+      };
+
+      window.onDotTransitionComplete = () => {
+        renderBrandPage(brandSlug, true);
+      };
+
+      updateBreadcrumb(brandData.title, "개요");
+
+      const content = document.getElementById('main-content');
+      
+      // Pass data via URL parameters to guarantee the iframe gets it even if CORS blocks window.parent
+      const params = new URLSearchParams({
+        text: window.currentTransitionData.text,
+        bgColor: window.currentTransitionData.bgColor,
+        textColor: window.currentTransitionData.textColor
+      });
+      
+      content.innerHTML = `
+        <div class="w-full h-full relative" style="background-color: ${window.currentTransitionData.bgColor};">
+          <iframe src="dot_transition.html?${params.toString()}" class="w-full h-full border-none absolute inset-0"></iframe>
+        </div>
+      `;
+      lucide.createIcons();
+    }
+
+    // Render Dynamic Brand Page
+    function renderBrandPage(brandSlug, forceOpen = true) {
+      if (!canNavigate()) return;
+      pushNavState({ type: 'brand', slug: brandSlug });
+      setBackButtonTheme(brandSlug === 'it' ? 'light' : 'light');
+
+      currentBrandSlug = brandSlug;
+      // Ensure the accordion for this brand opens if it was closed
+      if (forceOpen && openMenuSlug !== brandSlug) openMenuSlug = brandSlug;
+      initMenu(); // Refresh menu UI
+
+      const brandData = menuData.find(b => b.slug === brandSlug);
+      if (!brandData) return;
+
+      updateBreadcrumb(brandData.title, "개요");
+
+      let subItemsHTML = '';
+      brandData.subItems.forEach(sub => {
+        const isObj = typeof sub === 'object';
+        const subTitle = isObj ? sub.title : sub;
+        const isHeader = isObj && sub.isHeader;
+        const children = isObj ? sub.children : null;
+
+        if (isHeader) {
+          subItemsHTML += `<div class="w-full text-left mb-10 last:mb-0">
+            <h3 class="text-xl font-bold text-white mb-5 border-b border-white/20 pb-2 pl-2">${subTitle}</h3>
+            <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">`;
+
+          if (children && children.length > 0) {
+            children.forEach(child => {
+              const childTitle = child.title;
+              const childDesc = child.description || "";
+              subItemsHTML += `
+                <a href="#" onclick="openSubMenu('${brandData.title}', '${childTitle}')" class="group relative flex flex-col items-start justify-between overflow-hidden rounded-xl bg-white/10 px-5 py-5 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40 text-left min-h-[120px]">
+                  <div class="flex items-center gap-3 mb-2 w-full">
+                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-500">
+                      <i data-lucide="arrow-right" class="h-4 w-4 opacity-80 group-hover:opacity-100"></i>
+                    </div>
+                    <span class="text-base font-bold tracking-wide leading-tight">${childTitle}</span>
+                  </div>
+                  ${childDesc ? `<p class="text-xs text-slate-300 font-medium leading-relaxed opacity-80 mt-1 pl-11">${childDesc}</p>` : ''}
+                </a>
+              `;
+            });
+          } else {
+            subItemsHTML += `<div class="col-span-full text-slate-400 text-sm italic pl-2 py-4">등록된 하위 메뉴가 없습니다.</div>`;
+          }
+          subItemsHTML += `</div></div>`;
+        } else {
+          // Fallback if there are subitems without header
+          subItemsHTML += `
+            <a href="#" onclick="openSubMenu('${brandData.title}', '${subTitle}')" class="group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-white/10 px-4 py-6 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40 mb-4">
+              <div class="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-500">
+                <i data-lucide="arrow-right" class="h-5 w-5 opacity-80 group-hover:opacity-100"></i>
+              </div>
+              <span class="text-sm font-bold tracking-wide">${subTitle}</span>
+            </a>
+          `;
+        }
+      });
+
+      const content = document.getElementById('main-content');
+      content.innerHTML = `
+        <div class="relative flex flex-1 w-full flex-col items-center justify-center overflow-hidden bg-slate-900">
+          <!-- Background Image with Blur & Overlay -->
+          <div class="absolute inset-0 z-0 opacity-40 bg-cover bg-center transition-all duration-700 hover:scale-105 hover:blur-sm blur-md" style="background-image: url('${brandData.imageUrl}')"></div>
+          <div class="absolute inset-0 z-10 bg-black/50 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
+
+          <!-- Glassmorphism Content Area -->
+          <div class="relative z-20 flex w-full max-w-3xl flex-col items-center px-6 py-12 text-center animate-fade-in-up">
+            <!-- Brand Icon & Title -->
+            <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 p-4 text-white shadow-xl backdrop-blur-md ring-1 ring-white/20">
+              ${brandData.logoUrl ? `<img src="${brandData.logoUrl}" class="h-12 w-12 object-contain drop-shadow-md" alt="${brandData.title} logo" />` : `<i data-lucide="${brandData.icon}" class="h-10 w-10"></i>`}
+            </div>
+            <h1 class="mb-2 text-4xl font-extrabold tracking-tight text-white drop-shadow-md sm:text-5xl">
+              ${brandData.title} <span class="font-light text-slate-300">Portal</span>
+            </h1>
+            <p class="mb-10 text-lg font-medium text-slate-300 drop-shadow max-w-xl leading-relaxed">
+              ${brandData.title} 전용 통합 관리 시스템입니다.<br>아래 원하는 메뉴를 선택하여 작업을 시작하세요.
+            </p>
+
+            <!-- Submenu Grid -->
+            <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+              ${subItemsHTML}
+            </div>
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function openSubMenu(brandTitle, subTitle) {
+      if (!canNavigate()) return;
+      pushNavState({ type: 'submenu', brand: brandTitle, sub: subTitle });
+      
+      const brandData = menuData.find(b => b.title === brandTitle);
+      const subItem = brandData?.subItems?.find(s => s.title === subTitle);
+      const fileName = subItem ? subItem.fileName : "";
+
+      // Determine theme based on subTitle
+      if (fileName === "main page dot1.html") {
+        setBackButtonTheme('light');
+      } else {
+        setBackButtonTheme('dark');
+      }
+
+      updateBreadcrumb(brandTitle, subTitle);
+
+      const content = document.getElementById('main-content');
+
+      const itFiles = [
+        "Hansoll Vibe coding Gallery.html",
+        "Hansoll Vibe coding Gallery2.html",
+        "main page dot1.html",
+        "mainPage.html",
+        "mainPageTest.html"
+      ];
+
+      if (itFiles.includes(fileName)) {
+        content.innerHTML = `
+          <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+            <iframe src="Project files/IT부/main page test/${fileName}" class="w-full h-full flex-1 border-0"></iframe>
+          </div>
+        `;
+      } else if (fileName === "한솔섬유_좌석배치도.html") {
+        content.innerHTML = `
+          <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+            <iframe src="Project files/총무/좌석배치도/한솔섬유_좌석배치도.html" class="w-full h-full flex-1 border-0"></iframe>
+          </div>
+        `;
+      } else if (fileName === "chicos_trim_verify.html") {
+        content.innerHTML = `
+          <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+            <iframe src="chicos_trim_verify.html" class="w-full h-full flex-1 border-0"></iframe>
+          </div>
+        `;
+      } else if (fileName === "PO_Diff_Analyzer_Chico's.html") {
+        content.innerHTML = `
+          <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+            <iframe src="Project files/사업 3부/Chicos 변경 내용 검토/PO_Diff_Analyzer_Chico's.html" class="w-full h-full flex-1 border-0"></iframe>
+          </div>
+        `;
+      } else if (fileName === "trim_verification_tool_v2.html") {
+        content.innerHTML = `
+          <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+            <iframe src="Project files/사업 3부/부자재 시트 교차 검증/trim_verification_tool_v2.html" class="w-full h-full flex-1 border-0"></iframe>
+          </div>
+        `;
+      } else if (fileName === "CMPH_Recap_Tool.py") {
+        content.innerHTML = `
+          <div class="flex flex-col w-full flex-1 h-full items-center justify-center p-6 bg-slate-50">
+            <div class="w-full max-w-2xl bg-white border border-slate-200/80 rounded-3xl shadow-xl p-8 relative overflow-hidden transition-all duration-300 hover:shadow-2xl">
+              <div class="absolute top-[-50px] right-[-50px] w-48 h-48 bg-purple-100 rounded-full blur-3xl opacity-60 z-0"></div>
+              
+              <div class="relative z-10 flex flex-col items-center text-center">
+                <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-purple-50 text-purple-600 shadow-md border border-purple-100/50">
+                  <i data-lucide="terminal" class="h-10 w-10"></i>
+                </div>
+
+                <h2 class="text-2xl font-extrabold text-slate-800 tracking-tight mb-2">
+                  CMPH Recap 작성 도구 (Python)
+                </h2>
+                <p class="text-sm font-medium text-slate-500 max-w-md leading-relaxed mb-8">
+                  Python 스크립트를 직접 구동하여 데이터를 처리합니다.
+                </p>
+
+                <div class="w-full bg-slate-50 border border-slate-100 rounded-2xl p-5 mb-8 text-left">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                    <i data-lucide="help-circle" class="h-4 w-4 text-slate-400"></i>
+                    실행 안내 및 파일 경로
+                  </h4>
+                  <ul class="space-y-2.5 text-sm text-slate-600">
+                    <li class="flex gap-2">
+                      <span class="text-purple-500 font-bold shrink-0">·</span>
+                      <span><strong>실행 파일 경로:</strong> <code class="bg-slate-200/60 px-1.5 py-0.5 rounded text-xs font-mono">Project files\\사업 3부\\CMPH Recap Tool\\CMPH_Recap_Tool.py</code></span>
+                    </li>
+                    <li class="flex gap-2">
+                      <span class="text-purple-500 font-bold shrink-0">·</span>
+                      <span>로컬 서버(Next.js) 백그라운드를 통해 파이썬 스크립트가 구동됩니다.</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="flex flex-col gap-4 w-full items-center">
+                  <button id="btn-run-cmph" class="flex items-center justify-center gap-2.5 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg shadow-purple-600/20 hover:scale-[1.02] hover:shadow-xl transition-all duration-200 w-full max-w-sm">
+                    <i data-lucide="play" class="h-5 w-5 fill-white"></i>
+                    Python 스크립트 가동하기
+                  </button>
+                  <p id="cmph-run-status" class="text-xs text-slate-400">※ 백그라운드 로컬 서버(localhost:3000)를 통해 실행합니다.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        lucide.createIcons();
+
+        document.getElementById('btn-run-cmph').onclick = async () => {
+          const statusText = document.getElementById('cmph-run-status');
+          statusText.textContent = "가동 요청 중...";
+          statusText.className = "text-xs font-semibold text-purple-600";
+          try {
+            const res = await fetch("http://localhost:3000/api/run-py", { method: "POST" });
+            const data = await res.json();
+            if (data.success) {
+              statusText.textContent = "✓ 파이썬 프로그램이 성공적으로 실행되었습니다!";
+              statusText.className = "text-xs font-semibold text-emerald-600";
+            } else {
+              throw new Error(data.error || "실행 실패");
+            }
+          } catch (err) {
+            statusText.innerHTML = "⚠ <b>오류: 로컬 서버와 통신할 수 없습니다.</b><br/>다운로드 없이 즉시 가동하려면 터미널에서 <code>npm run dev</code>를 입력해 로컬 서버를 먼저 켜주세요.";
+            statusText.className = "text-xs font-semibold text-rose-600 text-center leading-relaxed";
+          }
+        };
+      } else {
+        if (subItem && subItem.fileName) {
+          const folderName = subItem.folderName || subTitle;
+          const filePath = `Project files/${brandTitle}/${folderName}/${subItem.fileName}`;
+          
+          let absolutePathDisplay = `Project files\\${brandTitle}\\${folderName}\\${subItem.fileName}`;
+          if (window.location.protocol === 'file:') {
+            let currentPath = decodeURIComponent(window.location.pathname);
+            if (currentPath.startsWith('/')) currentPath = currentPath.substring(1);
+            let dirPath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+            dirPath = dirPath.replace(/\//g, '\\\\');
+            absolutePathDisplay = `${dirPath}\\\\Project files\\\\${brandTitle}\\\\${subTitle}\\\\${subItem.fileName}`;
+          }
+
+
+          if (subItem.urlAddress) {
+            let url = subItem.urlAddress;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+              url = 'https://' + url;
+            }
+            content.innerHTML = `
+              <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+                <iframe src="${url}" class="w-full h-full flex-1 border-0" allowfullscreen></iframe>
+              </div>
+            `;
+          } else if (subItem.fileName && subItem.fileName.endsWith('.txt')) {
+            content.innerHTML = `
+              <div class="w-full h-full flex-1 flex flex-col items-center justify-center bg-slate-50">
+                <i data-lucide="loader-2" class="w-10 h-10 text-blue-500 animate-spin mb-4"></i>
+                <p class="text-slate-500 text-sm font-semibold">URL을 불러오는 중입니다...</p>
+              </div>
+            `;
+            
+            const isLocalFile = window.location.protocol === 'file:';
+            // Vercel (http/https) serves static files directly from public/.
+            // Local file:// needs the API to read from disk.
+            const fetchUrl = isLocalFile 
+              ? 'http://localhost:3000/api/read-file?filePath=' + encodeURIComponent(filePath) + '&t=' + Date.now()
+              : '/' + filePath.replace(/\\/g, '/') + '?t=' + Date.now();
+            
+            fetch(fetchUrl)
+              .then(res => {
+                if(!res.ok) throw new Error("File not found");
+                return res.text();
+              })
+              .then(text => {
+                let url = text.split('\n')[0].trim();
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                  url = 'https://' + url;
+                }
+                content.innerHTML = `
+                  <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+                    <iframe src="${url}" class="w-full h-full flex-1 border-0" allowfullscreen></iframe>
+                  </div>
+                `;
+                lucide.createIcons();
+              })
+              .catch(err => {
+                content.innerHTML = `
+                  <div class="w-full h-full flex-1 flex flex-col items-center justify-center bg-white">
+                    <p class="text-rose-500 font-bold mb-2">URL을 불러오는데 실패했습니다.</p>
+                    <p class="text-slate-500 text-sm">${err.message}</p>
+                  </div>
+                `;
+              });
+          } else {
+            const urlEncodedPath = '/' + filePath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+            content.innerHTML = `
+              <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
+                <iframe src="${urlEncodedPath}" class="w-full h-full flex-1 border-0"></iframe>
+              </div>
+            `;
+          }
+        } else {
+          // "기능 준비중" (Coming Soon) Screen
+          content.innerHTML = `
+            <div class="w-full h-full flex-1 flex flex-col items-center justify-center bg-white">
+              <div class="flex flex-col items-center text-center p-8 animate-fade-in-up">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 mb-6 border border-blue-100 shadow-inner">
+                  <i data-lucide="hammer" class="h-10 w-10 text-blue-500"></i>
+                </div>
+                <h3 class="text-2xl font-extrabold text-slate-800 mb-3">기능 준비중</h3>
+                <p class="text-slate-500 max-w-sm leading-relaxed">
+                  현재 <strong>${subTitle}</strong> 모듈은 기능 개발 및 테스트가 진행 중입니다.<br/>
+                  보다 나은 서비스로 곧 찾아뵙겠습니다.
+                </p>
+              </div>
+            </div>
+          `;
+        }
+        lucide.createIcons();
+      }
+    }
+
+    // Initialize application
+    lucide.createIcons();
+
+    function renderDept3Showcase() {
+      if (!canNavigate()) return;
+      pushNavState({ type: 'dept3' });
+      setBackButtonTheme('dark');
+
+      currentBrandSlug = 'business';
+      updateBreadcrumb("사업부", "사업 3부 AI Playground");
+
+      const content = document.getElementById('main-content');
+      content.innerHTML = `
+        <div class="flex-1 w-full bg-[#fdfbf7] relative overflow-hidden flex flex-col items-center">
+          
+          <!-- Background Blobs -->
+          <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-200/30 blur-[120px] pointer-events-none mix-blend-multiply"></div>
+          <div class="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-purple-200/30 blur-[120px] pointer-events-none mix-blend-multiply"></div>
+          
+          <div class="w-full max-w-6xl px-6 py-12 relative z-10 flex flex-col items-center" style="zoom: 0.7;">
+            
+            <!-- Floating Badges -->
+            <div class="absolute top-10 left-10 hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-md rounded-full shadow-sm border border-white/40 animate-pulse">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-500"></i>
+              <span class="text-xs font-bold text-slate-600">Vibe Coding</span>
+            </div>
+            
+            <div class="absolute top-24 right-10 hidden lg:flex items-center gap-2 px-3 py-1.5 bg-white/60 backdrop-blur-md rounded-full shadow-sm border border-white/40 animate-pulse" style="animation-delay: 0.5s">
+              <i data-lucide="bot" class="w-3.5 h-3.5 text-blue-500"></i>
+              <span class="text-xs font-bold text-slate-600">Internal AI Lab</span>
+            </div>
+
+            <!-- Hero Section -->
+            <div class="text-center mb-16 mt-8 flex flex-col items-center animate-fade-in-up">
+              <div class="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-50 to-purple-50 shadow-inner border border-white">
+                <i data-lucide="brain-circuit" class="h-10 w-10 text-indigo-600"></i>
+              </div>
+              <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-4 leading-tight font-cafe24">
+                Business Division 3 <br class="md:hidden" />
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">AI Playground</span>
+              </h1>
+              <p class="text-lg text-slate-500 font-medium max-w-2xl">
+                사업 3부에서 직접 만든 <strong class="text-slate-700">바이브코딩 결과물</strong>입니다.<br />
+                업무를 더 편하게 만드는 작은 AI 도구들을 체험해 보세요.
+              </p>
+            </div>
+
+            <!-- Interactive Layout Area -->
+            <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              <!-- Navigation / Intro Side -->
+              <div class="lg:col-span-5 flex flex-col gap-6 animate-fade-in-up" style="animation-delay: 0.2s">
+                <div class="bg-white/60 backdrop-blur-xl rounded-3xl p-8 border border-white shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                  <h2 class="text-2xl font-bold text-slate-800 mb-2">어떤 작업을 자동화할까요?</h2>
+                  <p class="text-sm text-slate-500 mb-8 leading-relaxed">
+                    PDF 파싱부터 엑셀 비교 검증까지, 실무에서 발생하는 반복 작업을 AI가 똑똑하게 해결해 줍니다.
+                  </p>
+                  
+                  <div class="flex flex-col gap-3" id="showcase-tabs">
+                    <!-- Tabs generated by JS -->
+                  </div>
+                </div>
+              </div>
+
+              <!-- Main Showcase Area -->
+              <div class="lg:col-span-7 flex flex-col animate-fade-in-up" style="animation-delay: 0.3s">
+                <div class="relative w-full h-[500px] bg-slate-100/50 rounded-3xl border-2 border-white shadow-xl p-2 sm:p-6 backdrop-blur-sm flex items-center justify-center overflow-hidden" id="showcase-content">
+                  <!-- Content generated by JS -->
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Footer Note -->
+            <div class="mt-20 mb-8 text-center animate-fade-in-up" style="animation-delay: 0.5s">
+              <p class="text-2xl text-slate-600 tracking-wider font-nanum">
+                "사업 3부는 오늘도 실무를 더 편하게 만드는 AI를 연구중입니다 ✨"
+              </p>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      renderShowcaseTab('cmph');
+      lucide.createIcons();
+    }
+
+    function renderShowcaseTab(tabId) {
+      const tabsContainer = document.getElementById('showcase-tabs');
+      const contentContainer = document.getElementById('showcase-content');
+      if (!tabsContainer || !contentContainer) return;
+
+      const tabs = [
+        { id: "cmph", label: "CMPH Recap Auto-Parser", icon: "file-spreadsheet" },
+        { id: "po", label: "PO Diff Analyzer", icon: "scan-search" },
+        { id: "trim", label: "Trim Data Verifier", icon: "list-checks" }
+      ];
+
+      tabsContainer.innerHTML = tabs.map(tab => {
+        const isActive = tab.id === tabId;
+        return `
+          <button onclick="renderShowcaseTab('${tab.id}')" class="relative flex items-center gap-4 p-4 rounded-2xl transition-all duration-300 text-left overflow-hidden ${isActive ? 'bg-white shadow-md border border-transparent text-blue-700 ring-1 ring-blue-100' : 'bg-transparent hover:bg-white/50 border border-slate-200/50 text-slate-600 hover:text-slate-800'}">
+            ${isActive ? '<div class="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-purple-50/50 z-0 rounded-2xl"></div>' : ''}
+            <div class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}">
+              <i data-lucide="${tab.icon}" class="h-5 w-5"></i>
+            </div>
+            <div class="relative z-10 flex-1">
+              <span class="font-bold block">${tab.label}</span>
+            </div>
+            <div class="relative z-10 transition-all duration-300 ${isActive ? 'translate-x-0 opacity-100' : '-translate-x-2 opacity-0'}">
+              <i data-lucide="arrow-right" class="h-4 w-4"></i>
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      let contentHTML = '';
+      if (tabId === 'cmph') {
+        contentHTML = `
+          <div class="w-full max-w-md h-full min-h-[400px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col animate-fade-in-up">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div class="flex items-center gap-2">
+                <i data-lucide="file-spreadsheet" class="h-5 w-5 text-emerald-600"></i>
+                <span class="font-bold text-slate-700 text-sm">CMPH Recap Auto-Parser</span>
+              </div>
+              <div class="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wider">Ready</div>
+            </div>
+            <div class="flex-1 p-6 flex flex-col items-center justify-center">
+              <div class="w-full border-2 border-dashed border-slate-300 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:border-emerald-400 hover:bg-emerald-50/30 transition-colors cursor-pointer mb-6">
+                <i data-lucide="upload-cloud" class="h-10 w-10 text-slate-400 mb-3"></i>
+                <p class="text-sm font-bold text-slate-600">Tech Pack PDF 업로드</p>
+                <p class="text-xs text-slate-400 mt-1">이곳에 파일을 드래그 앤 드롭 하세요</p>
+              </div>
+              <button class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white py-3 rounded-xl shadow-md shadow-emerald-500/20 font-bold transition-all hover:-translate-y-0.5">
+                <i data-lucide="wand-2" class="h-4 w-4"></i> 데이터 추출 및 엑셀 작성
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (tabId === 'po') {
+        contentHTML = `
+          <div class="w-full max-w-md h-full min-h-[400px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col animate-fade-in-up">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div class="flex items-center gap-2">
+                <i data-lucide="scan-search" class="h-5 w-5 text-blue-600"></i>
+                <span class="font-bold text-slate-700 text-sm">PO Diff Analyzer</span>
+              </div>
+              <div class="px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider">Analyzing</div>
+            </div>
+            <div class="flex-1 p-6 flex flex-col">
+              <div class="grid grid-cols-2 gap-4 mb-6 flex-1">
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col relative overflow-hidden">
+                  <span class="text-xs font-bold text-slate-400 mb-2 uppercase">Old Version (PO)</span>
+                  <div class="w-full h-4 bg-slate-200 rounded mb-2"></div>
+                  <div class="w-3/4 h-4 bg-slate-200 rounded mb-2"></div>
+                  <div class="w-5/6 h-4 bg-rose-100 rounded mb-2 border border-rose-200"></div>
+                  <div class="w-full h-4 bg-slate-200 rounded"></div>
+                </div>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 flex flex-col relative overflow-hidden">
+                  <span class="text-xs font-bold text-slate-400 mb-2 uppercase">New Version (CPO)</span>
+                  <div class="w-full h-4 bg-slate-200 rounded mb-2"></div>
+                  <div class="w-3/4 h-4 bg-slate-200 rounded mb-2"></div>
+                  <div class="w-5/6 h-4 bg-emerald-100 rounded mb-2 border border-emerald-200 relative">
+                    <span class="absolute -right-1 -top-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span></span>
+                  </div>
+                  <div class="w-full h-4 bg-slate-200 rounded"></div>
+                </div>
+              </div>
+              <button class="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white py-3 rounded-xl shadow-md shadow-blue-500/20 font-bold transition-all hover:-translate-y-0.5">
+                <i data-lucide="scan-search" class="h-4 w-4"></i> 변경 내역 리포트 생성
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        contentHTML = `
+          <div class="w-full max-w-md h-full min-h-[400px] bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col animate-fade-in-up">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+              <div class="flex items-center gap-2">
+                <i data-lucide="list-checks" class="h-5 w-5 text-purple-600"></i>
+                <span class="font-bold text-slate-700 text-sm">Trim Data Verifier</span>
+              </div>
+              <div class="px-2.5 py-1 rounded-full bg-purple-100 text-purple-700 text-[10px] font-bold uppercase tracking-wider">Verified</div>
+            </div>
+            <div class="flex-1 p-6 flex flex-col">
+              <div class="flex items-center gap-3 mb-6 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <div class="h-10 w-10 rounded-full bg-purple-200 flex items-center justify-center shrink-0">
+                  <i data-lucide="check-circle-2" class="h-5 w-5 text-purple-700"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-purple-900">교차 검증 완료</p>
+                  <p class="text-xs text-purple-700/80">공임 차트와 부자재 시트 간 불일치 발견</p>
+                </div>
+              </div>
+              <div class="space-y-3 flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div class="p-3 border border-slate-100 rounded-lg flex items-start justify-between hover:bg-slate-50 transition-colors">
+                  <div class="flex flex-col gap-1"><span class="text-xs font-bold text-slate-700">Button Item #1043</span><span class="text-[11px] text-slate-500">BOM 수량: 120 / Excel: 100</span></div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-600">Mismatch</span>
+                </div>
+                <div class="p-3 border border-slate-100 rounded-lg flex items-start justify-between hover:bg-slate-50 transition-colors">
+                  <div class="flex flex-col gap-1"><span class="text-xs font-bold text-slate-700">Zipper Item #1044</span><span class="text-[11px] text-slate-500">BOM 단가: $1.2 / Excel: $1.5</span></div>
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-600">Mismatch</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      contentContainer.innerHTML = contentHTML;
+      lucide.createIcons();
+    }
+  </script>
+
+  <!-- Auth Modal -->
+  <div id="tooltip-auth-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-[320px] transform transition-all">
+      <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <i data-lucide="lock" class="w-5 h-5 text-blue-500"></i> 관리자 인증
+      </h3>
+      <p class="text-xs text-slate-500 mb-4 leading-relaxed">말풍선 내용을 수정하려면 비밀번호를 입력해주세요.</p>
+      <input type="password" id="tooltip-pw-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyTooltipAuth()">
+      <div class="flex justify-end gap-2">
+        <button onclick="closeTooltipAuth()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
+        <button onclick="verifyTooltipAuth()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Admin Auth Modal -->
+  <div id="page-admin-auth-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-[320px] transform transition-all">
+      <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+        <i data-lucide="shield" class="w-5 h-5 text-blue-500"></i> 관리자 로그인
+      </h3>
+      <p class="text-xs text-slate-500 mb-4 leading-relaxed">관리자 페이지에 접근하려면 로그인해주세요.</p>
+      
+      <div class="space-y-3 mb-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">아이디</label>
+          <input type="text" id="admin-id-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="아이디 입력">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">비밀번호</label>
+          <input type="password" id="admin-pw-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyPageAdminAuth()">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2">
+        <button onclick="closePageAdminAuth()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
+        <button onclick="verifyPageAdminAuth()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20">로그인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Form Modal -->
+  <div id="tooltip-edit-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+        <h3 id="edit-modal-title" class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> 말풍선 내용 수정
+        </h3>
+        <button onclick="closeTooltipEditForm()" class="text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      
+      <div class="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
+        <!-- Section 1 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">1</span> 제목을 입력해주세요.</label>
+          <input type="text" id="edit-title" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+        </div>
+        
+        <!-- Section 2 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">2</span> 이 기능을 추가한 이유를 설명해주세요.</label>
+          <textarea id="edit-reason" rows="4" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow" placeholder="예: 반복적인 수작업을 줄이기 위해..."></textarea>
+        </div>
+
+        <!-- Section 3 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">3</span> 기능 설명과 사용 방법을 적어주세요.</label>
+          <textarea id="edit-desc" rows="6" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow" placeholder="상세한 설명과 사용법..."></textarea>
+        </div>
+        
+        <!-- Section 4 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">4</span> 검색 시 사용되는 키워드를 적어주세요. (구분은 ,로 해주세요.)</label>
+          <input type="text" id="edit-keywords" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" placeholder="예: 키워드1, 키워드2, 키워드3">
+        </div>
+        
+        <!-- Section 5 -->
+        <div id="edit-pw-section" class="pt-5 border-t border-slate-100">
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">비밀번호 설정 <span class="text-xs font-normal text-slate-500 ml-1">(4~8자)</span></label>
+          <input type="password" id="edit-pw" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" placeholder="비밀번호">
+        </div>
+      </div>
+      
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
+        <button id="edit-cancel-btn" onclick="closeTooltipEditForm()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">취소</button>
+        <button id="edit-save-btn" onclick="saveTooltipData()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm shadow-blue-600/20 hover:shadow-md hover:-translate-y-0.5">저장하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View Modal -->
+  <div id="tooltip-detail-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i data-lucide="info" class="w-5 h-5 text-blue-500"></i> 기능 상세 정보
+        </h3>
+        <button onclick="closeTooltipDetail()" class="text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      
+      <div class="p-8 overflow-y-auto flex-1 custom-scrollbar text-[15px] text-slate-700 leading-loose">
+        <div class="mb-6 border-b border-slate-200 pb-4">
+          <strong id="detail-title" class="text-blue-700 text-2xl font-extrabold block"></strong> 
+        </div>
+        
+        <div class="mb-6">
+          <div class="font-medium mb-2">이 기능을 만든 이유는</div> 
+          <strong id="detail-reason" class="text-indigo-700 text-[15px] block whitespace-pre-wrap mb-1"></strong> 
+          <div class="font-medium">이고요.</div>
+        </div>
+        
+        <div class="mb-6">
+          <div class="font-medium mb-3">사용 방법은 이렇습니다.</div>
+          <div id="detail-desc" class="whitespace-pre-wrap text-[15px] font-bold text-indigo-700 leading-relaxed"></div>
+        </div>
+      </div>
+      
+      <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
+        <button onclick="closeTooltipDetail()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">닫기</button>
+        <button onclick="openTooltipAuth(); closeTooltipDetail();" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-sm shadow-slate-800/20 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-1.5"><i data-lucide="edit-2" class="w-4 h-4"></i> 수정</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentEditMenuId = null;
+    let currentEditMenuTitle = null;
+    let currentEditEventTarget = null;
+    let currentDefaultDesc = null;
+    const ADMIN_PW = "admin0000";
+    const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+
+    async function getTooltipDataFromSupabase(menuId) {
+      try {
+        if (window.globalMenualData) {
+          // MenuId 컬럼을 기준으로 식별하여 최신 데이터 가져오기
+          const manualEntries = window.globalMenualData.filter(m => m.MenuId === menuId);
+          if (manualEntries.length > 0) {
+            manualEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const manualEntry = manualEntries[0];
+            return {
+              title: manualEntry.Title,
+              reason: manualEntry.Reason,
+              description: manualEntry.HowToUse,
+              keywords: manualEntry.KeyWord,
+              password: manualEntry.PassWord
+            };
+          }
+        }
+      } catch (e) {
+        console.error("Failed to parse tooltip data", e);
+      }
+      
+      // Supabase 데이터 없을 시 기존 localStorage에서 Fallback 조회
+      try {
+        const data = JSON.parse(localStorage.getItem('hansoll_tooltips')) || {};
+        return data[menuId] || null;
+      } catch(e) { return null; }
+    }
+
+    function setTooltipData(title, dataObj) {
+      try {
+        const data = JSON.parse(localStorage.getItem('hansoll_tooltips')) || {};
+        data[title] = dataObj;
+        localStorage.setItem('hansoll_tooltips', JSON.stringify(data));
+      } catch(e) {}
+    }
+
+    async function showMenuTooltip(event, menuId, title, desc) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        currentDefaultDesc = desc;
+      }
+      
+      await openTooltipDetail(menuId, title);
+    }
+
+    async function openTooltipDetail(menuId, title) {
+      // 로딩 중 표시가 필요할 수도 있으나 빠른 조회를 가정
+      const data = await getTooltipDataFromSupabase(menuId) || {};
+      currentEditMenuId = menuId;
+      currentEditMenuTitle = title;
+      
+      const displayTitle = title;
+      const displayReason = data.reason || "(등록된 이유가 없습니다)";
+      const displayDesc = data.description || currentDefaultDesc || "(등록된 설명이 없습니다)";
+      
+      document.getElementById('detail-title').textContent = displayTitle;
+      document.getElementById('detail-reason').textContent = displayReason;
+      document.getElementById('detail-desc').textContent = displayDesc;
+      
+      document.getElementById('tooltip-detail-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTooltipDetail() {
+      document.getElementById('tooltip-detail-modal').classList.add('hidden');
+    }
+
+    function openTooltipAuth() {
+      document.getElementById('tooltip-pw-input').value = "";
+      document.getElementById('tooltip-auth-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('tooltip-pw-input').focus(), 50);
+    }
+
+    function closeTooltipAuth() {
+      document.getElementById('tooltip-auth-modal').classList.add('hidden');
+    }
+
+    async function verifyTooltipAuth() {
+      const pwInput = document.getElementById('tooltip-pw-input').value;
+      const data = await getTooltipDataFromSupabase(currentEditMenuId);
+      const expectedPw = data ? data.password : "1234";
+      const masterPw = localStorage.getItem("hansoll_admin_pw") || "admin0000";
+
+      if (pwInput === expectedPw || pwInput === masterPw) {
+        closeTooltipAuth();
+        await openTooltipEditForm();
+      } else {
+        alert("비밀번호가 일치하지 않습니다.");
+      }
+    }
+
+    async function openTooltipEditForm() {
+      const data = await getTooltipDataFromSupabase(currentEditMenuId) || {};
+      document.getElementById('edit-title').value = data.title || currentEditMenuTitle;
+      document.getElementById('edit-reason').value = data.reason || "";
+      document.getElementById('edit-desc').value = data.description || currentDefaultDesc || "";
+      document.getElementById('edit-keywords').value = data.keywords || "";
+      document.getElementById('edit-pw').value = data.password || "1234";
+      
+      document.getElementById('tooltip-edit-modal').classList.remove('hidden');
+      lucide.createIcons();
+    }
+
+    function closeTooltipEditForm() {
+      document.getElementById('tooltip-edit-modal').classList.add('hidden');
+    }
+
+    function promptAdminAuth() {
+      document.getElementById('admin-id-input').value = "";
+      document.getElementById('admin-pw-input').value = "";
+      document.getElementById('page-admin-auth-modal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('admin-id-input').focus(), 50);
+    }
+
+    function closePageAdminAuth() {
+      document.getElementById('page-admin-auth-modal').classList.add('hidden');
+    }
+
+    function verifyPageAdminAuth() {
+      const id = document.getElementById('admin-id-input').value;
+      const pw = document.getElementById('admin-pw-input').value;
+      const savedPw = localStorage.getItem("hansoll_admin_pw") || "admin0000";
+      
+      if (id === "admin" && pw === savedPw) {
+        closePageAdminAuth();
+        updateAdminButtonState(true);
+        openAdminPage();
+      } else {
+        alert("아이디 또는 비밀번호가 일치하지 않습니다.");
+      }
+    }
+
+    async function saveTooltipData() {
+      const title = document.getElementById('edit-title').value.trim();
+      const reason = document.getElementById('edit-reason').value.trim();
+      const desc = document.getElementById('edit-desc').value.trim();
+      const keywords = document.getElementById('edit-keywords').value.trim();
+      const pw = document.getElementById('edit-pw').value.trim();
+
+      if (pw.length < 4 || pw.length > 8) {
+        alert("비밀번호는 4~8자 사이로 입력해주세요.");
+        return;
+      }
+
+      const payload = {
+        MenuId: currentEditMenuId,
+        Title: title,
+        Reason: reason,
+        HowToUse: desc,
+        KeyWord: keywords,
+        PassWord: pw
+      };
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/MenualPage`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errText = await response.text();
+          console.error("Supabase 저장 실패:", errText);
+          alert("데이터베이스 저장에 실패했습니다.");
+        } else {
+          console.log("Supabase 저장 성공!");
+        }
+      } catch (e) {
+        console.error("네트워크 오류:", e);
+        alert("네트워크 통신 오류가 발생했습니다.");
+      }
+
+      setTooltipData(currentEditMenuId, {
+        title: title,
+        reason: reason,
+        description: desc,
+        keywords: keywords,
+        password: pw
+      });
+
+      closeTooltipEditForm();
+      
+      // Re-open tooltip immediately to show updated content
+      showMenuTooltip(null, currentEditMenuId, currentEditMenuTitle, currentDefaultDesc);
+    }
+
+    // Modals no longer close on background click to prevent accidental data loss,
+    // they require clicking the explicit Close/Cancel buttons.
+
+
+  </script>
+</body>
+</html>

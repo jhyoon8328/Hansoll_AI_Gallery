@@ -1,0 +1,13 @@
+"use client";
+
+export default function Home() {
+  return (
+    <div className="w-full h-[calc(100vh-130px)] rounded-3xl mt-4 shadow-xl border border-slate-200 overflow-hidden bg-white">
+      <iframe 
+        src="/mainPage.html" 
+        className="w-full h-full border-none"
+        title="Hansoll Textile AI Gallery"
+      />
+    </div>
+  );
+}

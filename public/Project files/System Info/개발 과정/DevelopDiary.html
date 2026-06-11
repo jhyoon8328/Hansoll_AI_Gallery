@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나의 웹사이트 개발기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Jua&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Jua', 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            overflow: hidden; /* 슬라이드 스크롤을 위해 body 오버플로우 숨김 */
+        }
+
+        .presentation-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .slide-title {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #1e293b;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 1000px;
+            width: 100%;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .content-area {
+                flex-direction: row;
+                justify-content: space-between;
+            }
+        }
+
+        .text-box {
+            flex: 1;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-list {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .custom-list li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .custom-list li::before {
+            content: '🚀';
+            position: absolute;
+            left: 0;
+            top: 0.1rem;
+            font-size: 1.2rem;
+        }
+
+        .image-wrapper {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: transform 0.3s ease;
+        }
+
+        .image-wrapper img:hover {
+            transform: scale(1.05);
+        }
+
+        /* 각 섹션별 포인트 컬러 설정 */
+        #slide0 { background-color: #e0f2fe; }
+        #slide1 { background-color: #fef3c7; }
+        #slide2 { background-color: #d1fae5; }
+        #slide3 { background-color: #fee2e2; }
+        #slide4 { background-color: #e0e7ff; }
+        #slide5 { background-color: #ffedd5; }
+        #slide6 { background-color: #f3e8ff; }
+        #slide7 { background-color: #ccfbf1; }
+        #slide8 { background-color: #fce7f3; }
+
+        .nav-hint {
+            position: absolute;
+            bottom: 2rem;
+            font-size: 1rem;
+            color: #64748b;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="presentation-container">
+        
+        <!-- 오프닝 슬라이드 -->
+        <div class="slide-container" id="slide0">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 text-center text-blue-600 drop-shadow-md">나의 웹사이트 개발기 🛠️</h1>
+            <p class="text-2xl text-gray-700 mb-8">바이브 코딩을 활용한 갤러리 웹사이트 구축 여정</p>
+            <div class="nav-hint">마우스 휠이나 방향키(↓)로 내려보세요!</div>
+        </div>
+
+        <!-- Slide 1: 섹션 1 -->
+        <div class="slide-container" id="slide1">
+            <h2 class="slide-title">아무런 배경 없이 Gemini에서 시작</h2>
+            <div class="content-area">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>초기에는 별도의 사전 지식이나 치밀한 계획 없이, 순수하게 <strong>바이브 코딩</strong>만으로 화면 구상을 시작했습니다.</li>
+                        <li><strong>Gemini의 Canvas 기능</strong>을 활용하여 초기 프로토타입 제작을 시도했습니다.</li>
+                        <li>전체적인 UI가 신속하게 생성되는 점은 무척 인상적이었습니다.</li>
+                        <li>하지만 프로젝트가 진행될수록 기능 추가 및 유지보수를 위한 <strong>확장성 측면에서 명확한 한계점</strong>을 체감하게 되었습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 1 일러스트" src="https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: 섹션 2 -->
+        <div class="slide-container" id="slide2">
+            <h2 class="slide-title">Antigravity로 환승</h2>
+            <div class="content-area flex-row-reverse">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>근본적인 한계를 극복하기 위해 프로젝트를 처음부터 다시 재구축하기로 결정했습니다.</li>
+                        <li>새로운 개발 도구로 <strong>Antigravity</strong>를 도입하였으며, 기본적인 기술 스펙을 지정하여 환경 구성을 요청했습니다.</li>
+                        <li>AI가 프로젝트에 <strong>필요한 디렉토리 구조와 초기 파일들을 자체적으로 생성</strong>하는 것을 확인할 수 있었습니다.</li>
+                        <li>안정적으로 구축된 기반 위에서 Antigravity 툴을 적극 활용하여 본격적인 갤러리 사이트 개발에 착수했습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 2 일러스트" src="https://media.giphy.com/media/xT9IgzoWaVYHbYqOaM/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: 섹션 3 -->
+        <div class="slide-container" id="slide3">
+            <h2 class="slide-title">기능 확장에 대한 니즈 (욕심의 시작)</h2>
+            <div class="content-area">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>기존 자료(HTML, URL, Python 스크립트 등)를 업로드하고 각각의 메뉴를 통해 열람할 수 있는 통합 갤러리 화면을 완성했습니다.</li>
+                        <li>기본적인 뷰어(Viewer) 기능이 갖춰지자, <strong>추가적인 시스템 관리에 대한 니즈</strong>가 발생했습니다.</li>
+                        <li><em>"이 요소들을 관리자 페이지에서 중앙 제어할 수 있지 않을까?"</em> 라는 가설을 세웠습니다.</li>
+                        <li>이러한 아이디어를 바탕으로 메뉴 생성/수정, 통계 확인, 그리고 화면 부연 설명을 위한 <strong>말풍선 기능</strong> 등을 포함한 관리자 시스템을 구축했습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 3 일러스트" src="https://media.giphy.com/media/3o7btPCcdNniyf0ArS/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: 섹션 4 -->
+        <div class="slide-container" id="slide4">
+            <h2 class="slide-title">백엔드의 필요성</h2>
+            <div class="content-area flex-row-reverse">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>다양한 데이터와 설정값들을 체계적으로 관리하기 위해서는 영구적인 <strong>저장 공간이 필수적</strong>이었습니다.</li>
+                        <li>휘발성 메모리에만 의존하는 방식으로는 앞서 기획한 관리자 기능들을 온전히 구현할 수 없었습니다.</li>
+                        <li>이에 따라 바이브 코딩을 통해 별도의 데이터 저장 로직 구현을 요청했습니다.</li>
+                        <li>결과적으로 <strong>물리적 공간(로컬 PC)을 활용</strong>하여 <code>.json</code> 파일 형태로 데이터를 안전하게 보존하는 방식을 채택했습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 4 일러스트" src="https://media.giphy.com/media/Q8OPrlvICzjajupr2T/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: 섹션 5 -->
+        <div class="slide-container" id="slide5">
+            <h2 class="slide-title">Vercel 배포와 데이터 불일치</h2>
+            <div class="content-area">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>클라이언트 화면 및 로컬 저장소 구축을 완료한 후, 서비스를 라이브로 제공하기 위해 Vercel 플랫폼에 연동했습니다.</li>
+                        <li>일부 설정 상의 시행착오가 있었으나, 결과적으로 <strong>Vercel 환경으로의 배포에 성공</strong>했습니다.</li>
+                        <li>하지만 배포 직후, 예상치 못한 <strong>'데이터 동기화 문제'</strong>에 직면하게 되었습니다.</li>
+                        <li>로컬 환경과 Vercel 환경의 데이터가 상호 공유되지 않아, 접속 환경에 따라 완전히 다른 데이터를 렌더링하는 치명적인 이슈가 발생한 것입니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 5 일러스트" src="https://media.giphy.com/media/11qBG0k3hCDRCM/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: 섹션 6 -->
+        <div class="slide-container" id="slide6">
+            <h2 class="slide-title">Supabase를 통한 데이터 동기화</h2>
+            <div class="content-area flex-row-reverse">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>웹 서비스에서 데이터의 무결성과 일관성은 핵심 요소이므로, 단일화된 중앙 <strong>데이터베이스(DB)의 도입이 시급</strong>했습니다.</li>
+                        <li>이를 해결하기 위한 방안으로 서버리스 데이터베이스인 <strong>Supabase</strong>를 채택했습니다.</li>
+                        <li>Supabase와 Antigravity 환경을 연동하고, 필요한 테이블을 설계하여 클라이언트 화면과 성공적으로 매핑했습니다.</li>
+                        <li>마침내 <strong>저장 공간이 하나로 통합</strong>되었으며, 어떠한 접속 환경에서도 완벽하게 동일한 데이터를 보장할 수 있게 되었습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 6 일러스트" src="https://media.giphy.com/media/V80llXf734WzK/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: 섹션 7 -->
+        <div class="slide-container" id="slide7">
+            <h2 class="slide-title">Vercel 호스팅의 한계점</h2>
+            <div class="content-area">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>Vercel은 훌륭한 프론트엔드 호스팅 환경을 제공하지만, 로컬 환경처럼 파이썬(.py)이나 배치 파일(.bat)을 <strong>직접 실행하여 결과를 반환하는 아키텍처는 지원하지 않음</strong>을 확인했습니다.</li>
+                        <li>Github와의 연동을 통해 정적 파일 및 버전을 관리하는 우회적인 방법도 고려해 보았습니다.</li>
+                        <li>그러나 해당 방식은 <strong>실시간 로딩이 불가능</strong>하며, 변경 사항 반영에 1~2분의 지연(Delay)이 발생하여 즉각적인 피드백이 어렵다는 단점이 있습니다.</li>
+                        <li>이러한 실행 환경의 제약은 향후 서비스 고도화를 위해 추가적으로 연구해야 할 과제로 남았습니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 7 일러스트" src="https://media.giphy.com/media/tXL4FHPSnVJ0A/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 섹션 8 -->
+        <div class="slide-container" id="slide8">
+            <h2 class="slide-title">프로젝트 인사이트 (배운 점)</h2>
+            <div class="content-area flex-row-reverse">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>이번 프로젝트를 통해, 본격적인 개발에 앞서 <strong>명확한 아키텍처 설계가 선행되어야 함</strong>을 다시 한번 실감했습니다.</li>
+                        <li>단순한 로컬 구동용인지, 혹은 클라우드 환경에서 다수의 사용자를 대상으로 서비스할 것인지 명확한 목적 설정이 필요합니다.</li>
+                        <li>백엔드 시스템 도입 시 데이터의 성격에 맞춰 저장 방식(메모리, 로컬 파일, 온라인 DB 등)을 사전에 확정해야 합니다.</li>
+                        <li>향후 프로젝트에서는 <strong>충분한 요구사항 분석과 사전 설계</strong>를 바탕으로, 체계적이고 단계적인 개발 방법론을 적용할 계획입니다.</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 8 일러스트" src="https://media.giphy.com/media/d3mlE7uhX8KFgEmY/giphy.gif">
+                </div>
+            </div>
+        </div>
+
+        <!-- Outro Slide -->
+        <div class="slide-container" style="background-color: #f8fafc;">
+            <h2 class="text-4xl font-bold mb-4 text-center text-blue-600">경청해 주셔서 감사합니다! 🎉</h2>
+            <p class="text-xl text-gray-700">이상으로 바이브 코딩을 활용한 웹사이트 구축 여정 발표를 마치겠습니다.</p>
+        </div>
+
+    </div>
+
+    <script>
+        // 키보드 방향키로 슬라이드 이동을 조금 더 매끄럽게 돕는 스크립트
+        document.addEventListener('keydown', function(event) {
+            const container = document.querySelector('.presentation-container');
+            const slideHeight = window.innerHeight;
+            
+            if (event.key === 'ArrowDown') {
+                container.scrollBy({ top: slideHeight, behavior: 'smooth' });
+            } else if (event.key === 'ArrowUp') {
+                container.scrollBy({ top: -slideHeight, behavior: 'smooth' });
+            }
+        });
+    </script>
+</body>
+</html>

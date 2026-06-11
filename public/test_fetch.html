@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+  try {
+    fetch('/Project files/IT부/IT부 뉴스레터/IT부 뉴스레터.txt').then(() => console.log('success')).catch(e => console.error('async', e));
+    console.log('fetch started');
+  } catch(e) {
+    console.error('sync', e);
+  }
+</script>
+</body>
+</html>

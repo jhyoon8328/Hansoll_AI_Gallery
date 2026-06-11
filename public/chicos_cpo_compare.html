@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PO Diff Analyzer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f6f5f1;--surface:#fff;--surface2:#f0eeea;--border:#e0dcd4;--border2:#c8c3b8;
+  --accent:#1a56db;--accent-bg:#eef3ff;
+  --success:#0a7c4a;--success-bg:#ecfdf5;--success-border:#a7f3d0;
+  --danger:#b91c1c;--danger-bg:#fef2f2;--danger-border:#fecaca;
+  --warning:#92400e;--warning-bg:#fffbeb;
+  --text:#1c1917;--text2:#44403c;--muted:#78716c;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans KR',sans-serif;
+  --r:10px;--r-lg:14px;--sh:0 1px 3px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:52px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.logo-icon{width:26px;height:26px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700}
+.logo-text{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--accent)}
+.topbar-sub{font-size:12px;color:var(--muted)}
+.container{max-width:860px;margin:0 auto;padding:36px 20px 80px}
+.sec-title{font-size:18px;font-weight:600;letter-spacing:-.01em;margin-bottom:4px}
+.sec-sub{font-size:13px;color:var(--muted);margin-bottom:20px}
+.upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:560px){.upload-grid{grid-template-columns:1fr}}
+.vbadge{display:inline-block;font-family:var(--mono);font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.badge-old{background:var(--danger-bg);color:var(--danger);border:1px solid #fecaca}
+.badge-new{background:var(--success-bg);color:var(--success);border:1px solid var(--success-border)}
+.dropbox{background:var(--surface);border:2px dashed var(--border2);border-radius:var(--r-lg);padding:28px 18px;text-align:center;cursor:pointer;transition:all .15s;position:relative;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;box-shadow:var(--sh)}
+.dropbox:hover,.dropbox.drag-over{border-color:var(--accent);background:var(--accent-bg)}
+.dropbox.has-file{border-style:solid;border-color:var(--success);background:var(--success-bg)}
+.dropbox input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop-icon{font-size:24px;line-height:1}
+.drop-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.drop-hint{font-size:11px;color:var(--muted)}
+.drop-name{font-family:var(--mono);font-size:11px;color:var(--success);font-weight:500;word-break:break-all}
+.btn-run{width:100%;padding:13px;background:var(--accent);color:white;border:none;border-radius:var(--r-lg);font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(26,86,219,.2)}
+.btn-run:hover:not(:disabled){background:#1446b8;transform:translateY(-1px)}
+.btn-run:disabled{background:var(--border2);color:var(--muted);cursor:not-allowed;box-shadow:none;transform:none}
+.loading{display:none;text-align:center;padding:32px;margin-top:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg)}
+.loading.on{display:block}
+.spinner{width:26px;height:26px;border:2.5px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.result{display:none;margin-top:20px}
+.result.on{display:block}
+.diff-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh);overflow:hidden;margin-bottom:10px}
+.diff-card-head{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border)}
+.diff-card-ico{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;background:var(--warning-bg)}
+.diff-card-title{font-size:13px;font-weight:600;flex:1}
+.diff-card-count{font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:1px 8px;border-radius:99px}
+.diff-row{display:grid;grid-template-columns:190px 1fr auto 1fr;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid rgba(224,220,212,.4)}
+.diff-row:last-child{border-bottom:none}
+.diff-row:hover{background:rgba(0,0,0,.012)}
+.field-name{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:500}
+.val-old{background:var(--danger-bg);border:1px solid #fecaca;color:var(--danger);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;word-break:break-all}
+.val-new{background:var(--success-bg);border:1px solid var(--success-border);color:var(--success);font-family:var(--mono);font-size:11px;padding:3px 8px;border-radius:4px;font-weight:500;word-break:break-all}
+.arrow{color:var(--muted);font-size:11px;flex-shrink:0}
+.same-toggle{width:100%;padding:10px 16px;background:transparent;border:1px solid var(--border);border-radius:var(--r);font-family:var(--sans);font-size:12px;color:var(--muted);cursor:pointer;text-align:left;margin-top:8px;transition:all .15s}
+.same-toggle:hover{border-color:var(--border2);color:var(--text2)}
+.same-body{display:none;margin-top:6px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.same-body.on{display:block}
+.same-row{display:grid;grid-template-columns:190px 1fr;gap:8px;padding:8px 16px;border-bottom:1px solid rgba(224,220,212,.3);font-size:12px}
+.same-row:last-child{border-bottom:none}
+.no-diff{padding:24px;text-align:center;color:var(--success);font-size:13px;font-weight:500;background:var(--success-bg);border:1px solid var(--success-border);border-radius:var(--r-lg)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;font-size:11px;color:var(--muted)}
+.li{display:flex;align-items:center;gap:5px}
+.dot{width:8px;height:8px;border-radius:2px}
+.btn-reset{margin-top:14px;padding:9px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);font-family:var(--sans);font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s;font-weight:500}
+.btn-reset:hover{border-color:var(--accent);color:var(--accent)}
+.err-box{background:var(--danger-bg);border:1px solid #fecaca;border-radius:var(--r);padding:12px 16px;color:var(--danger);font-size:13px;margin-top:12px;display:none}
+.err-box.on{display:block}
+@media(max-width:600px){.diff-row{grid-template-columns:1fr;gap:4px}.arrow{display:none}.same-row{grid-template-columns:130px 1fr}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo-icon">≠</div>
+  <span class="logo-text">PO Diff Analyzer</span>
+  <span class="topbar-sub">서버·API·인터넷 불필요</span>
+</div>
+<div class="container">
+  <div class="sec-title">PO 파일 비교</div>
+  <div class="sec-sub">같은 CPO 번호의 구버전·신버전 PDF를 올리면 변경된 항목만 뽑아줍니다.</div>
+  <div class="upload-grid">
+    <div>
+      <span class="vbadge badge-old">구버전 (Old)</span>
+      <div class="dropbox" id="box1" ondragover="dov(event,1)" ondragleave="dlv(1)" ondrop="drp(event,1)">
+        <input type="file" accept=".pdf" id="f1" onchange="sel(1)">
+        <span class="drop-icon" id="ico1">📄</span>
+        <span class="drop-label">구버전 PDF</span>
+        <span class="drop-hint" id="hint1">클릭하거나 드래그</span>
+        <span class="drop-name" id="nm1"></span>
+      </div>
+    </div>
+    <div>
+      <span class="vbadge badge-new">신버전 (New)</span>
+      <div class="dropbox" id="box2" ondragover="dov(event,2)" ondragleave="dlv(2)" ondrop="drp(event,2)">
+        <input type="file" accept=".pdf" id="f2" onchange="sel(2)">
+        <span class="drop-icon" id="ico2">📄</span>
+        <span class="drop-label">신버전 PDF</span>
+        <span class="drop-hint" id="hint2">클릭하거나 드래그</span>
+        <span class="drop-name" id="nm2"></span>
+      </div>
+    </div>
+  </div>
+  <button class="btn-run" id="abtn" disabled onclick="run()">🔍 변경사항 분석</button>
+  <div class="err-box" id="errbox"></div>
+  <div class="loading" id="ld"><div class="spinner"></div>분석 중...</div>
+  <div class="result" id="res"></div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const fs={1:null,2:null};
+
+// ── 필드 정의 ──
+// 좌표: transform[4]=x, transform[5]=y (PDF 원본, 아래서 위 방향)
+// 실측값 기준으로 하드코딩
+// [이름, x, y, tolY, maxX]
+const FIELDS = [
+  // 헤더 좌컬럼 (value x≈79.9)
+  ['TSS Customer ID',      79.9, 385.3, 3, 150],
+  ['Customer',             79.9, 375.0, 3, 150],
+  ['CPO Number',           79.9, 364.7, 3, 150],
+  ['Order Type',           79.9, 354.4, 3, 100],
+  ['Order Date',           79.9, 344.1, 3, 100],
+  ['Revision No.',         79.9, 333.7, 3, 100],
+  ['Revision Date',        79.9, 323.4, 3, 100],
+  ['TSS CPO Status',       79.9, 313.1, 3, 100],
+  ['Exit City',            79.9, 302.8, 3, 100],
+  ['Last DC Date',         79.9, 292.5, 3, 100],
+  // 헤더 우컬럼 (value x≈307.6)
+  ['Country',             307.6, 385.3, 3,  80],
+  ['FOB Point',           307.6, 375.0, 3,  80],
+  ['Payment Term',        307.6, 364.7, 3,  80],
+  ['Trans Mode',          307.6, 354.4, 3,  80],
+  ['Customer Division',   307.6, 344.1, 3, 100],
+  ['Customer Department', 307.6, 333.7, 3,  80],
+  ['Order Quantity',      307.6, 323.4, 3,  80],
+  ['Assigned Quantity',   307.6, 313.1, 3,  80],
+  ['Total Value',         307.6, 302.8, 3,  80],
+  ['Delivery Terms',      307.6, 292.5, 3, 100],
+  // 주소 - 좌(Ship To / Bill To): x≈7.5
+  ['Ship To (1)',           7.5, 539.0, 3, 200],
+  ['Ship To (2)',           7.5, 524.6, 3, 200],
+  ['Ship To (city)',        7.5, 502.6, 3, 200],
+  ['Ship To (zip)',         7.5, 491.8, 3, 200],
+  ['Bill To (company)',     7.5, 458.3, 3, 200],
+  ['Bill To (addr)',        7.5, 447.5, 3, 200],
+  ['Bill To (city)',        7.5, 425.5, 3, 200],
+  ['Bill To (zip)',         7.5, 414.7, 3, 200],
+  // 주소 - 우(Vendor / Factory): x≈442.2
+  ['Vendor (code)',       442.2, 539.0, 3, 200],
+  ['Vendor (addr)',       442.2, 524.6, 3, 200],
+  ['Vendor (city)',       442.2, 502.6, 3, 200],
+  ['Vendor (zip)',        442.2, 491.8, 3, 200],
+  ['Factory (name)',      442.2, 458.3, 3, 200],
+  ['Factory (addr1)',     442.2, 447.5, 3, 200],
+  ['Factory (addr2)',     442.2, 437.7, 3, 200],
+  ['Factory (addr3)',     442.2, 425.5, 3, 200],
+  ['Factory (zip)',       442.2, 414.7, 3, 200],
+];
+
+function dov(e,n){e.preventDefault();document.getElementById('box'+n).classList.add('drag-over')}
+function dlv(n){document.getElementById('box'+n).classList.remove('drag-over')}
+function drp(e,n){e.preventDefault();dlv(n);const f=e.dataTransfer.files[0];if(f?.type==='application/pdf')setf(n,f)}
+function sel(n){const i=document.getElementById('f'+n);if(i.files[0])setf(n,i.files[0])}
+function setf(n,f){
+  fs[n]=f;
+  document.getElementById('box'+n).classList.add('has-file');
+  document.getElementById('ico'+n).textContent='✅';
+  document.getElementById('hint'+n).textContent=(f.size/1024).toFixed(0)+' KB';
+  document.getElementById('nm'+n).textContent=f.name;
+  if(fs[1]&&fs[2])document.getElementById('abtn').disabled=false;
+}
+
+async function extractItems(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+  const items = [];
+  for (let p=1; p<=pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    for (const item of content.items) {
+      const t = item.str.trim();
+      if (!t) continue;
+      items.push({
+        text: t,
+        x: item.transform[4],
+        y: item.transform[5],
+        page: p
+      });
+    }
+  }
+  return items;
+}
+
+function getAt(items, x, y, tolY, maxX) {
+  return items
+    .filter(w => w.page===1 && Math.abs(w.y-y)<=tolY && w.x>=x-3 && w.x<=x+maxX)
+    .sort((a,b)=>a.x-b.x)
+    .map(w=>w.text)
+    .join(' ').trim();
+}
+
+function extractLines(items) {
+  const byY = {};
+  for (const w of items) {
+    const yk = Math.round(w.y*2)/2;
+    if (!byY[yk]) byY[yk]=[];
+    byY[yk].push(w);
+  }
+  const lineMap = {};
+  for (const row of Object.values(byY)) {
+    const sorted = row.sort((a,b)=>a.x-b.x);
+    const texts = sorted.map(w=>w.text);
+    const appIdx = texts.findIndex(t=>t.startsWith('APPROVED'));
+    if (appIdx < 1) continue;
+    const lineNo = texts[appIdx-1];
+    if (!/^\w{4,7}$/.test(lineNo)) continue;
+    const blueIdx = texts.findIndex(t=>t==='BLUE' || t==='BLUE MUSE');
+    const museIdx = texts.findIndex(t=>t==='MUSE');
+    let sizeIdx = -1;
+    if (blueIdx>=0 && texts[blueIdx]==='BLUE MUSE') sizeIdx = blueIdx+1;
+    else if (museIdx>=0) sizeIdx = museIdx+1;
+    if (sizeIdx<0 || sizeIdx>=texts.length) continue;
+    const size = texts[sizeIdx];
+    if (!/^0{1,2}$|^\d$/.test(size)) continue;
+    const isPP = /^\d+$/.test(texts[texts.length-1]) && /^\d+$/.test(texts[texts.length-2]) && texts.length > 8;
+    const key = size+(isPP?'_pp':'');
+    const eaIdx = texts.indexOf('EA');
+    const qty = eaIdx>=0 ? texts[eaIdx+1] : '?';
+    if (!lineMap[key]) lineMap[key]={lineNo,size,qty,isPP};
+  }
+  return lineMap;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function run(){
+  const btn=document.getElementById('abtn');
+  const ld=document.getElementById('ld');
+  const res=document.getElementById('res');
+  const errbox=document.getElementById('errbox');
+  btn.disabled=true; ld.classList.add('on');
+  res.classList.remove('on'); res.innerHTML=''; errbox.classList.remove('on');
+  try {
+    const [i1,i2] = await Promise.all([extractItems(fs[1]),extractItems(fs[2])]);
+
+    const changed=[], same=[];
+    for (const [name,x,y,tolY,maxX] of FIELDS) {
+      const v1 = getAt(i1,x,y,tolY,maxX)||'—';
+      const v2 = getAt(i2,x,y,tolY,maxX)||'—';
+      if (v1!==v2) changed.push({name,old:v1,new:v2});
+      else if (v1!=='—') same.push({name,value:v1});
+    }
+
+    const lm1=extractLines(i1), lm2=extractLines(i2);
+    const lineDiffs=[];
+    for (const sz of new Set([...Object.keys(lm1),...Object.keys(lm2)])) {
+      const a=lm1[sz],b=lm2[sz];
+      if (!a||!b) continue;
+      if (a.lineNo!==b.lineNo) lineDiffs.push({size:a.size,qty:a.qty,old:a.lineNo,new:b.lineNo,isPP:a.isPP});
+    }
+
+    const getDate = (items) => {
+      const d = items.find(w=>w.page===1 && w.y<30 && /\d{2}\/\d{2}\/\d{4}/.test(w.text));
+      return d ? d.text.match(/\d{2}\/\d{2}\/\d{4}/)[0] : '';
+    };
+
+    render(changed,lineDiffs,same,getDate(i1),getDate(i2));
+  } catch(e){
+    errbox.textContent='오류: '+e.message; errbox.classList.add('on'); console.error(e);
+  } finally {
+    ld.classList.remove('on');
+    if(fs[1]&&fs[2]) btn.disabled=false;
+  }
+}
+
+function render(changed,lineDiffs,same,d1,d2){
+  const res=document.getElementById('res');
+  let h=`<div class="legend">
+    <div class="li"><div class="dot" style="background:var(--danger)"></div>구버전${d1?' ('+esc(d1)+')':''}</div>
+    <div class="li"><div class="dot" style="background:var(--success)"></div>신버전${d2?' ('+esc(d2)+')':''}</div>
+  </div>`;
+
+  if (!changed.length && !lineDiffs.length) {
+    h+=`<div class="no-diff">✅ 변경사항 없음 — 두 파일이 동일합니다.</div>`;
+  } else {
+    if (changed.length) {
+      const rows=changed.map(c=>`<div class="diff-row">
+        <span class="field-name">${esc(c.name)}</span>
+        <span class="val-old">${esc(c.old)}</span>
+        <span class="arrow">→</span>
+        <span class="val-new">${esc(c.new)}</span>
+      </div>`).join('');
+      h+=`<div class="diff-card">
+        <div class="diff-card-head"><div class="diff-card-ico">⚡</div><div class="diff-card-title">변경된 항목</div><span class="diff-card-count">${changed.length}건</span></div>
+        ${rows}</div>`;
+    }
+    if (lineDiffs.length) {
+      const rows=lineDiffs.map(l=>`<div class="diff-row">
+        <span class="field-name">Size ${esc(l.size)}${l.isPP?' (prepack)':''}</span>
+        <span class="val-old">Line# ${esc(l.old)}</span>
+        <span class="arrow">→</span>
+        <span class="val-new">Line# ${esc(l.new)}</span>
+      </div>`).join('');
+      h+=`<div class="diff-card">
+        <div class="diff-card-head"><div class="diff-card-ico">🔢</div><div class="diff-card-title">Line# 변경</div><span class="diff-card-count">${lineDiffs.length}개</span></div>
+        ${rows}</div>`;
+    }
+  }
+
+  if (same.length) {
+    const rows=same.map(f=>`<div class="same-row">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${esc(f.name)}</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">${esc(f.value)}</span>
+    </div>`).join('');
+    h+=`<button class="same-toggle" onclick="this.nextElementSibling.classList.toggle('on');this.textContent=this.nextElementSibling.classList.contains('on')?'▲ 동일 항목 접기':'▼ 동일 항목 보기 (${same.length}개)'">▼ 동일 항목 보기 (${same.length}개)</button>
+    <div class="same-body">${rows}</div>`;
+  }
+
+  h+=`<button class="btn-reset" onclick="reset()">↩ 새 파일 분석</button>`;
+  res.innerHTML=h; res.classList.add('on');
+}
+
+function reset(){
+  fs[1]=null;fs[2]=null;
+  [1,2].forEach(n=>{
+    document.getElementById('box'+n).classList.remove('has-file');
+    document.getElementById('ico'+n).textContent='📄';
+    document.getElementById('hint'+n).textContent='클릭하거나 드래그';
+    document.getElementById('nm'+n).textContent='';
+    document.getElementById('f'+n).value='';
+  });
+  document.getElementById('abtn').disabled=true;
+  document.getElementById('res').classList.remove('on');
+  document.getElementById('res').innerHTML='';
+  document.getElementById('errbox').classList.remove('on');
+}
+</script>
+</body>
+</html>

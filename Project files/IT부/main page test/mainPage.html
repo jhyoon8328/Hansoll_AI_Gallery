@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hansoll Textile AI Gallery</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --light-blue: #e6f0fa;
+            --accent-green: #00cc66;
+            --light-green: #e6ffe6;
+            --text-dark: #333333;
+            --text-gray: #666666;
+            --bg-color: #f4f7fb;
+            --glass-bg: rgba(255, 255, 255, 0.75);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            background-image: linear-gradient(135deg, #f4f7fb 0%, #eef5ff 100%);
+            color: var(--text-dark);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 1rem 0 0.5rem 0;
+            animation: fadeInDown 1s ease;
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            color: var(--primary-blue);
+            font-weight: 700;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, var(--primary-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Top Section Layout --- */
+        .top-section {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto;
+            overflow: hidden;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* --- Carousel Nav Arrows --- */
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-blue);
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        .nav-arrow:hover {
+            background: white;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            transform: translateY(-50%) scale(1.1);
+        }
+        .nav-left { left: 10%; }
+        .nav-right { right: 10%; }
+
+        .carousel-container {
+            display: grid;
+            grid-template-areas: "overlap";
+            width: 50vw;
+            max-width: 800px;
+            position: relative;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .panel {
+            grid-area: overlap;
+            width: 100%;
+            height: auto; /* Automatically adjust size */
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2.5rem 2rem;
+            box-shadow: var(--glass-shadow);
+            display: flex;
+            flex-direction: column;
+            overflow: visible; /* Prevent internal scrolling */
+            transition: all 0.8s cubic-bezier(0.4, 0.0, 0.2, 1);
+            transform-origin: center center;
+        }
+
+        .panel-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .panel-header h2 {
+            font-size: 1.2rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.2rem;
+            font-weight: 700;
+        }
+
+        .panel-header p {
+            font-size: 0.8rem;
+            color: var(--text-gray);
+        }
+
+        /* --- Left: AI Automation Visualization --- */
+        .workflow-viz {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 180px;
+            transform: scale(0.75);
+        }
+
+        .node {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            box-shadow: 0 4px 15px rgba(0, 86, 179, 0.2);
+            z-index: 2;
+        }
+
+        .node.center {
+            width: 90px;
+            height: 90px;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary-blue), #00aaff);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .node.doc { top: 10%; left: 10%; color: #ff6b6b; }
+        .node.chart { bottom: 10%; left: 20%; color: var(--accent-green); }
+        .node.msg { top: 20%; right: 10%; color: #feca57; }
+        .node.gear { bottom: 15%; right: 20%; color: #9b59b6; }
+
+        .connection-line {
+            position: absolute;
+            border: 2px dashed rgba(0, 86, 179, 0.2);
+            z-index: 1;
+        }
+
+        .data-dot {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: var(--accent-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-green);
+            z-index: 3;
+        }
+
+        /* Line 1: Center to Doc */
+        .line-1 { width: 100px; top: 35%; left: 25%; transform: rotate(-35deg); }
+        .dot-1 { animation: moveDot1 2s linear infinite; }
+        
+        /* Line 2: Center to Msg */
+        .line-2 { width: 100px; top: 40%; right: 25%; transform: rotate(25deg); }
+        .dot-2 { animation: moveDot2 2.5s linear infinite; }
+
+        /* --- Center: Expected Benefits --- */
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            flex: 1;
+            transform: scale(0.85);
+            transform-origin: top center;
+        }
+
+        .benefit-card {
+            background: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 15px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            transition: all 0.3s ease;
+        }
+
+        .benefit-card:hover {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 25px rgba(0, 204, 102, 0.15);
+            transform: scale(1.03);
+        }
+
+        .benefit-card i {
+            font-size: 2rem;
+            color: var(--primary-blue);
+            margin-bottom: 0.8rem;
+        }
+
+        .benefit-card.decrease i {
+            color: var(--accent-green);
+        }
+
+        .benefit-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .benefit-value {
+            font-size: 2rem;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700;
+        }
+        
+        .val-up { color: var(--primary-blue); }
+        .val-down { color: var(--accent-green); }
+
+        /* --- Right: Achievement Ranking --- */
+        .chart-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            flex: 1;
+            justify-content: center;
+            transform: scale(0.85);
+            transform-origin: top center;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .badge {
+            width: 30px;
+            height: 30px;
+            background: var(--light-blue);
+            color: var(--primary-blue);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .badge.rank-1 { background: #ffd700; color: #fff; box-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+        .badge.rank-2 { background: #c0c0c0; color: #fff; }
+        .badge.rank-3 { background: #cd7f32; color: #fff; }
+
+        .dept-name {
+            width: 60px;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .bar-track {
+            flex: 1;
+            height: 20px;
+            background: rgba(0,0,0,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            width: 0; /* JS will animate this */
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-green));
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .bar-value {
+            font-weight: 700;
+            color: var(--text-dark);
+            width: 40px;
+            text-align: right;
+        }
+
+        /* --- Bottom Section: Unified Message --- */
+        .bottom-section {
+            position: relative;
+            width: 100%;
+            flex: 0 0 12.5vh;
+            background: linear-gradient(to right, rgba(0, 86, 179, 0.9), rgba(0, 204, 102, 0.8));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            overflow: hidden;
+            animation: fadeIn 1.5s ease 1s forwards;
+            opacity: 0;
+        }
+
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .bottom-content {
+            position: relative;
+            z-index: 2;
+            padding: 0 2rem;
+        }
+
+        .bottom-content h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .bottom-content p {
+            font-size: 0.9rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .glowing-center {
+            margin-top: 0.5rem;
+            font-size: 1.5rem;
+            color: #fff;
+            animation: pulse-glow 2s infinite;
+        }
+
+        /* --- Keyframes --- */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 86, 179, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 86, 179, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 86, 179, 0); }
+        }
+
+        @keyframes pulse-glow {
+            0% { text-shadow: 0 0 10px rgba(255,255,255,0.5); transform: scale(1); }
+            50% { text-shadow: 0 0 25px rgba(255,255,255,1); transform: scale(1.1); }
+            100% { text-shadow: 0 0 10px rgba(255,255,255,0.5); transform: scale(1); }
+        }
+
+        @keyframes moveDot1 {
+            0% { top: 50%; left: 50%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 10%; left: 10%; opacity: 0; }
+        }
+
+        @keyframes moveDot2 {
+            0% { top: 50%; left: 50%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 20%; left: 90%; opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .top-section {
+                grid-template-columns: 1fr;
+                padding: 1rem 2rem;
+            }
+            .bottom-section {
+                height: auto;
+                padding: 4rem 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Hansoll Textile AI Gallery</h1>
+    </header>
+
+    <div class="top-section">
+        <div class="nav-arrow nav-left" onclick="moveCarousel(-1)"><i class="fa-solid fa-chevron-left"></i></div>
+        <div class="nav-arrow nav-right" onclick="moveCarousel(1)"><i class="fa-solid fa-chevron-right"></i></div>
+        <div class="carousel-container" id="carousel">
+        <article class="panel">
+            <div class="panel-header">
+                <h2>AI가 업무를 더 빠르고 스마트하게</h2>
+                <p>반복 업무는 자동화하고, 직원들은 더 가치 있는 일에 집중합니다.</p>
+            </div>
+            <div class="workflow-viz">
+                <div class="connection-line line-1"></div>
+                <div class="data-dot dot-1"></div>
+                <div class="connection-line line-2"></div>
+                <div class="data-dot dot-2"></div>
+                
+                <div class="node doc"><i class="fa-regular fa-file-alt"></i></div>
+                <div class="node chart"><i class="fa-solid fa-chart-pie"></i></div>
+                <div class="node msg"><i class="fa-regular fa-comments"></i></div>
+                <div class="node gear"><i class="fa-solid fa-cogs"></i></div>
+                <div class="node center"><i class="fa-solid fa-robot"></i></div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <h2>AI가 만드는 새로운 업무 환경</h2>
+                <p>더 빠르게, 더 정확하게, 더 창의적으로</p>
+            </div>
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                    <div class="benefit-title">업무 생산성 향상</div>
+                    <div class="benefit-value val-up">+<span class="counter" data-target="45">0</span>%</div>
+                </div>
+                <div class="benefit-card decrease">
+                    <i class="fa-solid fa-compress-arrows-alt"></i>
+                    <div class="benefit-title">반복 업무 감소</div>
+                    <div class="benefit-value val-down">-<span class="counter" data-target="60">0</span>%</div>
+                </div>
+                <div class="benefit-card">
+                    <i class="fa-solid fa-database"></i>
+                    <div class="benefit-title">데이터 활용도 증가</div>
+                    <div class="benefit-value val-up">+<span class="counter" data-target="70">0</span>%</div>
+                </div>
+                <div class="benefit-card">
+                    <i class="fa-solid fa-bolt"></i>
+                    <div class="benefit-title">의사결정 속도 향상</div>
+                    <div class="benefit-value val-up">+<span class="counter" data-target="50">0</span>%</div>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <div class="panel-header">
+                <h2>부서별 AI 활용 TOP 3</h2>
+                <p>지속적으로 확산되는 AI 혁신 사례</p>
+            </div>
+            <div class="chart-container" id="chart-container">
+                </div>
+        </article>
+        </div>
+
+    </div>
+
+    <section class="bottom-section">
+        <canvas id="particle-canvas"></canvas>
+        <div class="bottom-content">
+            <h1>각 부서의 AI 도전이 한솔섬유의 미래를 만듭니다</h1>
+            <p>함께 연결된 아이디어가 더 큰 성과로 이어집니다.</p>
+            <div class="glowing-center">
+                <i class="fa-solid fa-network-wired"></i>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Counter Animation (Center Section)
+            const counters = document.querySelectorAll('.counter');
+            const speed = 200; // lower is faster
+
+            const runCounters = () => {
+                counters.forEach(counter => {
+                    const updateCount = () => {
+                        const target = +counter.getAttribute('data-target');
+                        const count = +counter.innerText;
+                        const inc = target / speed;
+
+                        if (count < target) {
+                            counter.innerText = Math.ceil(count + inc);
+                            setTimeout(updateCount, 15);
+                        } else {
+                            counter.innerText = target;
+                        }
+                    };
+                    updateCount();
+                });
+            };
+            
+            // Trigger counters with slight delay for presentation
+            setTimeout(runCounters, 800);
+
+
+            // 2. Department Chart Injection & Animation (Right Section)
+            const chartContainer = document.getElementById('chart-container');
+            let lastDataString = "";
+
+            async function updateChartRealtime() {
+                let departmentData = [];
+                try {
+                    const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+                    
+                    const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?select=*`, {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        },
+                        cache: 'no-store'
+                    });
+                    
+                    if (!res.ok) throw new Error("Supabase Fetch failed");
+                    const data = await res.json();
+                    
+                    const activeCategories = data.filter(d => (d.menu_type === 'category' || d.menu_type === '카테고리') && d.YN_use !== false);
+                    
+                    departmentData = activeCategories.map(dept => {
+                        const subItems = data.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === dept.menu_name) && sub.YN_use !== false);
+                        return { department: dept.menu_name, count: subItems.length };
+                    });
+                    
+                    departmentData.sort((a, b) => b.count - a.count);
+                    departmentData = departmentData.slice(0, 3);
+                } catch (e) {
+                    console.error("Failed to load TOP3 stats from Supabase", e);
+                    departmentData = [
+                        { department: "사업 3부", count: 3 },
+                        { department: "IT부", count: 1 },
+                        { department: "총무부", count: 1 }
+                    ];
+                }
+
+                const currentDataString = JSON.stringify(departmentData);
+                if (currentDataString === lastDataString) return; // No change
+                lastDataString = currentDataString;
+
+                chartContainer.innerHTML = ""; // Clear existing bars
+
+                const maxCount = Math.max(...departmentData.map(d => d.count)) || 1; // Get max for percentage calc
+
+                departmentData.forEach((data, index) => {
+                    const percentage = (data.count / maxCount) * 100;
+                    const rank = index + 1;
+                    
+                    const row = document.createElement('div');
+                    row.className = 'bar-row';
+                    
+                    row.innerHTML = `
+                        <div class="badge rank-${rank}">#${rank}</div>
+                        <div class="dept-name">${data.department}</div>
+                        <div class="bar-track">
+                            <div class="bar-fill" style="width: 0;" data-width="${percentage}%"></div>
+                        </div>
+                        <div class="bar-value">${data.count}건</div>
+                    `;
+                    chartContainer.appendChild(row);
+                });
+
+                // Trigger bar animation
+                setTimeout(() => {
+                    const bars = chartContainer.querySelectorAll('.bar-fill');
+                    bars.forEach(bar => {
+                        bar.style.width = bar.getAttribute('data-width');
+                    });
+                }, 100);
+            }
+
+            // Run immediately
+            updateChartRealtime();
+            // Check for updates every 1.5 seconds to reflect real-time changes
+            setInterval(updateChartRealtime, 1500);
+
+            // 2.5 Carousel Animation
+            const carousel = document.getElementById('carousel');
+            const panels = document.querySelectorAll('.panel');
+            let activeIndex = 0;
+            const totalPanels = panels.length;
+
+            function updateCarousel() {
+                panels.forEach((panel, index) => {
+                    let offset = index - activeIndex;
+                    if (offset < -1) offset += totalPanels;
+                    if (offset > 1) offset -= totalPanels;
+                    
+                    if (offset === 0) {
+                        // Active Center Panel
+                        panel.style.transform = `translateX(0) scale(1.1)`;
+                        panel.style.opacity = 1;
+                        panel.style.zIndex = 3;
+                        panel.style.filter = 'none';
+                    } else if (offset === -1) {
+                        // Left Panel
+                        panel.style.transform = `translateX(-55%) scale(0.85)`;
+                        panel.style.opacity = 0.5;
+                        panel.style.zIndex = 1;
+                        panel.style.filter = 'blur(4px)';
+                    } else if (offset === 1) {
+                        // Right Panel
+                        panel.style.transform = `translateX(55%) scale(0.85)`;
+                        panel.style.opacity = 0.5;
+                        panel.style.zIndex = 1;
+                        panel.style.filter = 'blur(4px)';
+                    }
+                });
+            }
+            
+            updateCarousel();
+
+            let carouselInterval;
+
+            function startCarousel() {
+                clearInterval(carouselInterval);
+                carouselInterval = setInterval(() => {
+                    activeIndex = (activeIndex + 1) % totalPanels;
+                    updateCarousel();
+                }, 3000);
+            }
+
+            function stopCarousel() {
+                clearInterval(carouselInterval);
+            }
+
+            startCarousel();
+
+            window.moveCarousel = function(direction) {
+                stopCarousel();
+                activeIndex = (activeIndex + direction + totalPanels) % totalPanels;
+                updateCarousel();
+                startCarousel();
+            };
+
+            // Pause on hover
+            carousel.addEventListener('mouseenter', stopCarousel);
+            carousel.addEventListener('mouseleave', startCarousel);
+
+
+            // 3. Network Particle Canvas Animation (Bottom Section)
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            
+            let particlesArray = [];
+            
+            canvas.width = window.innerWidth;
+            canvas.height = canvas.parentElement.offsetHeight;
+
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+            });
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = (Math.random() * 1) - 0.5;
+                    this.speedY = (Math.random() * 1) - 0.5;
+                }
+                update() {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    
+                    if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                    if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+                }
+                draw() {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particlesArray = [];
+                let numberOfParticles = (canvas.width * canvas.height) / 9000; 
+                if (numberOfParticles > 100) numberOfParticles = 100; // limit max particles
+                for (let i = 0; i < numberOfParticles; i++) {
+                    particlesArray.push(new Particle());
+                }
+            }
+
+            function connectParticles() {
+                for (let a = 0; a < particlesArray.length; a++) {
+                    for (let b = a; b < particlesArray.length; b++) {
+                        let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) 
+                                     + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                        if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                            let opacity = 1 - (distance / 20000);
+                            ctx.strokeStyle = `rgba(255, 255, 255, ${opacity})`;
+                            ctx.lineWidth = 1;
+                            ctx.beginPath();
+                            ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                            ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particlesArray.length; i++) {
+                    particlesArray[i].update();
+                    particlesArray[i].draw();
+                }
+                connectParticles();
+                requestAnimationFrame(animateParticles);
+            }
+
+            // Start particle animation
+            setTimeout(() => {
+                initParticles();
+                animateParticles();
+            }, 1000); // delay to sync with CSS fade in
+        });
+    </script>
+</body>
+</html>
