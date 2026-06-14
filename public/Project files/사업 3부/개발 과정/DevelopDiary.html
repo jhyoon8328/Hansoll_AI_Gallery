@@ -122,6 +122,7 @@
         #slide6 { background-color: #f3e8ff; }
         #slide7 { background-color: #ccfbf1; }
         #slide8 { background-color: #fce7f3; }
+        #slide9 { background-color: #e0f2fe; }
 
         .nav-hint {
             position: absolute;
@@ -257,8 +258,27 @@
             </div>
         </div>
 
-        <!-- Slide 7: 섹션 7 -->
+        <!-- Slide 7: 섹션 7 (Vercel Storage) -->
         <div class="slide-container" id="slide7">
+            <h2 class="slide-title">파일 스토리지의 필요성 (Vercel Storage)</h2>
+            <div class="content-area">
+                <div class="text-box">
+                    <ul class="custom-list">
+                        <li>Supabase를 통한 데이터 관리뿐만 아니라, HTML 문서나 스크립트 등 물리적인 <strong>파일 관리의 필요성</strong>도 체감하게 되었습니다.</li>
+                        <li>주된 목적은 원활한 '메뉴 관리'였습니다. 신규 메뉴를 등록하거나 기존 파일을 수정할 때마다 로컬에서 작업 후 매번 재배포를 거쳐야 하는 번거로움이 있었습니다.</li>
+                        <li>이러한 파일 동기화 역시 Vercel 환경에서 실시간으로 처리하기 위해 <strong>Vercel Storage (클라우드 파일 저장소)</strong>를 전격 도입했습니다.</li>
+                        <li>로컬에 있던 모든 소스 파일들을 클라우드 스토리지로 완전히 이관하고, 포털의 모든 메뉴가 로컬이 아닌 <strong>Vercel 스토리지만을 다이렉트로 바라보도록</strong> 개편했습니다.</li>
+                        <li>그 결과, 로컬이든 Vercel 환경이든 어디서 수정하더라도 <strong>별도의 배포 없이 100% 즉각적인 실시간 동기화가 가능</strong>해졌습니다!</li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img alt="섹션 7 일러스트 (파일 업로드 및 동기화)" src="https://media.giphy.com/media/3oKIPsU8CE70Z0K7wI/giphy.gif?v=final">
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 8: 섹션 8 -->
+        <div class="slide-container" id="slide8">
             <h2 class="slide-title">Vercel 호스팅의 한계점</h2>
             <div class="content-area">
                 <div class="text-box">
@@ -275,8 +295,8 @@
             </div>
         </div>
 
-        <!-- Slide 8: 섹션 8 -->
-        <div class="slide-container" id="slide8">
+        <!-- Slide 9: 섹션 9 -->
+        <div class="slide-container" id="slide9">
             <h2 class="slide-title">프로젝트 인사이트 (배운 점)</h2>
             <div class="content-area flex-row-reverse">
                 <div class="text-box">

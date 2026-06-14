@@ -30,6 +30,7 @@ export const portalMenu: MenuItem[] = [
         isHeader: true,
         children: [
           { title: "CMPH recap 작성", href: "/business/cmph-recap", showHelpIcon: true, description: "테크팩 PDF에서 데이터를 추출하여 리캡 엑셀 자동 작성" },
+          { title: "CMPH recap 작성 (orig)", href: "/business/cmph-recap-backup", showHelpIcon: true, description: "테크팩 PDF에서 데이터를 추출하여 리캡 엑셀 자동 작성 (원본 로컬앱 방식)" },
           { title: "Chico's CPO파일 비교", href: "/business/chicos-cpo-compare", showHelpIcon: true, description: "PO 파일과 CPO 파일 간의 데이터 변경 내역 자동 검토" },
           { title: "부자재 공임차트 비교", href: "/business/trim-chart-compare", showHelpIcon: true, description: "공임 차트와 부자재 시트 데이터 간의 수량/단가 교차 검증" },
         ]

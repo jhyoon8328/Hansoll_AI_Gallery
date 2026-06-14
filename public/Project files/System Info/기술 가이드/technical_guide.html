@@ -106,6 +106,64 @@
                 </div>
             </div>
 
+            <!-- Supabase Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group md:col-span-2">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-teal-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-teal-100 text-teal-600 rounded-xl">
+                        <i data-lucide="database-zap" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">서버리스 클라우드 DB (Supabase)</h2>
+                </div>
+                <div class="space-y-4 relative z-10">
+                    <div class="bg-white/50 rounded-xl p-4 border border-slate-100">
+                        <span class="font-bold text-slate-700 block mb-2">도입 배경 (로컬 저장소의 한계 극복)</span>
+                        <p class="text-sm text-slate-600">초기에는 메뉴 데이터를 서버의 로컬 파일 시스템에 의존했으나, Vercel 클라우드 환경 특유의 읽기 전용(Read-Only) 정책으로 인해 관리자 페이지에서 변경한 데이터가 반영되지 않는 문제가 있었습니다. 이를 해결하고 <strong>'단 한 번의 배포도 필요 없는 실시간 동기화'</strong>를 달성하기 위해 강력한 서버리스 DB인 Supabase를 도입했습니다.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-teal-700 text-sm block mb-1">Project (프로젝트)</span>
+                            <p class="text-xs text-slate-600 flex-1">포털 서비스 전체를 감싸는 최상위 컨테이너입니다. 독립적인 데이터베이스와 클라우드 스토리지(Vercel Blob과 유사)를 한 곳에서 관리하며, 통신을 위한 고유한 접속 키(API Key)를 발급하여 보안을 유지합니다.</p>
+                        </div>
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-teal-700 text-sm block mb-1">Database (데이터베이스)</span>
+                            <p class="text-xs text-slate-600 flex-1">대규모 트래픽을 견디는 PostgreSQL 기반의 관계형 데이터베이스입니다. 포털을 구동하는 모든 메타데이터와 시스템 설정값들이 영구적으로 보존되는 거대한 안전 금고의 역할을 수행합니다.</p>
+                        </div>
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-teal-700 text-sm block mb-1">Table (테이블)</span>
+                            <p class="text-xs text-slate-600 flex-1">데이터베이스 내부의 실질적인 엑셀 시트(Sheet)와 같은 역할을 합니다. '메뉴 설정(MenuSetting)', '매뉴얼(MenualPage)' 등 데이터의 목적에 맞게 테이블을 분리하여 효율적인 추가, 수정, 조회를 가능하게 합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vercel Storage Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group md:col-span-2">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-fuchsia-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-fuchsia-100 text-fuchsia-600 rounded-xl">
+                        <i data-lucide="folder-cloud" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">클라우드 파일 저장소 (Vercel Storage)</h2>
+                </div>
+                <div class="space-y-4 relative z-10">
+                    <div class="bg-white/50 rounded-xl p-4 border border-slate-100">
+                        <span class="font-bold text-slate-700 block mb-2">도입 배경 (로컬 파일 동기화의 한계 극복)</span>
+                        <p class="text-sm text-slate-600">Supabase로 텍스트 형식의 '데이터' 문제는 해결했으나, 신규 메뉴의 HTML 파일이나 파이썬 스크립트 등 <strong>물리적인 '파일 데이터'</strong>를 새로 추가하거나 코드를 변경할 때에는 여전히 로컬에 저장 후 전체 배포를 다시 해야만 Vercel에 반영되는 한계가 남아 있었습니다. 이를 완벽한 서버리스로 탈바꿈하기 위해 Vercel Storage를 도입했습니다.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-fuchsia-700 text-sm block mb-1">핵심 기술 로직 (전면 클라우드 이관)</span>
+                            <p class="text-xs text-slate-600 flex-1">기존 하드디스크의 <code>Project files/</code> 폴더 내부에 위치하던 모든 로컬 파일을 Vercel 환경 내부의 클라우드 스토리지(Blob)로 통째로 이관시켰습니다. 이제 포털은 메뉴 클릭 시 로컬 PC 경로가 아닌 <strong>클라우드 스토리지 상의 고유 URL 주소</strong>를 다이렉트로 바라보고 파일을 불러옵니다.</p>
+                        </div>
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-fuchsia-700 text-sm block mb-1">도입 성과 (완전한 배포 제로화 달성)</span>
+                            <p class="text-xs text-slate-600 flex-1">이제 관리자 페이지에서 파일을 업로드하거나 소스 코드를 수정하면, 즉시 클라우드 저장소 공간에 직접 덮어쓰기가 진행됩니다. 결과적으로 DB 데이터뿐만 아니라 '파일 데이터' 관리에서도 배포 과정이 100% 생략되며, <strong>로컬 작업 없이 클라우드 환경 자체만으로 유지/보수가 가능한 진정한 서버리스 시스템이 완성</strong>되었습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Detailed Guide Section -->
@@ -268,6 +326,63 @@
 
                         <p><strong>3) 올바른 메뉴 관리 방법</strong><br>
                         이러한 한계 때문에, 포털의 메뉴를 추가하거나 숨기는 등의 <strong>'관리자 기능'은 반드시 로컬(내 컴퓨터) 환경에서 바탕화면의 <code>실행기.bat</code>를 통해 띄운 창에서만 진행</strong>하셔야 합니다. 개인 PC에서는 파일 덮어쓰기가 자유로우므로 저장이 정상적으로 처리됩니다. 로컬에서 수정을 완료하신 후, 터미널(CMD) 창에서 <code>vercel --prod</code> 명령어를 입력하여 <strong>최신 장부를 Vercel에 통째로 덮어쓰기(배포)</strong> 하셔야만 모든 사용자에게 변경된 메뉴가 완벽하게 노출됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. Supabase 도입 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-teal-500 mt-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="database-zap" class="w-5 h-5 text-teal-500"></i>
+                    8. Supabase 클라우드 DB 도입 (실시간 동기화로 Vercel 배포 문제 해결)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-teal-50 px-2 py-0.5 rounded">문제 해결:</strong> 과거 7번 항목의 한계(로컬 저장 후 매번 Vercel 배포 필요)를 완벽하게 극복하기 위해, 파일 저장 방식 대신 <strong>Supabase (서버리스 클라우드 DB)</strong>를 전격 도입했습니다.</p>
+                        
+                        <p><strong>1) 서버리스 DB 환경 구축</strong><br>
+                        과거에는 메뉴 설정 데이터가 로컬 컴퓨터의 <code>menuData.json</code> 텍스트 파일에 머물러 있었으나, 이제는 24시간 안전하게 관리되는 <strong>Supabase 클라우드 데이터베이스</strong>에 직접 저장됩니다.</p>
+
+                        <p><strong>2) 별도의 배포 절차 없이 100% 실시간 반영</strong><br>
+                        가장 큰 변화는 '실시간 동기화'입니다. 관리자 페이지에서 메뉴를 수정, 추가, 삭제하거나 순서를 변경한 뒤 [저장] 버튼을 누르면, 이 데이터가 클라우드 DB로 즉시 전송됩니다. <strong>더 이상 검은 화면(CMD)을 열고 귀찮게 <code>vercel --prod</code> 명령어를 쳐서 배포(업데이트)할 필요가 없습니다.</strong> 저장 즉시 전 세계 어디서든 포털에 접속한 모든 사용자의 화면에 변경된 사항이 자동으로 반영됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 9. Vercel Storage 도입 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-fuchsia-500 mt-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="folder-cloud" class="w-5 h-5 text-fuchsia-500"></i>
+                    9. Vercel Storage 도입 (파일 시스템의 클라우드화)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-fuchsia-50 px-2 py-0.5 rounded">배경 및 목적:</strong> 데이터베이스(Supabase) 해결 이후, HTML 문서나 파이썬 스크립트 등 <strong>'파일' 자체에 대한 동기화 문제</strong>도 추가로 개선했습니다. 신규 메뉴가 등록되어 파일을 추가하거나 기존 파일의 소스코드를 변경했을 때, 여전히 로컬에서 수정 후 배포를 해야만 Vercel 환경에 반영되는 불편함이 남아 있었습니다.</p>
+                        
+                        <p><strong>1) 로컬 파일을 클라우드로 전면 이관</strong><br>
+                        이 문제를 근본적으로 해결하기 위해 <strong>Vercel Storage (클라우드 파일 저장소)</strong>를 도입했습니다. 기존에 로컬 하드디스크(<code>Project files/</code>)에 담겨있던 모든 파일들을 클라우드 스토리지 공간으로 완전히 이관시켰습니다.</p>
+
+                        <p><strong>2) 완전한 서버리스 환경의 완성</strong><br>
+                        결과적으로 포털의 모든 메뉴는 이제 로컬 PC가 아닌 <strong>Vercel 스토리지의 클라우드 파일만을 다이렉트로 바라보도록 구조가 개편</strong>되었습니다. 관리자 페이지에서 파일을 업로드하거나 수정하는 즉시 클라우드 스토리지에 바로 덮어쓰기가 진행되므로, 텍스트 데이터뿐만 아니라 '파일 데이터' 역시 단 한 번의 배포 과정 없이 100% 실시간으로 반영됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 10. 파이썬 실행의 남은 숙제와 대안 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500 mt-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i>
+                    10. 파이썬(.bat) 직접 실행 불가 문제와 현재의 대안 (남은 숙제)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-orange-50 px-2 py-0.5 rounded">현재의 한계:</strong> DB와 스토리지를 모두 클라우드화 했음에도 불구하고, 웹 브라우저의 강력한 보안 정책 때문에 Vercel 환경에서 로컬 PC의 <strong>파이썬(.bat) 프로그램을 마우스 클릭 한 번으로 직접 가동할 수 없다는 문제</strong>가 여전히 숙제로 남았습니다.</p>
+                        
+                        <p><strong>대안 1) 실행 파일(.bat) 수동 다운로드 방식</strong><br>
+                        기존의 파이썬 데스크톱 UI를 그대로 유지하고 싶은 경우를 위해, 웹 화면에서 <code>.bat</code> 파일을 다운로드할 수 있는 기능을 제공했습니다. 사용자가 파일을 내려받아 직접 더블클릭하면 내부적으로 파이썬 코드를 백그라운드에서 실행하여 익숙한 프로그램 창이 열리도록 연동했습니다.</p>
+
+                        <p><strong>대안 2) 파이썬 로직의 웹 페이지 이관 (실험적 단계)</strong><br>
+                        궁극적으로 다운로드조차 필요 없는 웹 환경을 구축하기 위해, 기존 파이썬 소스의 내용(PDF 파싱, 엑셀 생성)을 분석하여 <strong>웹 브라우저 상에서 즉시 동작하도록 별도의 웹 UI(Next.js API 연동)를 직접 구현</strong>해 보았습니다. 기능적인 구동은 성공했으나, 아직 UI의 심미적인 디테일 개선과 추가적인 기능 검증이 필요하여 이 부분은 계속해서 풀어나가야 할 과제(숙제)로 남겨두었습니다.</p>
                     </div>
                 </div>
             </div>

@@ -599,5 +599,48 @@ class CMPHApp(tk.Tk):
 
 
 if __name__ == "__main__":
-    app = CMPHApp()
-    app.mainloop()
+    import sys, json
+    if len(sys.argv) > 1 and sys.argv[1] == "--parse":
+        try:
+            d = parse_pdf_text(sys.argv[2])
+            print(json.dumps(d))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}))
+        sys.exit(0)
+    elif len(sys.argv) > 1 and sys.argv[1] == "--generate":
+        try:
+            args = sys.argv[2:]
+            excel_path = args[args.index("--excel") + 1]
+            out_path = args[args.index("--out") + 1]
+            form_json = args[args.index("--form") + 1]
+            form = json.loads(form_json)
+            
+            pdfs = []
+            for i, arg in enumerate(args):
+                if arg == "--pdf":
+                    pdfs.append(args[i+1])
+            
+            for i, pdf in enumerate(pdfs):
+                src = excel_path if i == 0 else out_path
+                if i == 0:
+                    row_form = dict(form)
+                else:
+                    d = parse_pdf_text(pdf)
+                    row_form = {
+                        'style': d.get('style',''), 'name': d.get('name',''),
+                        'fabric': d.get('fabric',''),
+                        'season': form.get('season',''),
+                        'category': d.get('category','KNIT TOP'),
+                        'assign': form.get('assign','Hansoll assigned'),
+                        'cmph_k':'', 'cmph_l':'', 'cmph_m':'',
+                        'sub_enabled': False,
+                        'sub_qty':'', 'sub_cmph':'', 'sub_remark':''
+                    }
+                add_row_to_excel(src, pdf, row_form, out_path)
+            print(json.dumps({"success": True, "out_path": out_path}))
+        except Exception as e:
+            print(json.dumps({"error": str(e)}))
+        sys.exit(0)
+    else:
+        app = CMPHApp()
+        app.mainloop()

@@ -399,9 +399,12 @@
                     const flatData = await res.json();
                     if(flatData && flatData.length > 0) {
                         const categories = flatData.filter(d => d.menu_type === 'category' || d.menu_type === '카테고리');
+                        
+                        categories.sort((a, b) => ((a.menu_meta && a.menu_meta.sortOrder) || 0) - ((b.menu_meta && b.menu_meta.sortOrder) || 0));
+
                         globalMenuData = categories.map(cat => {
                             const meta = cat.menu_meta || {};
-                            const subItems = flatData.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === cat.menu_name)).map(sub => {
+                            let subItems = flatData.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === cat.menu_name)).map(sub => {
                                 const subMeta = sub.menu_meta || {};
                                 return {
                                     title: sub.menu_name,
@@ -410,9 +413,13 @@
                                     fileName: sub.file_path || "",
                                     menuId: sub.MenuId || sub.menu_name,
                                     folderName: subMeta.folderName || sub.menu_name,
-                                    urlAddress: sub.url_address || ""
+                                    urlAddress: sub.url_address || "",
+                                    sortOrder: subMeta.sortOrder || 0
                                 };
                             });
+                            
+                            subItems.sort((a, b) => a.sortOrder - b.sortOrder);
+
                             return {
                                 title: cat.menu_name,
                                 slug: meta.slug || "",
@@ -456,10 +463,7 @@
                         throw new Error("No parent data");
                     }
                 } catch(err) {
-                    globalMenuData = [
-                        { title: "사업 3부", slug: "business-3", status: "Y", subItems: [{ title: "CMPH recap 작성", status: "Y" }] },
-                        { title: "IT부", slug: "it", status: "Y", subItems: [{ title: "mainPage", status: "Y" }] }
-                    ];
+                    globalMenuData = [];
                 }
                 globalMenuData.forEach(cat => {
                     if (cat.subItems) {
@@ -495,12 +499,13 @@
                             bgColor: cat.bgColor,
                             imageUrl: cat.imageUrl,
                             textColor: cat.textColor,
-                            displayPhrase: cat.displayPhrase
+                            displayPhrase: cat.displayPhrase,
+                            sortOrder: index
                         }
                     });
 
                     if (cat.subItems) {
-                        cat.subItems.forEach(sub => {
+                        cat.subItems.forEach((sub, subIndex) => {
                             let subTitle = typeof sub === 'string' ? sub : sub.title;
                             let subDesc = typeof sub === 'string' ? null : sub.description;
                             let subStatus = typeof sub === 'string' ? 'Y' : (sub.status || 'Y');
@@ -529,7 +534,8 @@
                                 menu_meta: {
                                     description: subDesc,
                                     folderName: folderName,
-                                    parentCategory: cat.title
+                                    parentCategory: cat.title,
+                                    sortOrder: subIndex
                                 }
                             });
                         });

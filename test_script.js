@@ -77,9 +77,8 @@
                     } else {
                         throw new Error("No parent data");
                     }
-                } catch(err) {
                     globalMenuData = [
-                        { title: "사업 3부", slug: "business-3", status: "Y", subItems: [{ title: "CMPH recap 작성", status: "Y" }] },
+                        { title: "사업 3부", slug: "business-3", status: "Y", subItems: [{ title: "CMPH recap 작성", status: "Y" }, { title: "CMPH recap 작성 (Backup)", status: "Y" }] },
                         { title: "IT부", slug: "it", status: "Y", subItems: [{ title: "mainPage", status: "Y" }] }
                     ];
                 }

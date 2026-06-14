@@ -13,7 +13,7 @@ export async function OPTIONS() {
   });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -21,13 +21,26 @@ export async function POST() {
   };
 
   try {
+    let body;
+    try {
+      body = await req.json();
+    } catch(e) {
+      body = {};
+    }
+    const fileName = body.fileName || "CMPH_Recap_Tool.py";
+
+    // Only allow specific files for security
+    if (fileName !== "CMPH_Recap_Tool.py" && fileName !== "CMPH_Recap_Tool_orig.py") {
+      throw new Error("Invalid file name");
+    }
+
     const projectDir = process.cwd();
     const pyPath = path.join(
       projectDir,
       "Project files",
       "사업 3부",
       "CMPH Recap Tool",
-      "CMPH_Recap_Tool.py"
+      fileName
     );
     const pyDir = path.dirname(pyPath);
 

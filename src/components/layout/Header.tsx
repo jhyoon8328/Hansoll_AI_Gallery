@@ -2,16 +2,17 @@
 
 import { Bell, Moon, Search, User } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { portalMenu } from "@/config/menu";
+import { useMenu } from "@/components/providers/MenuProvider";
 
 export default function Header() {
   const pathname = usePathname();
+  const { menuData } = useMenu();
 
   // Simple breadcrumb logic based on the current path
   let breadcrumbPrimary = "대시보드";
   let breadcrumbSecondary = "";
 
-  portalMenu.forEach((item) => {
+  menuData.forEach((item) => {
     if (pathname === `/${item.slug}`) {
       breadcrumbPrimary = item.title;
       breadcrumbSecondary = "개요";

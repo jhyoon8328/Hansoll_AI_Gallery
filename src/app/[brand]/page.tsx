@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { portalMenu } from "@/config/menu";
 import { ArrowRight } from "lucide-react";
+import { fetchPortalMenu } from "@/lib/menuFetcher";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface BrandPageProps {
   params: Promise<{ brand: string }>;
@@ -10,7 +13,8 @@ interface BrandPageProps {
 export default async function BrandPage({ params }: BrandPageProps) {
   const { brand } = await params;
   
-  // Find the requested brand in the menu config
+  // Fetch from Supabase
+  const portalMenu = await fetchPortalMenu();
   const brandData = portalMenu.find((item) => item.slug === brand);
 
   if (!brandData) {

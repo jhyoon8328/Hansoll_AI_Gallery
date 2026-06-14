@@ -38,5 +38,5 @@ goto open_browser
 
 :open_browser
 echo [OK] Opening the portal page...
-start "" "index.html"
+start "" "http://localhost:3000/index.html"
 exit
