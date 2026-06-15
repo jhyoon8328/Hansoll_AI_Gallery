@@ -1,3 +1,3 @@
-https://newsletter-vercel.vercel.app/htmlfiles/NewsLetterM05.html
+https://newsletter-v3.vercel.app/newsletters?embed=true
 
 설명 : IT부 뉴스레터
