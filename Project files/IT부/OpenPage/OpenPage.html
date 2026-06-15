@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hansoll Textile AI Gallery</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Framer Motion -->
+  <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+    const { motion, AnimatePresence } = window.Motion;
+
+    // --- CONFIGURATION & DATA ---
+
+    const COLORS = {
+      bg: '#050505',
+      people: '#7DFF00', // Neon Green
+      process: '#00E6C3', // Cyan
+      planet: '#29C4FF', // Light Blue
+    };
+
+    const KOR_PHRASES = [
+      "업무 시간 단축", "새로운 업무 환경 구축", "업무 생산성 향상", "반복 업무 감소"
+    ];
+
+    const ENG_PHRASES = [
+      "Work Smarter", "Think Bigger", "Automate Everything", "Create Faster",
+      "Innovation Through AI", "Transforming Daily Work", "AI Driven Productivity",
+      "Empowering Every Team", "Smart Decisions Faster", "From Idea To Reality",
+      "Less Repetition More Creation", "Data Into Action", "Connected Intelligence",
+      "Digital Transformation", "Future Ready Workplace", "Human + AI Collaboration",
+      "One Team One AI", "Build Once Scale Everywhere", "AI For Everyone", "Coding Without Limits"
+    ];
+
+    const ALL_PHRASES = [...KOR_PHRASES, ...ENG_PHRASES];
+
+    const CATEGORIES = {
+      people: {
+        id: 'people',
+        title: 'Key Performance',
+        color: COLORS.people,
+        projects: 3,
+        items: [
+          { name: '업무시간 단축', subItems: [] },
+          { name: '단순업무 제거', subItems: [] },
+          { name: '휴먼에러 제거', subItems: [] }
+        ]
+      },
+      process: {
+        id: 'process',
+        title: 'PROCESS',
+        color: COLORS.process,
+        projects: 4,
+        items: [
+          { name: '사업 3부', subItems: ['CMPH recap 작성', 'CMPH recap 작성 (orig)', "Chico's CPO파일 비교", '부자재 공임차트 비교'] },
+          { name: '사업 7부', subItems: [] },
+          { name: 'HR부', subItems: [] },
+          { 
+            name: '총무부', 
+            subItems: ['한솔섬유 좌석배치도'] 
+          },
+          { name: 'IT부', subItems: ['Main page TEST'] }
+        ]
+      },
+      planet: {
+        id: 'planet',
+        title: 'PLANET',
+        color: COLORS.planet,
+        projects: 0,
+        items: []
+      }
+    };
+
+    // --- CANVAS PARTICLE SYSTEM & BACKGROUND ---
+
+    class Particle {
+      constructor(x, y, targetX, targetY, isText = false) {
+        this.x = x;
+        this.y = y;
+        this.targetX = targetX;
+        this.targetY = targetY;
+        this.vx = (Math.random() - 0.5) * 2;
+        this.vy = (Math.random() - 0.5) * 2;
+        this.radius = isText ? (Math.random() * 1.5 + 0.5) : (Math.random() * 2 + 1);
+        this.baseAlpha = isText ? (Math.random() * 0.5 + 0.5) : (Math.random() * 0.3 + 0.1);
+        this.alpha = 0;
+        this.isText = isText;
+        this.scattered = false;
+        this.color = '#ffffff';
+      }
+
+      update(stage) {
+        if (stage === 'intro-forming' || stage === 'intro-holding') {
+          // Move towards target
+          const dx = this.targetX - this.x;
+          const dy = this.targetY - this.y;
+          this.vx += dx * 0.005; // Spring strength
+          this.vy += dy * 0.005;
+          this.vx *= 0.85; // Friction
+          this.vy *= 0.85;
+          this.x += this.vx;
+          this.y += this.vy;
+          
+          if (this.alpha < this.baseAlpha) this.alpha += 0.01;
+        } else if (stage === 'intro-scattering' || stage === 'subtext' || stage === 'exploding') {
+          if (!this.scattered) {
+            // Explode outward
+            const angle = Math.random() * Math.PI * 2;
+            const force = Math.random() * 15 + 5;
+            this.vx = Math.cos(angle) * force;
+            this.vy = Math.sin(angle) * force;
+            this.scattered = true;
+          }
+          this.x += this.vx;
+          this.y += this.vy;
+          this.alpha -= 0.02; // Fade out rapidly
+        }
+      }
+
+      draw(ctx) {
+        if (this.alpha <= 0) return;
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    class DotTextGroup {
+      constructor(text, width, height) {
+        this.x = Math.random() * width;
+        this.y = Math.random() * height;
+        this.vx = (Math.random() - 0.5) * 1.2;
+        this.vy = (Math.random() - 0.5) * 1.2;
+        this.particles = [];
+        this.text = text;
+        this.alpha = 0;
+
+        const offscreen = document.createElement('canvas');
+        const oCtx = offscreen.getContext('2d', { willReadFrequently: true });
+        oCtx.font = `bold 20px "Inter", sans-serif`;
+        const textWidth = oCtx.measureText(text).width;
+        offscreen.width = textWidth + 40;
+        offscreen.height = 60;
+        
+        oCtx.fillStyle = 'white';
+        oCtx.font = `bold 20px "Inter", sans-serif`;
+        oCtx.textAlign = 'center';
+        oCtx.textBaseline = 'middle';
+        oCtx.fillText(text, offscreen.width/2, offscreen.height/2);
+        
+        const imageData = oCtx.getImageData(0, 0, offscreen.width, offscreen.height).data;
+        const step = 2; // pixel step for dots
+        
+        for (let py = 0; py < offscreen.height; py += step) {
+          for (let px = 0; px < offscreen.width; px += step) {
+            const alpha = imageData[((py * offscreen.width + px) * 4) + 3];
+            if (alpha > 128) {
+              const relX = px - offscreen.width/2;
+              const relY = py - offscreen.height/2;
+              this.particles.push({ rx: relX, ry: relY });
+            }
+          }
+        }
+        console.log(`Generated ${this.particles.length} particles for ${text}`);
+      }
+
+      update(width, height) {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        if (this.x < -150) this.x = width + 150;
+        if (this.x > width + 150) this.x = -150;
+        if (this.y < -150) this.y = height + 150;
+        if (this.y > height + 150) this.y = -150;
+        
+        if (this.alpha < 0.6) this.alpha += 0.01;
+      }
+
+      draw(ctx) {
+        if (this.alpha <= 0) return;
+        ctx.save();
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+        for (let i = 0; i < this.particles.length; i++) {
+          const p = this.particles[i];
+          ctx.beginPath();
+          ctx.arc(this.x + p.rx, this.y + p.ry, 1.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    const CanvasBackground = ({ stage, mousePos, activeCategory, leafMenus }) => {
+      const canvasRef = useRef(null);
+      const particlesRef = useRef([]);
+      const animationRef = useRef(null);
+      const dotTextsRef = useRef([]);
+      const activeCategoryRef = useRef(activeCategory);
+
+      useEffect(() => {
+        activeCategoryRef.current = activeCategory;
+        if (activeCategory === 'process' && dotTextsRef.current.length === 0 && leafMenus && leafMenus.length > 0) {
+          dotTextsRef.current = leafMenus.map(menu => new DotTextGroup(menu, window.innerWidth, window.innerHeight));
+        } else if (activeCategory !== 'process') {
+          dotTextsRef.current = [];
+        }
+      }, [activeCategory, leafMenus]);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+
+        // Helper to generate particle text
+        const initTextParticles = () => {
+          const offscreen = document.createElement('canvas');
+          const oCtx = offscreen.getContext('2d');
+          offscreen.width = width;
+          offscreen.height = height;
+          
+          const fontSize = Math.min(width * 0.08, 100);
+          oCtx.fillStyle = 'white';
+          oCtx.font = `bold ${fontSize}px "Inter", sans-serif`;
+          oCtx.textAlign = 'center';
+          oCtx.textBaseline = 'middle';
+          
+          const text1 = "Welcome to Hansoll Textile";
+          const text2 = "AI Gallery";
+          
+          oCtx.fillText(text1, width / 2, height / 2 - fontSize * 0.6);
+          oCtx.fillText(text2, width / 2, height / 2 + fontSize * 0.6);
+
+          const imageData = oCtx.getImageData(0, 0, width, height).data;
+          const particles = [];
+          
+          // Step controls density (lower = more particles)
+          const step = Math.max(Math.floor(width / 300), 3); 
+          
+          for (let y = 0; y < height; y += step) {
+            for (let x = 0; x < width; x += step) {
+              const alpha = imageData[((y * width + x) * 4) + 3];
+              if (alpha > 128) {
+                // Spawn from random positions
+                const startX = Math.random() * width;
+                const startY = Math.random() * height;
+                particles.push(new Particle(startX, startY, x, y, true));
+              }
+            }
+          }
+          particlesRef.current = particles;
+
+          // Asynchronously load and draw the Hansoll Logo
+          const logoImg = new Image();
+          logoImg.onload = () => {
+            const logoW = width * 0.15; // 15% of screen width
+            const maxLogoW = 200;
+            const finalLogoW = Math.max(Math.min(logoW, maxLogoW), 100);
+            const logoH = (logoImg.height / logoImg.width) * finalLogoW;
+            const lCtx = document.createElement('canvas').getContext('2d');
+            lCtx.canvas.width = finalLogoW;
+            lCtx.canvas.height = logoH;
+            lCtx.drawImage(logoImg, 0, 0, finalLogoW, logoH);
+            
+            const lData = lCtx.getImageData(0, 0, finalLogoW, logoH).data;
+            const logoCx = width * 0.85 - finalLogoW / 2;
+            const logoCy = height * 0.75 - logoH / 2;
+            
+            const lStep = Math.max(Math.floor(finalLogoW / 100), 2);
+            const newParticles = [];
+            for (let y = 0; y < logoH; y += lStep) {
+              for (let x = 0; x < finalLogoW; x += lStep) {
+                const i = (y * finalLogoW + x) * 4;
+                const r = lData[i];
+                const g = lData[i+1];
+                const b = lData[i+2];
+                // Skip white-ish background
+                if ((r + g + b) / 3 < 240) {
+                  const startX = Math.random() * width;
+                  const startY = Math.random() * height;
+                  const targetX = logoCx + x;
+                  const targetY = logoCy + y;
+                  const p = new Particle(startX, startY, targetX, targetY, true);
+                  p.color = `rgb(${r},${g},${b})`; // Keep original logo colors!
+                  newParticles.push(p);
+                }
+              }
+            }
+            particlesRef.current = [...particlesRef.current, ...newParticles];
+          };
+          logoImg.src = '/imgFile/HS_logo4.jpg';
+        };
+
+        if (stage === 'intro-forming' && particlesRef.current.length === 0) {
+          initTextParticles();
+        }
+
+        // Draw ESG background diagram (blurred overlapping circles)
+        const drawBackground = () => {
+          ctx.fillStyle = COLORS.bg;
+          ctx.fillRect(0, 0, width, height);
+          
+          // Parallax offset
+          const offsetX = (mousePos.x - width / 2) * 0.02;
+          const offsetY = (mousePos.y - height / 2) * 0.02;
+
+          ctx.save();
+          ctx.translate(width / 2 + offsetX, height / 2 + offsetY);
+          
+          // Subtle ESG Rings
+          const ringRadius = Math.min(width, height) * 0.4;
+          
+          ctx.globalCompositeOperation = 'screen';
+          ctx.lineWidth = 1;
+          ctx.filter = 'blur(8px)';
+          
+          // Ring 1 (People)
+          ctx.beginPath();
+          ctx.arc(-ringRadius*0.2, -ringRadius*0.2, ringRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(125, 255, 0, 0.08)`;
+          ctx.stroke();
+          
+          // Ring 2 (Process)
+          ctx.beginPath();
+          ctx.arc(ringRadius*0.2, -ringRadius*0.2, ringRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(0, 230, 195, 0.08)`;
+          ctx.stroke();
+
+          // Ring 3 (Planet)
+          ctx.beginPath();
+          ctx.arc(0, ringRadius*0.2, ringRadius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(41, 196, 255, 0.08)`;
+          ctx.stroke();
+
+          ctx.restore();
+        };
+
+        const animate = () => {
+          drawBackground();
+
+          if (activeCategoryRef.current === 'process') {
+            for (let i = 0; i < dotTextsRef.current.length; i++) {
+              const dt = dotTextsRef.current[i];
+              dt.update(width, height);
+              dt.draw(ctx);
+            }
+          }
+
+          // Update and draw particles
+          const currentParticles = particlesRef.current;
+          for (let i = currentParticles.length - 1; i >= 0; i--) {
+            const p = currentParticles[i];
+            p.update(stage);
+            p.draw(ctx);
+            if (p.alpha <= 0 && (stage === 'intro-scattering' || stage === 'exploding')) {
+              currentParticles.splice(i, 1);
+            }
+          }
+
+          animationRef.current = requestAnimationFrame(animate);
+        };
+
+        animate();
+
+        const handleResize = () => {
+          width = window.innerWidth;
+          height = window.innerHeight;
+          canvas.width = width;
+          canvas.height = height;
+          if (stage === 'intro-forming') {
+            particlesRef.current = [];
+            initTextParticles();
+          }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => {
+          window.removeEventListener('resize', handleResize);
+          cancelAnimationFrame(animationRef.current);
+        };
+      }, [stage, mousePos]);
+
+      return (
+        <canvas 
+          ref={canvasRef} 
+          className="fixed inset-0 pointer-events-none z-0"
+        />
+      );
+    };
+
+    // --- FLOATING TEXT PHASE ---
+
+    const FloatingText = ({ text, index, stage }) => {
+      const [pos, setPos] = useState({ x: 0, y: 0 });
+      const [delay] = useState(Math.random() * 2);
+      const [duration] = useState(Math.random() * 10 + 15);
+      
+      useEffect(() => {
+        // Random initial placement
+        setPos({
+          x: Math.random() * 80 + 10, // 10% to 90% vw
+          y: Math.random() * 80 + 10, // 10% to 90% vh
+        });
+      }, []);
+
+      if (stage !== 'subtext') return null;
+
+      return (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, x: '-50%', y: '-50%' }}
+          animate={{ 
+            opacity: [0, 0.6, 0.6, 0],
+            scale: [0.8, 1, 1, 1.1],
+            top: [`${pos.y}%`, `${pos.y - 10}%`],
+            left: [`${pos.x}%`, `${pos.x + (Math.random() * 10 - 5)}%`]
+          }}
+          transition={{
+            duration: duration,
+            delay: delay,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          className="absolute text-white font-light tracking-wide whitespace-nowrap"
+          style={{
+            textShadow: '0 0 10px rgba(255,255,255,0.3)',
+            fontSize: `${Math.random() * 0.8 + 0.8}rem`,
+            zIndex: 10
+          }}
+        >
+          {text}
+        </motion.div>
+      );
+    };
+
+    // --- MAIN CATEGORIES & NETWORK VIEW ---
+
+    const CategoryRing = ({ category, isActive, isDimmed, onClick }) => {
+      const { title, color, projects } = category;
+      
+      return (
+        <motion.div
+          layoutId={`ring-${category.id}`}
+          onClick={() => onClick(category.id)}
+          initial={false}
+          animate={{
+            scale: isActive ? 1.2 : isDimmed ? 0.8 : 1,
+            opacity: isDimmed ? 0.2 : 1,
+            filter: isActive ? `drop-shadow(0 0 30px ${color})` : 'drop-shadow(0 0 0px transparent)',
+          }}
+          whileHover={!isActive ? {
+            scale: 1.05,
+            filter: `drop-shadow(0 0 20px ${color})`,
+            transition: { duration: 0.3 }
+          } : {}}
+          className={`relative rounded-full cursor-pointer flex flex-col items-center justify-center transition-all duration-500`}
+          style={{
+            width: isActive ? '20vw' : '25vw',
+            height: isActive ? '20vw' : '25vw',
+            minWidth: '200px',
+            minHeight: '200px',
+            maxWidth: '400px',
+            maxHeight: '400px',
+            border: `1px solid ${color}40`,
+            background: `radial-gradient(circle at center, ${color}10 0%, transparent 70%)`,
+            backdropFilter: 'blur(10px)',
+            zIndex: isActive ? 50 : 20
+          }}
+        >
+          {/* Outer Pulse Ring */}
+          <motion.div
+            animate={!isActive ? { scale: [1, 1.05, 1], opacity: [0.1, 0.3, 0.1] } : { scale: 1, opacity: 0 }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute inset-0 rounded-full"
+            style={{ border: `1px solid ${color}` }}
+          />
+          
+          <motion.h2 
+            layoutId={`title-${category.id}`}
+            className="text-2xl md:text-4xl font-bold tracking-widest"
+            style={{ color: '#fff', textShadow: `0 0 10px ${color}` }}
+          >
+            {title}
+          </motion.h2>
+          
+          <motion.p 
+            layoutId={`count-${category.id}`}
+            className="text-sm md:text-md mt-2 font-light opacity-80"
+            style={{ color }}
+          >
+            {projects} AI Projects
+          </motion.p>
+        </motion.div>
+      );
+    };
+
+    const SubmenuNetwork = ({ category, activePath, onSubItemClick, onBack }) => {
+      const currentParent = activePath.length > 0 ? activePath[activePath.length - 1] : category;
+      const items = currentParent.subItems || currentParent.items || [];
+      const radius = window.innerWidth < 768 ? 140 : 280; // responsive radius
+      const color = category.color;
+      const currentKey = currentParent.name || category.id;
+
+      const [preparingNode, setPreparingNode] = useState(false);
+
+      useEffect(() => {
+        if (items.length === 0) {
+          setPreparingNode(true);
+        } else {
+          setPreparingNode(false);
+        }
+      }, [items.length]);
+
+      return (
+        <motion.div 
+          key={currentKey}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 flex items-center justify-center z-40"
+        >
+          {/* Connecting Lines (SVG) */}
+          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+            <defs>
+              <radialGradient id={`grad-${category.id}`} cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={color} stopOpacity="0.5" />
+                <stop offset="100%" stopColor={color} stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            {items.map((_, i) => {
+              const angle = (i / items.length) * Math.PI * 2 - Math.PI / 2;
+              const x2 = window.innerWidth / 2 + Math.cos(angle) * radius;
+              const y2 = window.innerHeight / 2 + Math.sin(angle) * radius;
+              return (
+                <motion.line
+                  key={i}
+                  initial={{ pathLength: 0, opacity: 0 }}
+                  animate={{ pathLength: 1, opacity: 0.3 }}
+                  transition={{ duration: 1, delay: i * 0.1 }}
+                  x1="50%"
+                  y1="50%"
+                  x2={x2}
+                  y2={y2}
+                  stroke={color}
+                  strokeWidth="1"
+                />
+              );
+            })}
+          </svg>
+
+          {/* Network Nodes */}
+          {items.map((item, i) => {
+            const isObj = typeof item === 'object' && item !== null;
+            const label = isObj ? item.name : item;
+            const angle = (i / items.length) * Math.PI * 2 - Math.PI / 2;
+            const x = Math.cos(angle) * radius;
+            const y = Math.sin(angle) * radius;
+
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
+                animate={{ opacity: 1, x, y, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 + i * 0.1, type: "spring" }}
+                className="absolute flex items-center justify-center p-4 rounded-xl cursor-pointer"
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: `1px solid ${color}40`,
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: `0 0 15px ${color}10`,
+                }}
+                whileHover={{ 
+                  scale: 1.1, 
+                  background: 'rgba(255,255,255,0.1)',
+                  boxShadow: `0 0 25px ${color}40`,
+                  borderColor: color 
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const hasChildren = isObj && item.subItems && item.subItems.length > 0;
+                  if (hasChildren) {
+                    onSubItemClick(item);
+                  } else {
+                    if (activePath.length === 0) {
+                      setPreparingNode(true);
+                    } else {
+                      setPreparingNode(false);
+                    }
+                  }
+                }}
+              >
+                <span className="text-white text-sm md:text-base font-light whitespace-nowrap">{label}</span>
+              </motion.div>
+            );
+          })}
+
+          {/* Preparing Text Orbiting Animation */}
+          <AnimatePresence>
+            {preparingNode && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, rotate: 360 }}
+                exit={{ opacity: 0 }}
+                transition={{ 
+                  opacity: { duration: 0.5 }, 
+                  rotate: { duration: 4, repeat: Infinity, ease: "linear" } 
+                }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-50"
+              >
+                <div 
+                  className="absolute text-white font-bold tracking-widest text-lg drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+                  style={{ transform: `translateY(-${radius * 0.75}px)` }}
+                >
+                  준비중...
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      );
+    };
+
+    // --- MAIN APP COMPONENT ---
+
+    const App = () => {
+      // Stages: 'intro-forming' -> 'intro-holding' -> 'intro-scattering' -> 'subtext'
+      const [stage, setStage] = useState('intro-forming');
+      const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+      const [resetKey, setResetKey] = useState(0);
+      const [showLogin, setShowLogin] = useState(false);
+      const [dynamicPhrases, setDynamicPhrases] = useState(ALL_PHRASES);
+      const [leafMenus, setLeafMenus] = useState([]);
+
+      // Fetch menu data from parent portal
+      useEffect(() => {
+        try {
+          if (window.parent && window.parent.menuData) {
+            const menus = [];
+            const leaves = [];
+            window.parent.menuData.forEach(brand => {
+              menus.push(brand.title);
+              if (brand.subItems && brand.subItems.length > 0) {
+                brand.subItems.forEach(sub => {
+                  menus.push(sub.title);
+                  if (sub.children && sub.children.length > 0) {
+                    sub.children.forEach(child => {
+                      menus.push(child.title);
+                      leaves.push(child.title);
+                    });
+                  } else {
+                    leaves.push(sub.title);
+                  }
+                });
+              }
+            });
+            if (menus.length > 0) {
+              const uniqueMenus = [...new Set(menus)];
+              setDynamicPhrases([...ALL_PHRASES, ...uniqueMenus]);
+            }
+            if (leaves.length > 0) {
+              setLeafMenus([...new Set(leaves)]);
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to sync menu data from parent", e);
+        }
+      }, []);
+
+      // Mouse Parallax tracking
+      useEffect(() => {
+        const handleMouseMove = (e) => {
+          setMousePos({ x: e.clientX, y: e.clientY });
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+      }, []);
+
+      // Intro Sequence Timings
+      useEffect(() => {
+        if (stage === 'intro-forming') {
+          const t1 = setTimeout(() => setStage('intro-holding'), 2000);
+          return () => clearTimeout(t1);
+        }
+        if (stage === 'intro-holding') {
+          const t2 = setTimeout(() => setStage('intro-scattering'), 3500);
+          return () => clearTimeout(t2);
+        }
+        if (stage === 'intro-scattering') {
+          const t3 = setTimeout(() => setStage('subtext'), 800);
+          return () => clearTimeout(t3);
+        }
+      }, [stage]);
+
+      // Click Interaction Removed - Now handled by the button
+
+      const handleHomeClick = (e) => {
+        e.stopPropagation(); // 배경 클릭 이벤트 방지
+        setStage('intro-forming'); // 인트로 단계로 초기화
+        setResetKey(prev => prev + 1); // 캔버스 파티클 완전히 새로고침
+        setShowLogin(false);
+      };
+
+      return (
+        <div 
+          className="relative w-full h-screen overflow-hidden select-none font-sans"
+          style={{ backgroundColor: COLORS.bg, fontFamily: '"Inter", sans-serif' }}
+        >
+          {/* Canvas Layer for Particles and Parallax Background */}
+          <CanvasBackground key={resetKey} stage={stage} mousePos={mousePos} activeCategory={null} leafMenus={leafMenus} />
+
+          {/* Top Left Navigation */}
+          <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
+            {/* Home Button */}
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              onClick={handleHomeClick}
+              className="text-white/50 hover:text-white transition-all p-3 cursor-pointer rounded-full hover:bg-white/10 backdrop-blur-md"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+              </svg>
+            </motion.button>
+          </div>
+
+          {/* Floating Subtext Layer */}
+          <AnimatePresence>
+            {stage === 'subtext' && (
+              <motion.div 
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 1.5, filter: 'blur(10px)' }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="absolute inset-0 z-10 pointer-events-none cursor-pointer"
+              >
+                {dynamicPhrases.map((phrase, i) => (
+                  <FloatingText key={i} text={phrase} index={i} stage={stage} />
+                ))}
+                
+                {/* Open Gallery Button */}
+                <motion.button 
+                  initial={{ 
+                    opacity: 0, 
+                    scale: 0, 
+                    y: 200, 
+                    z: -500,
+                    rotateX: 70, 
+                    filter: 'blur(30px) brightness(0)' 
+                  }}
+                  animate={{ 
+                    opacity: 1, 
+                    scale: 1, 
+                    y: 0, 
+                    z: 0,
+                    rotateX: 0, 
+                    filter: 'blur(0px) brightness(1)' 
+                  }}
+                  whileHover={{ 
+                    scale: 1.05, 
+                    boxShadow: "0px 0px 30px rgba(125, 255, 0, 0.6)", 
+                    borderColor: 'rgba(125, 255, 0, 1)',
+                    y: -5
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ 
+                    delay: 5, 
+                    duration: 5, 
+                    type: "spring", 
+                    bounce: 0.3 
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLogin(true);
+                  }}
+                  className="absolute left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-xl font-bold tracking-widest pointer-events-auto transition-colors duration-300"
+                  style={{
+                    top: '75%',
+                    color: '#ffffff',
+                    background: 'linear-gradient(135deg, rgba(125,255,0,0.1) 0%, rgba(0,230,195,0.1) 100%)',
+                    border: '1px solid rgba(125,255,0,0.4)',
+                    backdropFilter: 'blur(10px)',
+                    boxShadow: '0 0 20px rgba(0,230,195,0.2)',
+                    textShadow: '0 0 10px rgba(255,255,255,0.5)',
+                    transformStyle: 'preserve-3d'
+                  }}
+                >
+                  OPEN GALLERY
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Microsoft Login Placeholder Modal */}
+          <AnimatePresence>
+            {showLogin && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md"
+              >
+                <motion.div
+                  initial={{ scale: 0.9, y: 50, opacity: 0 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                  className="bg-white/10 border border-white/20 p-10 rounded-2xl flex flex-col items-center justify-center max-w-md w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-xl relative"
+                >
+                  {/* Close button */}
+                  <button 
+                    onClick={() => setShowLogin(false)}
+                    className="absolute top-4 right-4 text-white/50 hover:text-white"
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  </button>
+
+                  {/* MS Logo Placeholder */}
+                  <svg className="w-16 h-16 mb-6" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                  </svg>
+                  
+                  <h2 className="text-2xl font-bold text-white mb-2">Sign In</h2>
+                  <p className="text-white/70 text-center mb-8 text-sm">
+                    한솔섬유 Microsoft 인증 연동을<br/>준비 중입니다. <span className="text-[#00E6C3]">(추후 개발 예정)</span>
+                  </p>
+
+                  <button 
+                    disabled
+                    className="w-full py-4 bg-white/10 text-white rounded-lg cursor-not-allowed opacity-50 flex items-center justify-center gap-3 border border-white/20"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                    </svg>
+                    Continue with Microsoft
+                  </button>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

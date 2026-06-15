@@ -8,7 +8,8 @@ REM Check if port 3000 is already listening
 netstat -ano | find "LISTENING" | find ":3000" >nul
 if %errorlevel% equ 0 goto already_running
 
-echo [STARTING] Starting local server (npm.cmd run dev)...
+echo [STARTING] Starting local server and file watcher (Auto-sync)...
+start /min cmd /c "node scripts/watch.js"
 start /min cmd /c "npm.cmd run dev"
 
 echo [WAITING] Waiting for the server to be fully ready (Max 30s)...

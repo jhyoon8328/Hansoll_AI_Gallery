@@ -125,6 +125,13 @@
         "description": "인터랙티브 파티클 노드 뷰",
         "status": "N",
         "fileName": "main page dot1.html"
+      },
+      {
+        "title": "OpenPage",
+        "showHelpIcon": false,
+        "description": "OpenPage 새로 생성된 메뉴",
+        "status": "Y",
+        "fileName": "OpenPage.html"
       }
     ],
     "displayPhrase": "Information\\nTechnology",

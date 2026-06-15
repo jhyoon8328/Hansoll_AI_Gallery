@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Proxy Test</h1>
+  <iframe id="test-frame" width="100%" height="800px" border="1"></iframe>
+  <script>
+    async function testProxy() {
+      // Create a local API route to bypass CORS for the fetch
+      const res = await fetch('/api/proxy-html?url=' + encodeURIComponent('https://newsletter-v3.vercel.app/login'));
+      let html = await res.text();
+      // Inject base tag
+      html = html.replace('<head>', '<head><base href="https://newsletter-v3.vercel.app/">');
+      document.getElementById('test-frame').srcdoc = html;
+    }
+    testProxy();
+  </script>
+</body>
+</html>
