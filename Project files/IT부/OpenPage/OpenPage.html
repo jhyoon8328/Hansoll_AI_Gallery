@@ -17,6 +17,9 @@
   
   <!-- Framer Motion -->
   <script src="https://unpkg.com/framer-motion@10.12.16/dist/framer-motion.js"></script>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -610,8 +613,6 @@
       const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
       const [resetKey, setResetKey] = useState(0);
       const [showLogin, setShowLogin] = useState(false);
-      const [username, setUsername] = useState('');
-      const [password, setPassword] = useState('');
       const [dynamicPhrases, setDynamicPhrases] = useState(ALL_PHRASES);
       const [leafMenus, setLeafMenus] = useState([]);
 
@@ -682,8 +683,13 @@
 
       return (
         <div 
-          className="relative w-full h-screen overflow-hidden select-none font-sans"
+          className="relative w-full h-screen overflow-hidden select-none font-sans cursor-pointer"
           style={{ backgroundColor: COLORS.bg, fontFamily: '"Inter", sans-serif' }}
+          onClick={() => {
+            if (stage !== 'subtext') {
+              setStage('subtext');
+            }
+          }}
         >
           {/* Canvas Layer for Particles and Parallax Background */}
           <CanvasBackground key={resetKey} stage={stage} mousePos={mousePos} activeCategory={null} leafMenus={leafMenus} />
@@ -703,21 +709,8 @@
             )}
           </AnimatePresence>
 
-          {/* Top Left Navigation */}
-          <div className="absolute top-6 left-6 z-50 flex items-center gap-2">
-            {/* Home Button */}
-            <motion.button
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              onClick={handleHomeClick}
-              className="text-white/50 hover:text-white transition-all p-3 cursor-pointer rounded-full hover:bg-white/10 backdrop-blur-md"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-            </motion.button>
+          {/* Top Left Navigation (Hidden per user request) */}
+          <div className="hidden absolute top-6 left-6 z-50 items-center gap-2">
           </div>
 
           {/* Floating Subtext Layer */}
@@ -789,78 +782,126 @@
           {/* Microsoft Login Placeholder Modal */}
           <AnimatePresence>
             {showLogin && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md"
-              >
                 <motion.div
-                  initial={{ scale: 0.9, y: 50, opacity: 0 }}
-                  animate={{ scale: 1, y: 0, opacity: 1 }}
-                  exit={{ scale: 0.9, y: 20, opacity: 0 }}
-                  className="bg-white/10 border border-white/20 p-10 rounded-2xl flex flex-col items-center justify-center max-w-md w-full shadow-[0_0_50px_rgba(0,0,0,0.5)] backdrop-blur-xl relative"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 z-[100] flex flex-col items-center justify-center bg-[#091518]/95 backdrop-blur-md"
                 >
                   {/* Close button */}
                   <button 
                     onClick={() => setShowLogin(false)}
-                    className="absolute top-4 right-4 text-white/50 hover:text-white"
+                    className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors"
                   >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
                   </button>
 
-                  {/* MS Logo Placeholder (Kept for aesthetic) */}
-                  <svg className="w-12 h-12 mb-4" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-                    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-                    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-                    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-                  </svg>
-                  
-                  <h2 className="text-2xl font-bold text-white mb-2">Sign In</h2>
-                  <p className="text-white/50 text-center mb-6 text-sm">
-                    Hansoll Textile AI Gallery
-                  </p>
+                  <motion.div
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -10, opacity: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="flex flex-col items-center"
+                  >
+                    {/* Top Icon */}
+                    <div class="w-16 h-16 bg-[#163329] border border-[#265342] rounded-2xl flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(38,83,66,0.4)]">
+                      <svg class="w-8 h-8 text-[#539E6D]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                      </svg>
+                    </div>
 
-                  <div className="w-full space-y-4">
-                    <input 
-                      type="text" 
-                      placeholder="Username" 
-                      value={username}
-                      onChange={(e) => setUsername(e.target.value)}
-                      className="w-full bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 outline-none focus:border-[#00E6C3] focus:ring-1 focus:ring-[#00E6C3] transition-all"
-                    />
-                    <input 
-                      type="password" 
-                      placeholder="Password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          if ((username === 'login' && password === 'logintest') || (username === 'jhyoon' && password === 'test1234')) {
-                            window.parent.postMessage({ type: 'LOGIN_SUCCESS' }, '*');
-                          } else {
-                            alert('아이디 또는 비밀번호가 올바르지 않습니다.');
+                    {/* Title */}
+                    <div class="text-center mb-8 flex flex-col items-center">
+                      <h3 class="text-[0.7rem] font-extrabold tracking-[0.3em] text-[#708E85] mb-2 uppercase">Hansoll Textile</h3>
+                      <h2 class="text-5xl sm:text-[3.5rem] font-black text-[#D0F4E2] leading-none tracking-tighter font-sans mb-3 uppercase" style={{ textShadow: '0 4px 20px rgba(0,0,0,0.3)' }}>AI GALLERY</h2>
+                      <h3 class="text-[0.7rem] font-extrabold tracking-[0.3em] text-[#708E85] uppercase">Portal</h3>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ scale: 0.95, y: 20, opacity: 0 }}
+                    animate={{ scale: 1, y: 0, opacity: 1 }}
+                    exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-[#132226] border border-white/60 p-8 sm:p-10 rounded-[1.5rem] flex flex-col items-center justify-center max-w-[420px] w-[90%] shadow-[0_20px_60px_rgba(0,0,0,0.6)] relative"
+                  >
+                    {/* Description */}
+                    <div class="text-center mb-8">
+                      <p class="text-[#8B9F9A] text-[15px] leading-relaxed">
+                        한솔섬유 임직원 전용 포털입니다.<br/>
+                        회사 Microsoft 계정으로 로그인해 주세요.
+                      </p>
+                    </div>
+
+                    {/* Features */}
+                    <div class="w-full space-y-4 mb-8">
+                      <div class="flex items-center gap-4 text-[14px] text-[#8B9F9A]">
+                        <div class="w-8 h-8 rounded-lg bg-[#1D3230] flex items-center justify-center shrink-0">
+                          <svg class="w-4 h-4 text-[#539E6D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                        </div>
+                        <span class="font-medium">부서별 AI 혁신 사례 및 프롬프트 아카이브</span>
+                      </div>
+                      <div class="flex items-center gap-4 text-[14px] text-[#8B9F9A]">
+                        <div class="w-8 h-8 rounded-lg bg-[#1D3230] flex items-center justify-center shrink-0">
+                          <svg class="w-4 h-4 text-[#539E6D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <span class="font-medium">전사 AI 프로젝트 통합 검색</span>
+                      </div>
+                      <div class="flex items-center gap-4 text-[14px] text-[#8B9F9A]">
+                        <div class="w-8 h-8 rounded-lg bg-[#1D3230] flex items-center justify-center shrink-0">
+                          <svg class="w-4 h-4 text-[#539E6D]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.956 11.956 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </div>
+                        <span class="font-medium">회사 계정 기반 안전한 보안 인증</span>
+                      </div>
+                    </div>
+
+                    <div class="w-full">
+                      <button 
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          const supabaseUrl = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+                          const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+                          const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+                          try {
+                            const { data, error } = await supabase.auth.signInWithOAuth({
+                              provider: 'azure',
+                              options: {
+                                scopes: 'email profile User.Read',
+                                redirectTo: window.parent.location.origin + window.parent.location.pathname,
+                                skipBrowserRedirect: true,
+                              }
+                            });
+
+                            if (error) {
+                              alert('로그인 오류: ' + error.message);
+                            } else if (data && data.url) {
+                              window.parent.location.href = data.url;
+                            } else {
+                              alert('오류: Microsoft 로그인 주소를 받아오지 못했습니다.');
+                            }
+                          } catch (err) {
+                            alert('예외 발생: ' + err.message);
                           }
-                        }
-                      }}
-                      className="w-full bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/30 outline-none focus:border-[#00E6C3] focus:ring-1 focus:ring-[#00E6C3] transition-all"
-                    />
-                    <button 
-                      onClick={() => {
-                        if ((username === 'login' && password === 'logintest') || (username === 'jhyoon' && password === 'test1234')) {
-                          window.parent.postMessage({ type: 'LOGIN_SUCCESS' }, '*');
-                        } else {
-                          alert('아이디 또는 비밀번호가 올바르지 않습니다.');
-                        }
-                      }}
-                      className="w-full py-3 mt-4 bg-[#00E6C3]/80 hover:bg-[#00E6C3] text-black font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
-                    >
-                      Login
-                    </button>
-                  </div>
+                        }}
+                        class="w-full py-3.5 bg-[#539E6D] hover:bg-[#438359] text-white font-bold rounded-xl transition-all shadow-[0_4px_15px_rgba(83,158,109,0.3)] flex items-center justify-center gap-3 text-[15px] hover:-translate-y-0.5"
+                      >
+                        <svg class="w-5 h-5" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                          <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                          <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                          <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                          <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                        </svg>
+                        Microsoft 계정으로 로그인
+                      </button>
+                    </div>
+
+                    {/* Copyright */}
+                    <div class="absolute -bottom-12 w-full text-center pointer-events-none">
+                      <p class="text-[12px] text-[#8B9F9A]/60">© 2026 Hansoll Textile IT Team. All rights reserved.</p>
+                    </div>
+                  </motion.div>
                 </motion.div>
-              </motion.div>
             )}
           </AnimatePresence>
         </div>

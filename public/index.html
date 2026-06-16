@@ -19,6 +19,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide Icons CDN -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Google Fonts & Custom Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap" rel="stylesheet">
@@ -174,33 +176,41 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2 sm:gap-4">
-        <div class="relative hidden sm:block">
-          <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-blue-500 transition-colors" onclick="triggerSearch()"></i>
-          <input type="text" id="global-search-input" onkeydown="handleSearch(event)" oninput="document.getElementById('search-clear-btn').classList.toggle('hidden', !this.value)" placeholder="메뉴 검색..."
-            class="h-9 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500">
-          <button id="search-clear-btn" onclick="clearSearch()" class="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
-            <i data-lucide="x" class="h-3.5 w-3.5"></i>
+      <div class="flex flex-col items-end justify-center">
+        <!-- User Info (Above buttons) -->
+        <div id="header-user-info-container" class="hidden mb-1 mr-2 flex items-center gap-1.5">
+          <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
+          <span id="header-user-info" class="text-[11px] font-bold text-slate-500 tracking-wide">로딩중...</span>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-4">
+          <div class="relative hidden sm:block">
+            <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-blue-500 transition-colors" onclick="triggerSearch()"></i>
+            <input type="text" id="global-search-input" onkeydown="handleSearch(event)" oninput="document.getElementById('search-clear-btn').classList.toggle('hidden', !this.value)" placeholder="메뉴 검색..."
+              class="h-9 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500">
+            <button id="search-clear-btn" onclick="clearSearch()" class="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
+              <i data-lucide="x" class="h-3.5 w-3.5"></i>
+            </button>
+          </div>
+          <div class="h-6 w-px bg-slate-200 hidden sm:block mx-1"></div>
+
+          <button id="header-admin-btn" onclick="promptAdminAuth()" style="display: none;"
+            class="ml-1 flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-3 hover:bg-slate-50 transition-colors">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <i data-lucide="user" class="h-4 w-4"></i>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 hidden sm:block">관리자</span>
+          </button>
+
+          <!-- Logout Button -->
+          <button id="header-logout-btn" onclick="handleLogout()"
+            class="ml-1 flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-3 hover:bg-rose-50 transition-colors">
+            <div class="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-rose-600">
+              <i data-lucide="log-out" class="h-4 w-4"></i>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 hidden sm:block">로그아웃</span>
           </button>
         </div>
-        <div class="h-6 w-px bg-slate-200 hidden sm:block mx-1"></div>
-
-        <button id="header-admin-btn" onclick="promptAdminAuth()"
-          class="ml-1 flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-3 hover:bg-slate-50 transition-colors">
-          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100 text-blue-600">
-            <i data-lucide="user" class="h-4 w-4"></i>
-          </div>
-          <span class="text-sm font-semibold text-slate-700 hidden sm:block">관리자</span>
-        </button>
-
-        <!-- Logout Button -->
-        <button id="header-logout-btn" onclick="handleLogout()"
-          class="ml-1 flex h-9 items-center gap-2 rounded-full border border-slate-200 bg-white p-1 pr-3 hover:bg-rose-50 transition-colors">
-          <div class="flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-rose-600">
-            <i data-lucide="log-out" class="h-4 w-4"></i>
-          </div>
-          <span class="text-sm font-semibold text-slate-700 hidden sm:block">로그아웃</span>
-        </button>
       </div>
     </header>
 
@@ -1200,25 +1210,116 @@
 
     function handleLogout() {
       if (confirm('로그아웃 하시겠습니까?')) {
-        sessionStorage.removeItem('isLoggedIn');
-        document.body.classList.add('is-logged-out');
-        const content = document.getElementById('main-content');
-        content.innerHTML = `
-          <div class="w-full h-full relative bg-black">
-            <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
-          </div>
-        `;
-        // Also clear any saved nav state so next login starts fresh
         sessionStorage.removeItem('savedNavState');
+        if (window.supabaseClient) {
+          window.supabaseClient.auth.signOut();
+        } else {
+          sessionStorage.removeItem('isLoggedIn');
+          document.body.classList.add('is-logged-out');
+          const content = document.getElementById('main-content');
+          content.innerHTML = `
+            <div class="w-full h-full relative bg-black">
+              <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
+            </div>
+          `;
+        }
       }
     }
 
     // Initialize application
-    function initializeApp() {
+    async function initializeApp() {
       lucide.createIcons();
       
-      const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
-      if (!isLoggedIn) {
+      const supabaseUrl = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+      const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+      window.supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+      // --- 에러 디버깅 코드 추가 ---
+      if (window.location.hash && window.location.hash.includes('error_description=')) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const errorDesc = hashParams.get('error_description');
+        alert("Microsoft 연동 에러 발생: " + errorDesc);
+        // 에러를 본 후 해시 지우기
+        window.history.replaceState(null, null, ' ');
+      }
+      // ----------------------------
+
+      // Auth State Listener
+      window.supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (session) {
+          sessionStorage.setItem('isLoggedIn', 'true');
+          document.body.classList.remove('is-logged-out');
+
+          // --- Microsoft Graph API로 부서 및 이름 가져오기 ---
+          if (session.provider_token) {
+            try {
+              const res = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName,department,officeLocation', {
+                headers: { 'Authorization': `Bearer ${session.provider_token}` }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                
+                if (data.department) sessionStorage.setItem('ms_department', data.department);
+                
+                // 회사 정책에 따라 한글 이름이 officeLocation에 저장되어 있음
+                let korName = '';
+                if (data.officeLocation) {
+                  korName = data.officeLocation;
+                } else if (data.displayName) {
+                  korName = data.displayName;
+                }
+                
+                if (korName) sessionStorage.setItem('ms_displayName', korName);
+              }
+            } catch (err) {
+              console.error('MS Graph API Error:', err);
+            }
+          }
+          
+          let dep = sessionStorage.getItem('ms_department') || '';
+          let name = sessionStorage.getItem('ms_displayName') || (session.user && session.user.user_metadata && session.user.user_metadata.full_name) || '';
+          
+          if (name) {
+            let userInfoStr = dep ? `${dep} / ${name}` : name;
+            const userInfoEl = document.getElementById('header-user-info');
+            const userContainer = document.getElementById('header-user-info-container');
+            if(userInfoEl && userContainer) {
+              userInfoEl.innerText = userInfoStr;
+              userContainer.classList.remove('hidden');
+            }
+          }
+          
+          // --- IT부 전용 관리자/수정 버튼 표시 로직 ---
+          const adminBtn = document.getElementById('header-admin-btn');
+          const detailEditBtn = document.getElementById('detail-edit-btn');
+          
+          if (dep && dep.trim() === 'IT부') {
+            if (adminBtn) adminBtn.style.display = ''; // flex 적용
+            if (detailEditBtn) detailEditBtn.style.display = ''; // flex 적용
+          } else {
+            if (adminBtn) adminBtn.style.display = 'none';
+            if (detailEditBtn) detailEditBtn.style.display = 'none';
+          }
+          // ----------------------------------------------------
+
+          renderDashboard(); 
+        } else {
+          sessionStorage.removeItem('isLoggedIn');
+          document.body.classList.add('is-logged-out');
+          const content = document.getElementById('main-content');
+          if (!content.innerHTML.includes('OpenPage.html')) {
+            content.innerHTML = `
+              <div class="w-full h-full relative bg-black">
+                <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
+              </div>
+            `;
+          }
+        }
+      });
+
+      // Initial check
+      const { data: { session } } = await window.supabaseClient.auth.getSession();
+      if (!session) {
         document.body.classList.add('is-logged-out');
         const content = document.getElementById('main-content');
         content.innerHTML = `
@@ -1226,19 +1327,8 @@
             <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
           </div>
         `;
-      } else {
-        // Default initial load if already logged in (it will trigger loadMenuData anyway, but good to ensure content isn't empty)
-        // renderDashboard is called after menuData loads, so we don't need to do it here
       }
     }
-
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'LOGIN_SUCCESS') {
-        sessionStorage.setItem('isLoggedIn', 'true');
-        document.body.classList.remove('is-logged-out');
-        renderDashboard(); 
-      }
-    });
 
     initializeApp();
 
@@ -1572,7 +1662,7 @@
       
       <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
         <button onclick="closeTooltipDetail()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">닫기</button>
-        <button onclick="openTooltipAuth(); closeTooltipDetail();" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-sm shadow-slate-800/20 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-1.5"><i data-lucide="edit-2" class="w-4 h-4"></i> 수정</button>
+        <button id="detail-edit-btn" onclick="openTooltipAuth(); closeTooltipDetail();" style="display: none;" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-sm shadow-slate-800/20 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-1.5"><i data-lucide="edit-2" class="w-4 h-4"></i> 수정</button>
       </div>
     </div>
   </div>
@@ -1757,6 +1847,17 @@
           alert("데이터베이스 저장에 실패했습니다.");
         } else {
           console.log("Supabase 저장 성공!");
+          // 수정된 데이터를 즉시 반영하기 위해 DB에서 최신 데이터 다시 불러오기
+          const manualRes = await fetch(`${SUPABASE_URL}/rest/v1/MenualPage?select=*`, {
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            cache: 'no-store'
+          });
+          if (manualRes.ok) {
+            window.globalMenualData = await manualRes.json();
+          }
         }
       } catch (e) {
         console.error("네트워크 오류:", e);

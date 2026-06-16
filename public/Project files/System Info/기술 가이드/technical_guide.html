@@ -164,6 +164,33 @@
                 </div>
             </div>
 
+            <!-- Microsoft Entra ID Card -->
+            <div class="glass-card rounded-2xl p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 relative overflow-hidden group md:col-span-2">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl -mr-10 -mt-10 transition-transform group-hover:scale-150"></div>
+                <div class="flex items-center gap-4 mb-4 relative z-10">
+                    <div class="p-3 bg-sky-100 text-sky-600 rounded-xl">
+                        <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-800">테넌트 계정 (Microsoft Entra ID) 기반 사내 보안 로그인</h2>
+                </div>
+                <div class="space-y-4 relative z-10">
+                    <div class="bg-white/50 rounded-xl p-4 border border-slate-100">
+                        <span class="font-bold text-slate-700 block mb-2">도입 배경 (보안 강화 및 편의성 증대)</span>
+                        <p class="text-sm text-slate-600">허가되지 않은 외부 인원의 접근을 원천 차단하고, 임직원들이 별도의 번거로운 회원가입 절차 없이 이미 사용 중인 회사 업무용 계정으로 안전하게 포털에 접속할 수 있도록 Single Sign-On (SSO) 환경을 구축했습니다.</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-sky-700 text-sm block mb-1">핵심 기술 로직 (Supabase Auth & Graph API)</span>
+                            <p class="text-xs text-slate-600 flex-1">Supabase의 인증(Auth) 시스템을 통해 Microsoft 서버로 안전하게 권한을 넘긴 뒤, <strong>Microsoft Graph API</strong>를 호출합니다. 단순히 영문 이름뿐만 아니라 사내 정책상 한글 이름이 저장된 '사무실 위치(officeLocation)' 속성과 '부서명(department)' 데이터를 즉시 불러와 화면에 띄워줍니다.</p>
+                        </div>
+                        <div class="bg-white/50 rounded-xl p-4 border border-slate-100 flex flex-col h-full">
+                            <span class="font-bold text-sky-700 text-sm block mb-1">도입 성과 (부서 맞춤형 스마트 권한 제어)</span>
+                            <p class="text-xs text-slate-600 flex-1">모든 사용자가 본인의 한글 이름과 부서를 명확히 확인할 수 있으며, Graph API로 추출한 부서 데이터를 기반으로 <strong>"IT부" 소속에게만 관리자 버튼(톱니바퀴)을 자동으로 노출</strong>시켜 타 부서 인원의 접근을 차단하는 동적 보안 로직이 완성되었습니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Detailed Guide Section -->
@@ -368,11 +395,53 @@
                 </div>
             </div>
 
-            <!-- 10. 파이썬 실행의 남은 숙제와 대안 -->
+            <!-- 10. 인증 아키텍처 -->
+            <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-indigo-500 mt-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <i data-lucide="key" class="w-5 h-5 text-indigo-500"></i>
+                    10. 사내 로그인 인증 구조 (왜 Vercel이 아닌 Supabase에만 보안키를 넣었을까?)
+                </h3>
+                <div class="flex flex-col md:flex-row gap-6 items-start">
+                    <div class="flex-1 space-y-4 text-slate-600 text-sm leading-relaxed">
+                        <p><strong class="text-slate-700 font-bold bg-indigo-50 px-2 py-0.5 rounded">핵심 요약:</strong> Microsoft 사내 계정 연동을 위해 필요한 <strong>핵심 열쇠(테넌트 ID, 보안 비밀번호, App ID 등)</strong>를 화면을 보여주는 Vercel이 아니라, 뒷단의 <strong>Supabase(데이터베이스/인증 서버)</strong>에만 보관하도록 설계했습니다.</p>
+                        
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="layout" class="w-4 h-4 text-indigo-600"></i> Vercel (건물의 안내데스크)</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-indigo-100">
+                                비유하자면 Vercel은 누구나 오갈 수 있는 '건물 1층의 투명한 안내데스크'입니다. 화면(HTML, JS)을 방문자에게 매우 빠르게 배포하는 데 특화되어 있습니다. 하지만 코드가 방문자의 인터넷 브라우저(크롬 등)에 그대로 노출될 수 있기 때문에, 이곳에 회사 전체의 보안 출입 명부를 통째로 맡기거나 마스터 키(보안 비밀번호)를 두는 것은 대단히 위험합니다.
+                            </p>
+                        </div>
+
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="shield-check" class="w-4 h-4 text-indigo-600"></i> Supabase (지하의 철통 금고실)</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-indigo-100">
+                                반면 Supabase는 외부에서 절대 코드를 뜯어볼 수 없는 '지하의 철통 금고실(백엔드 서버)'입니다. 그래서 Microsoft 시스템과 소통하기 위한 <strong>진짜 마스터 키(테넌트 ID, 보안 Secret ID 등)를 오직 Supabase 금고 안에만 안전하게 설정</strong>해 두었습니다.
+                            </p>
+                        </div>
+
+                        <div>
+                            <strong class="text-slate-800 flex items-center gap-1"><i data-lucide="arrow-right-left" class="w-4 h-4 text-indigo-600"></i> 실제 로그인 진행 과정 (안전한 역할 분담)</strong>
+                            <p class="mt-1 pl-5 border-l-2 border-indigo-100">
+                                1. 사용자가 Vercel 안내데스크에서 <strong>[로그인 버튼]</strong>을 누릅니다.<br>
+                                2. 안내데스크는 직접 검사를 하지 않고, 사용자를 지하의 <strong>Supabase 금고실</strong>로 내려보냅니다.<br>
+                                3. Supabase는 금고 안에 숨겨둔 마스터 키를 꺼내어 <strong>Microsoft 본사(Azure AD)</strong>에 "이 사람 우리 직원 맞나요?" 라고 은밀하게 확인(인증)을 받습니다.<br>
+                                4. Microsoft가 "맞다"고 승인하면, Supabase는 사용자에게 안전한 <strong>'임시 출입증(토큰)'</strong>만 발급해 줍니다.<br>
+                                5. 사용자는 그 출입증만 들고 Vercel로 돌아와 포털을 자유롭게 이용합니다.
+                            </p>
+                        </div>
+                        
+                        <p class="bg-indigo-50/50 p-3 rounded-lg border border-indigo-100 mt-2">
+                            <strong>결과적으로:</strong> 이 방식을 통해 회사의 민감한 보안 키가 인터넷이나 사용자 브라우저에 단 한 글자도 유출되지 않으며, 관리자는 파편화된 Vercel 환경을 신경 쓸 필요 없이 <strong>오직 중앙 금고인 Supabase 단 한 곳에서만 보안 키를 간편하고 강력하게 통제</strong>할 수 있습니다.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 11. 파이썬 실행의 남은 숙제와 대안 -->
             <div class="glass-card rounded-2xl p-6 shadow-sm border-l-4 border-l-orange-500 mt-6">
                 <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mb-4">
                     <i data-lucide="alert-triangle" class="w-5 h-5 text-orange-500"></i>
-                    10. 파이썬(.bat) 직접 실행 불가 문제와 현재의 대안 (남은 숙제)
+                    11. 파이썬(.bat) 직접 실행 불가 문제와 현재의 대안 (남은 숙제)
                 </h3>
                 <div class="flex flex-col md:flex-row gap-6 items-start">
                     <div class="flex-1 space-y-3 text-slate-600 text-sm leading-relaxed">
