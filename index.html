@@ -775,6 +775,13 @@
       if (openMenuSlug !== brandSlug) openMenuSlug = brandSlug;
       initMenu();
 
+      const particleKey = 'particle_shown_' + brandSlug;
+      if (sessionStorage.getItem(particleKey) === 'true') {
+        renderBrandPage(brandSlug, true);
+        return;
+      }
+      sessionStorage.setItem(particleKey, 'true');
+
       window.currentTransitionData = {
         text: brandData.displayPhrase || brandData.title,
         bgColor: brandData.bgColor || '#050505',
@@ -1215,6 +1222,9 @@
           window.supabaseClient.auth.signOut();
         } else {
           sessionStorage.removeItem('isLoggedIn');
+          Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('particle_shown_')) sessionStorage.removeItem(key);
+          });
           document.body.classList.add('is-logged-out');
           const content = document.getElementById('main-content');
           content.innerHTML = `
@@ -1305,6 +1315,9 @@
           renderDashboard(); 
         } else {
           sessionStorage.removeItem('isLoggedIn');
+          Object.keys(sessionStorage).forEach(key => {
+            if (key.startsWith('particle_shown_')) sessionStorage.removeItem(key);
+          });
           document.body.classList.add('is-logged-out');
           const content = document.getElementById('main-content');
           if (!content.innerHTML.includes('OpenPage.html')) {
@@ -1320,6 +1333,9 @@
       // Initial check
       const { data: { session } } = await window.supabaseClient.auth.getSession();
       if (!session) {
+        Object.keys(sessionStorage).forEach(key => {
+          if (key.startsWith('particle_shown_')) sessionStorage.removeItem(key);
+        });
         document.body.classList.add('is-logged-out');
         const content = document.getElementById('main-content');
         content.innerHTML = `
