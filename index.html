@@ -1219,7 +1219,7 @@
           const content = document.getElementById('main-content');
           content.innerHTML = `
             <div class="w-full h-full relative bg-black">
-              <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
+              <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
             </div>
           `;
         }
@@ -1310,7 +1310,7 @@
           if (!content.innerHTML.includes('OpenPage.html')) {
             content.innerHTML = `
               <div class="w-full h-full relative bg-black">
-                <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
+                <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
               </div>
             `;
           }
@@ -1324,7 +1324,7 @@
         const content = document.getElementById('main-content');
         content.innerHTML = `
           <div class="w-full h-full relative bg-black">
-            <iframe src="Project files/IT부/OpenPage/OpenPage.html" class="w-full h-full border-none absolute inset-0"></iframe>
+            <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
           </div>
         `;
       }
