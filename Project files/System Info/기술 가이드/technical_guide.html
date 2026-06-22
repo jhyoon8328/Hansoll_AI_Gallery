@@ -6,6 +6,7 @@
     <title>기술 가이드 - Hansoll AI Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -15,16 +16,21 @@
 <body class="min-h-screen p-8">
     <div class="max-w-5xl mx-auto space-y-8 animate-fade-in-up">
         <!-- Header -->
-        <header class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+        <header class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden" id="pdf-header">
             <div class="absolute inset-0 bg-white/10 opacity-50 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px]"></div>
-            <div class="relative z-10 flex items-center gap-4 mb-4">
-                <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                    <i data-lucide="cpu" class="w-8 h-8 text-white"></i>
+            <div class="relative z-10 flex items-center justify-between mb-4">
+                <div class="flex items-center gap-4">
+                    <div class="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
+                        <i data-lucide="cpu" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-extrabold tracking-tight">주요 기술 가이드</h1>
+                        <p class="text-blue-100 mt-1 font-medium">Hansoll AI Portal을 구동하는 핵심 기술 스택 및 구조 안내</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight">주요 기술 가이드</h1>
-                    <p class="text-blue-100 mt-1 font-medium">Hansoll AI Portal을 구동하는 핵심 기술 스택 및 구조 안내</p>
-                </div>
+                <button id="pdf-btn" onclick="downloadPDF()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-lg backdrop-blur-sm shadow-sm font-semibold text-sm cursor-pointer z-50 relative">
+                    <i data-lucide="download" class="w-4 h-4"></i> PDF 다운로드
+                </button>
             </div>
         </header>
 
@@ -460,6 +466,27 @@
     </div>
     <script>
         lucide.createIcons();
+
+        function downloadPDF() {
+            const element = document.querySelector('.max-w-5xl');
+            const btn = document.getElementById('pdf-btn');
+            
+            // Hide button during PDF generation
+            if (btn) btn.style.display = 'none';
+
+            const opt = {
+                margin:       [10, 10, 10, 10], // top, left, bottom, right
+                filename:     'Hansoll_AI_Portal_기술가이드.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1200 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restore button after saving
+                if (btn) btn.style.display = 'flex';
+            });
+        }
     </script>
 </body>
 </html>
