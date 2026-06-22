@@ -468,32 +468,42 @@
         lucide.createIcons();
 
         function downloadPDF() {
-            const element = document.querySelector('.max-w-5xl');
             const btn = document.getElementById('pdf-btn');
-            
-            // Hide button during PDF generation
             if (btn) btn.style.display = 'none';
+
+            // 원본 요소 
+            const originalElement = document.querySelector('.max-w-5xl');
             
-            // 왼쪽 잘림 현상 방지를 위해 캡처 전에 mx-auto 속성 임시 해제
-            const originalClasses = element.className;
-            element.classList.remove('mx-auto');
+            // 캡처용 컨테이너 생성 및 스타일 강제 고정
+            const clone = originalElement.cloneNode(true);
+            const container = document.createElement('div');
+            container.style.position = 'absolute';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.width = '1024px'; // 렌더링 너비를 1024px로 고정하여 잘림 방지
+            container.style.padding = '40px';
+            container.style.backgroundColor = '#f8fafc';
+            container.style.fontFamily = "'Pretendard', sans-serif";
+            container.style.zIndex = '-9999';
 
-            // 스타일 적용 대기 후 캡처 진행
-            setTimeout(() => {
-                const opt = {
-                    margin:       [10, 10, 10, 10], // top, left, bottom, right
-                    filename:     'Hansoll_AI_Portal_기술가이드.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
+            // mx-auto 속성 등 불필요한 마진 제거
+            clone.classList.remove('mx-auto');
+            container.appendChild(clone);
+            document.body.appendChild(container);
 
-                html2pdf().set(opt).from(element).save().then(() => {
-                    // Restore button and layout after saving
-                    element.className = originalClasses;
-                    if (btn) btn.style.display = 'flex';
-                });
-            }, 100);
+            const opt = {
+                margin:       10, // top, left, bottom, right
+                filename:     'Hansoll_AI_Portal_기술가이드.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1024, scrollX: 0, scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save().then(() => {
+                // 다운로드 후 임시 컨테이너 제거
+                document.body.removeChild(container);
+                if (btn) btn.style.display = 'flex';
+            });
         }
     </script>
 </body>
