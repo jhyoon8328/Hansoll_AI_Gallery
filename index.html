@@ -128,9 +128,12 @@
 
 <body class="h-screen bg-[#f5f7fb] text-slate-900 overflow-hidden flex">
 
+  <!-- Sidebar Backdrop -->
+  <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden opacity-0 transition-opacity duration-300 md:hidden" onclick="toggleSidebar()"></div>
+
   <!-- ==================== SIDEBAR ==================== -->
-  <aside
-    class="w-[280px] flex-shrink-0 flex flex-col bg-white border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-40 transition-transform duration-300">
+  <aside id="sidebar"
+    class="fixed inset-y-0 left-0 w-[280px] -translate-x-full md:relative md:translate-x-0 md:flex-shrink-0 flex flex-col bg-white border-r border-slate-200/80 shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-50 transition-transform duration-300">
     <!-- Header / Logo -->
     <div class="flex h-[70px] shrink-0 items-center border-b border-slate-100 px-6" onclick="renderDashboard()">
       <div class="flex items-center gap-3 group w-full cursor-pointer">
@@ -167,16 +170,20 @@
 
     <!-- Header -->
     <header
-      class="h-[70px] flex-shrink-0 flex items-center justify-between bg-white border-b border-slate-200/80 px-4 sm:px-8 z-30">
-      <div class="flex items-center gap-4">
-        <div class="flex items-center text-sm font-medium text-slate-500" id="breadcrumb">
-          <span class="hover:text-blue-600 cursor-pointer transition-colors" onclick="renderDashboard()">시스템 관리</span>
+      class="h-[70px] flex-shrink-0 flex items-center justify-between bg-white border-b border-slate-200/80 px-3 sm:px-8 z-30 relative">
+      <div class="flex items-center gap-2 sm:gap-4 max-w-[50%]">
+        <!-- Hamburger Button -->
+        <button onclick="toggleSidebar()" class="md:hidden flex items-center justify-center p-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
+          <i data-lucide="menu" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center text-[11px] sm:text-sm font-medium text-slate-500 truncate" id="breadcrumb">
+          <span class="hover:text-blue-600 cursor-pointer transition-colors truncate" onclick="renderDashboard()">시스템 관리</span>
           <span class="mx-2 text-slate-300">/</span>
           <span class="text-slate-900 font-semibold">대시보드</span>
         </div>
       </div>
 
-      <div class="flex flex-col items-end justify-center">
+      <div class="flex flex-col items-end justify-center shrink-0">
         <!-- User Info (Above buttons) -->
         <div id="header-user-info-container" class="hidden mb-1 mr-2 flex items-center gap-1.5">
           <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]"></span>
@@ -227,11 +234,35 @@
     </main>
   </div>
 
-  <!-- JavaScript for dynamic routing and rendering -->
   <script>
     const defaultMenuData = [];
     let menuData = [];
     window.menuData = menuData;
+
+    let isSidebarOpen = false;
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const backdrop = document.getElementById('sidebar-backdrop');
+      if (!sidebar || !backdrop) return;
+      
+      isSidebarOpen = !isSidebarOpen;
+      if (isSidebarOpen) {
+        sidebar.classList.remove('-translate-x-full');
+        backdrop.classList.remove('hidden');
+        void backdrop.offsetWidth; // trigger reflow
+        backdrop.classList.remove('opacity-0');
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        backdrop.classList.add('opacity-0');
+        setTimeout(() => backdrop.classList.add('hidden'), 300);
+      }
+    }
+
+    function closeSidebarIfMobile() {
+      if (window.innerWidth < 768 && isSidebarOpen) {
+        toggleSidebar();
+      }
+    }
 
     async function loadMenuData(isQuietRefresh) {
       try {
@@ -478,6 +509,8 @@
               initMenu();
             } else {
               startBrandTransition(item.slug);
+              document.getElementById('sidebar').classList.add('-translate-x-full');
+              document.getElementById('sidebar-backdrop').classList.add('hidden');
             }
           }
         };
@@ -745,6 +778,7 @@
 
     // Render Original Dashboard -> Now: Main Landing Showcase
     function renderDashboard() {
+      closeSidebarIfMobile();
       if (!canNavigate()) return;
       pushNavState({ type: 'dashboard' });
       setBackButtonTheme('dark');
@@ -830,6 +864,7 @@
 
     // Render Dynamic Brand Page
     function renderBrandPage(brandSlug, forceOpen = true) {
+      closeSidebarIfMobile();
       if (!canNavigate()) return;
       pushNavState({ type: 'brand', slug: brandSlug });
       setBackButtonTheme(brandSlug === 'it' ? 'light' : 'light');
@@ -921,6 +956,7 @@
     }
 
     function openSubMenu(brandTitle, subTitle) {
+      closeSidebarIfMobile();
       if (!canNavigate()) return;
       pushNavState({ type: 'submenu', brand: brandTitle, sub: subTitle });
       
