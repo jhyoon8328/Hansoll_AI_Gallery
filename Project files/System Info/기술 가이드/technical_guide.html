@@ -473,19 +473,27 @@
             
             // Hide button during PDF generation
             if (btn) btn.style.display = 'none';
+            
+            // 왼쪽 잘림 현상 방지를 위해 캡처 전에 mx-auto 속성 임시 해제
+            const originalClasses = element.className;
+            element.classList.remove('mx-auto');
 
-            const opt = {
-                margin:       [10, 10, 10, 10], // top, left, bottom, right
-                filename:     'Hansoll_AI_Portal_기술가이드.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, windowWidth: 1200 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
+            // 스타일 적용 대기 후 캡처 진행
+            setTimeout(() => {
+                const opt = {
+                    margin:       [10, 10, 10, 10], // top, left, bottom, right
+                    filename:     'Hansoll_AI_Portal_기술가이드.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
 
-            html2pdf().set(opt).from(element).save().then(() => {
-                // Restore button after saving
-                if (btn) btn.style.display = 'flex';
-            });
+                html2pdf().set(opt).from(element).save().then(() => {
+                    // Restore button and layout after saving
+                    element.className = originalClasses;
+                    if (btn) btn.style.display = 'flex';
+                });
+            }, 100);
         }
     </script>
 </body>
