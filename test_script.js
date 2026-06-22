@@ -319,6 +319,10 @@
                             <span class="text-sm font-medium text-slate-700">${title}</span>
                         </div>
                             <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${(typeof sub === 'object' && sub.isPrivate) ? 'checked' : ''} onchange="toggleMenuPrivate(${catIndex}, ${subIndex})">
+                                </label>
                                 <span class="text-xs font-bold ${status === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${status === 'Y' ? '사용중' : '숨김'}</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" class="sr-only peer" ${isChecked} onchange="toggleMenuStatus(${catIndex}, ${subIndex})">
@@ -356,6 +360,10 @@
                                 <h3 class="font-bold text-slate-800">${cat.title}</h3>
                             </div>
                             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+                                <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${cat.isPrivate ? 'checked' : ''} onchange="toggleCategoryPrivate(${catIndex})">
+                                </label>
                                 <span class="text-xs font-bold ${(cat.status || 'Y') === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${(cat.status || 'Y') === 'Y' ? '사용중' : '숨김'}</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" class="sr-only peer" ${catChecked} onchange="toggleCategoryStatus(${catIndex})">

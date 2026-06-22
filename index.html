@@ -217,7 +217,7 @@
     <!-- Main Dashboard -->
     <main class="flex-1 overflow-y-auto custom-scrollbar flex relative">
       <!-- Global Back Button -->
-      <button id="global-back-btn" onclick="goBack()" class="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 hidden group">
+      <button id="global-back-btn" onclick="goBack()" style="display: none !important;" class="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 hidden group">
         <i data-lucide="arrow-left" class="w-5 h-5 transition-transform group-hover:-translate-x-1"></i>
       </button>
 
@@ -260,6 +260,7 @@
                   title: sub.menu_name,
                   description: subMeta.description || "",
                   status: sub.YN_use ? 'Y' : 'N',
+                  isPrivate: sub.YN_view === 'Y',
                   fileName: sub.file_path || "",
                   menuId: sub.MenuId || sub.menu_name,
                   urlAddress: sub.url_address || "",
@@ -275,6 +276,7 @@
                 imageUrl: meta.imageUrl || "",
                 icon: meta.icon || "",
                 status: cat.YN_use ? 'Y' : 'N',
+                isPrivate: cat.YN_view === 'Y',
                 displayPhrase: meta.displayPhrase || "",
                 bgColor: meta.bgColor || "",
                 textColor: meta.textColor || "",
@@ -282,10 +284,19 @@
               };
             });
 
-            menuData = reconstructedData.filter(cat => (cat.status || 'Y') === 'Y').map(cat => ({
+            const dep = sessionStorage.getItem('ms_department') || '';
+            menuData = reconstructedData.filter(cat => {
+              if ((cat.status || 'Y') !== 'Y') return false;
+              if (cat.isPrivate && dep.trim() !== 'IT부') return false;
+              return true;
+            }).map(cat => ({
               ...cat,
-              subItems: cat.subItems.filter(sub => (sub.status || 'Y') === 'Y')
-            }));
+              subItems: cat.subItems.filter(sub => {
+                if ((sub.status || 'Y') !== 'Y') return false;
+                if (sub.isPrivate && dep.trim() !== 'IT부') return false;
+                return true;
+              })
+            })).filter(cat => cat.subItems.length > 0 || dep.trim() === 'IT부');
             window.menuData = menuData;
           }
         }
@@ -323,6 +334,9 @@
       if (!isLoggedIn) {
         return; // Prevent rendering dashboard if showing OpenPage
       }
+      if (window.isPortalInitialized) return;
+      window.isPortalInitialized = true;
+
       const savedStateStr = sessionStorage.getItem('savedNavState');
       if (savedStateStr) {
         try {
@@ -763,6 +777,9 @@
       if (event.data && event.data.type === 'RELOAD_PORTAL') {
         window.location.reload();
       }
+      if (event.data && event.data.type === 'UPDATE_PORTAL_MENU') {
+        loadMenuData(true);
+      }
     });
 
     function startBrandTransition(brandSlug) {
@@ -1046,7 +1063,7 @@
           alert("웹 브라우저의 보안 한계로 인해 여기서 직접 실행할 수 없습니다.\\n\\n[1단계] 버튼을 눌러 다운로드된 'CMPH_실행_orig.bat' 파일을 브라우저의 다운로드 폴더에서 찾아 직접 더블클릭하여 실행해 주시기 바랍니다.");
         };
       } else {
-        if (subItem && subItem.fileName) {
+        if (subItem && (subItem.fileName || subItem.urlAddress)) {
           const folderName = subItem.folderName || subTitle;
           const filePath = `Project files/${brandTitle}/${folderName}/${subItem.fileName}`;
           
@@ -1312,7 +1329,25 @@
           }
           // ----------------------------------------------------
 
-          renderDashboard(); 
+          if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+            if (window.isPortalInitialized) return;
+            window.isPortalInitialized = true;
+
+            if (!window.menuData || window.menuData.length === 0) {
+              await loadMenuData(true);
+            }
+            const savedStateStr = sessionStorage.getItem('savedNavState');
+            if (savedStateStr) {
+              try {
+                const savedState = JSON.parse(savedStateStr);
+                restoreState(savedState);
+              } catch(e) {
+                renderDashboard();
+              }
+            } else {
+              renderDashboard();
+            }
+          }
         } else {
           sessionStorage.removeItem('isLoggedIn');
           Object.keys(sessionStorage).forEach(key => {
@@ -1800,7 +1835,23 @@
       document.getElementById('tooltip-edit-modal').classList.add('hidden');
     }
 
-    function promptAdminAuth() {
+    async function promptAdminAuth() {
+      const dep = sessionStorage.getItem('ms_department') || '';
+      let name = sessionStorage.getItem('ms_displayName') || '';
+      
+      if (!name && window.supabaseClient) {
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
+        if (session && session.user && session.user.user_metadata) {
+          name = session.user.user_metadata.full_name || '';
+        }
+      }
+
+      if (dep.trim() === 'IT부' && name.trim() === '윤정호') {
+        updateAdminButtonState(true);
+        openAdminPage();
+        return;
+      }
+
       document.getElementById('admin-id-input').value = "";
       document.getElementById('admin-pw-input').value = "";
       document.getElementById('page-admin-auth-modal').classList.remove('hidden');

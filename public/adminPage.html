@@ -410,6 +410,7 @@
                                     title: sub.menu_name,
                                     description: subMeta.description || "",
                                     status: sub.YN_use ? 'Y' : 'N',
+                                    isPrivate: sub.YN_view === 'Y',
                                     fileName: sub.file_path || "",
                                     menuId: sub.MenuId || sub.menu_name,
                                     folderName: subMeta.folderName || sub.menu_name,
@@ -426,6 +427,7 @@
                                 imageUrl: meta.imageUrl || "",
                                 icon: meta.icon || "",
                                 status: cat.YN_use ? 'Y' : 'N',
+                                isPrivate: cat.YN_view === 'Y',
                                 displayPhrase: meta.displayPhrase || "",
                                 bgColor: meta.bgColor || "#050505",
                                 textColor: meta.textColor || "#ffffff",
@@ -479,7 +481,11 @@
             }
         }
 
-        window.onload = loadMenuData;
+        window.onload = async () => {
+    await loadMenuData();
+    const activeTab = sessionStorage.getItem('admin_active_tab') || 'home';
+    switchTab(activeTab);
+};
 
         async function saveData() {
             try {
@@ -493,6 +499,7 @@
                         file_path: null,
                         url_address: "",
                         YN_use: (cat.status || 'Y') === 'Y',
+                        YN_view: cat.isPrivate ? 'Y' : 'N',
                         menu_meta: {
                             icon: cat.icon,
                             slug: cat.slug,
@@ -531,6 +538,7 @@
                                 file_path: subFile,
                                 url_address: isUrl ? urlAddr : "",
                                 YN_use: subStatus === 'Y',
+                                YN_view: sub.isPrivate ? 'Y' : 'N',
                                 menu_meta: {
                                     description: subDesc,
                                     folderName: folderName,
@@ -587,10 +595,20 @@
                 c.classList.add('hidden');
             });
 
-            event.target.classList.add('active');
+            if (window.event && window.event.target && window.event.target.classList.contains('tab-btn')) {
+                window.event.target.classList.add('active');
+            } else {
+                const btn = document.querySelector(`.tab-btn[onclick*="switchTab('${tabId}')"]`);
+                if(btn) btn.classList.add('active');
+            }
+
             const target = document.getElementById('tab-' + tabId);
-            target.classList.remove('hidden');
-            target.classList.add('block');
+            if(target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+            }
+            
+            sessionStorage.setItem('admin_active_tab', tabId);
             
             if(tabId === 'home') renderDashboard();
         }
@@ -704,6 +722,10 @@
                             <span class="text-sm font-medium text-slate-700">${title}</span>
                         </div>
                             <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${(typeof sub === 'object' && sub.isPrivate) ? 'checked' : ''} onchange="toggleMenuPrivate(${catIndex}, ${subIndex})">
+                                </label>
                                 <span class="text-xs font-bold ${status === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${status === 'Y' ? '사용중' : '숨김'}</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" class="sr-only peer" ${isChecked} onchange="toggleMenuStatus(${catIndex}, ${subIndex})">
@@ -741,6 +763,10 @@
                                 <h3 class="font-bold text-slate-800">${cat.title}</h3>
                             </div>
                             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+                                <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${cat.isPrivate ? 'checked' : ''} onchange="toggleCategoryPrivate(${catIndex})">
+                                </label>
                                 <span class="text-xs font-bold ${(cat.status || 'Y') === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${(cat.status || 'Y') === 'Y' ? '사용중' : '숨김'}</span>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" class="sr-only peer" ${catChecked} onchange="toggleCategoryStatus(${catIndex})">
@@ -797,10 +823,9 @@
             alert("변경사항이 정상적으로 저장되었습니다. 화면을 새로고침합니다.");
             try {
                 if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({ type: 'RELOAD_PORTAL' }, '*');
-                } else {
-                    window.location.reload();
+                    window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                 }
+                window.location.reload();
             } catch(e) {
                 window.location.reload();
             }
@@ -829,6 +854,18 @@
             const cat = globalMenuData[catIndex];
             cat.status = (cat.status || 'Y') === 'Y' ? 'N' : 'Y';
             renderMenuManager();
+        }
+
+        function toggleCategoryPrivate(catIndex) {
+            const cat = globalMenuData[catIndex];
+            cat.isPrivate = !cat.isPrivate;
+        }
+
+        function toggleMenuPrivate(catIndex, subIndex) {
+            const sub = globalMenuData[catIndex].subItems[subIndex];
+            if(typeof sub === 'object') {
+                sub.isPrivate = !sub.isPrivate;
+            }
         }
 
         async function deleteMenu(catIndex, subIndex) {
@@ -869,7 +906,7 @@
                 renderDashboard();
                 
                 if (window.parent && window.parent !== window) {
-                    window.parent.postMessage({ type: 'RELOAD_PORTAL' }, '*');
+                    window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                 }
             } catch(e) {
                 alert("삭제 중 오류가 발생했습니다: " + e.message);
@@ -979,6 +1016,7 @@
                 imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200", // default
                 icon: "folder",
                 status: "Y",
+                isPrivate: true,
                 subItems: []
             });
 
@@ -1134,6 +1172,7 @@
                     description: desc,
                     showHelpIcon: !!desc,
                     status: "Y",
+                    isPrivate: true,
                     fileName: finalFile.name,
                     urlAddress: isUrlMode ? urlValue : ""
                 });
@@ -1142,10 +1181,9 @@
                 alert("정상적으로 저장되었습니다. 화면을 새로고침합니다.");
                 try {
                     if (window.parent && window.parent !== window) {
-                        window.parent.postMessage({ type: 'RELOAD_PORTAL' }, '*');
-                    } else {
-                        window.location.reload();
+                        window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                     }
+                    window.location.reload();
                 } catch(e) {
                     window.location.reload();
                 }
@@ -1412,10 +1450,9 @@
                 alert("정상적으로 저장되었습니다. 화면을 새로고침합니다.");
                 try {
                     if (window.parent && window.parent !== window) {
-                        window.parent.postMessage({ type: 'RELOAD_PORTAL' }, '*');
-                    } else {
-                        window.location.reload();
+                        window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                     }
+                    window.location.reload();
                 } catch(e) {
                     window.location.reload();
                 }
