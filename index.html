@@ -1321,6 +1321,7 @@
               });
               if (res.ok) {
                 const data = await res.json();
+                console.log('MS Graph API에서 가져온 사용자 정보:', data); // 디버깅용 콘솔 출력 추가
                 
                 if (data.department) sessionStorage.setItem('ms_department', data.department);
                 
