@@ -6,7 +6,6 @@
     <title>기술 가이드 - Hansoll AI Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body { font-family: 'Pretendard', sans-serif; background-color: #f8fafc; color: #0f172a; }
@@ -28,9 +27,6 @@
                         <p class="text-blue-100 mt-1 font-medium">Hansoll AI Portal을 구동하는 핵심 기술 스택 및 구조 안내</p>
                     </div>
                 </div>
-                <button id="pdf-btn" onclick="downloadPDF()" class="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition-colors px-4 py-2 rounded-lg backdrop-blur-sm shadow-sm font-semibold text-sm cursor-pointer z-50 relative">
-                    <i data-lucide="download" class="w-4 h-4"></i> PDF 다운로드
-                </button>
             </div>
         </header>
 
@@ -466,38 +462,6 @@
     </div>
     <script>
         lucide.createIcons();
-
-        function downloadPDF() {
-            const btn = document.getElementById('pdf-btn');
-            if (btn) btn.style.display = 'none';
-
-            // 페이지 상단으로 이동하여 스크롤 오프셋 문제 방지
-            window.scrollTo(0, 0);
-
-            const element = document.body;
-            
-            // 기존 스타일 백업
-            const originalWidth = element.style.width;
-            
-            // 캡처 영역을 명확히 하기 위해 body 전체 너비를 콘텐츠 너비로 임시 고정
-            element.style.width = '1024px';
-
-            setTimeout(() => {
-                const opt = {
-                    margin:       0, // body 패딩이 있으므로 PDF 여백은 0으로 설정
-                    filename:     'Hansoll_AI_Portal_기술가이드.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0, windowWidth: 1024 },
-                    jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-                };
-
-                html2pdf().set(opt).from(element).save().then(() => {
-                    // 다운로드 완료 후 화면 복구
-                    element.style.width = originalWidth;
-                    if (btn) btn.style.display = 'flex';
-                });
-            }, 100);
-        }
     </script>
 </body>
 </html>
