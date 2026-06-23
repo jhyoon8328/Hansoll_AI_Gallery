@@ -1150,37 +1150,39 @@
             formData.append('file', finalFile);
 
             try {
-                // Upload file (로컬 서버용, Vercel 환경에서는 실패하지만 DB 저장은 진행)
+                // 1. 항상 Supabase Storage로 직접 업로드 (가장 확실한 방법)
+                const folderName = menuName;
+                const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                const encodedFilePath = encodeURIComponent(supabasePath);
+                const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                const { data, error } = await supabaseClient.storage
+                    .from('hansoll-files')
+                    .upload(storageKey, finalFile, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+                
+                if (error) {
+                    alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                    throw error;
+                }
+
+                // 2. 로컬 서버(Antigravity 환경)용 백업 업로드 시도
                 try {
                     let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                     if(!res.ok) {
                         if (res.status === 409) {
-                            if (confirm("동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                            if (confirm("로컬에 동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                 formData.append('overwrite', 'true');
                                 res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
-                                if (!res.ok) console.warn("Upload failed after overwrite request");
+                                if (!res.ok) console.warn("Local upload failed after overwrite request");
                             }
                         } else {
-                            console.warn("Upload failed");
+                            console.warn("Local upload failed");
                         }
                     }
                 } catch(uploadErr) {
-                    console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). Supabase Storage로 직접 업로드를 시도합니다.", uploadErr);
-                    const folderName = menuName;
-                    const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
-                    const encodedFilePath = encodeURIComponent(supabasePath);
-                    const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-                    const { data, error } = await supabaseClient.storage
-                        .from('hansoll-files')
-                        .upload(storageKey, finalFile, {
-                            cacheControl: '3600',
-                            upsert: true
-                        });
-                    
-                    if (error) {
-                        alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
-                        throw error;
-                    }
+                    console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                 }
 
                 // Update data
@@ -1424,33 +1426,36 @@
                     formData.append('menuName', newMenuName);
                     formData.append('file', finalFile);
 
+                    // 1. 항상 Supabase Storage로 직접 업로드
+                    const folderName = isNameOnly ? oldMenuName : newMenuName;
+                    const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                    const encodedFilePath = encodeURIComponent(supabasePath);
+                    const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, finalFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+                    
+                    if (error) {
+                        alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                        throw error;
+                    }
+
+                    // 2. 로컬 서버 백업용 업로드
                     try {
                         let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                         if(!res.ok) {
                             if (res.status === 409) {
-                                if (confirm("기존 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                                if (confirm("로컬 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                     formData.append('overwrite', 'true');
                                     res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                                 }
                             }
                         }
                     } catch(uploadErr) {
-                        console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). Supabase Storage로 직접 업로드를 시도합니다.", uploadErr);
-                        const folderName = isNameOnly ? oldMenuName : newMenuName;
-                        const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
-                        const encodedFilePath = encodeURIComponent(supabasePath);
-                        const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-                        const { data, error } = await supabaseClient.storage
-                            .from('hansoll-files')
-                            .upload(storageKey, finalFile, {
-                                cacheControl: '3600',
-                                upsert: true
-                            });
-                        
-                        if (error) {
-                            alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
-                            throw error;
-                        }
+                        console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                     }
                     finalFileName = finalFile.name;
                 }
