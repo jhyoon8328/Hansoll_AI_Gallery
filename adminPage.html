@@ -717,12 +717,22 @@
                     hasMatchingSubItems = true;
                     const isChecked = status === 'Y' ? 'checked' : '';
                     
+                    let subFileNameHtml = "";
+                    if (typeof sub === 'object') {
+                        if (sub.fileName && sub.fileName !== "정보 없음") {
+                            subFileNameHtml = `<span class="text-xs text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.fileName}">${sub.fileName}</span>`;
+                        } else if (sub.urlAddress) {
+                            subFileNameHtml = `<span class="text-xs text-blue-500 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.urlAddress}">🔗 URL 링크</span>`;
+                        }
+                    }
+
                     return `
                     <div class="flex items-center justify-between p-3 bg-white border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-move sub-drag-handle hover:text-slate-500"></i>
-                            <i data-lucide="file-code-2" class="w-4 h-4 text-slate-400"></i>
-                            <span class="text-sm font-medium text-slate-700">${title}</span>
+                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 shrink-0 text-slate-300 cursor-move sub-drag-handle hover:text-slate-500"></i>
+                            <i data-lucide="file-code-2" class="w-4 h-4 shrink-0 text-slate-400"></i>
+                            <span class="text-sm font-medium text-slate-700 whitespace-nowrap">${title}</span>
+                            ${subFileNameHtml}
                         </div>
                             <div class="flex items-center gap-3">
                                 <label class="flex items-center gap-1 cursor-pointer">
