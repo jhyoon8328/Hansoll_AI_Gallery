@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SortableJS for Drag and Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -385,6 +387,7 @@
 
         const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function loadMenuData(retries = 10) {
             try {
@@ -1162,7 +1165,22 @@
                         }
                     }
                 } catch(uploadErr) {
-                    console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", uploadErr);
+                    console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). Supabase Storage로 직접 업로드를 시도합니다.", uploadErr);
+                    const folderName = menuName;
+                    const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                    const encodedFilePath = encodeURIComponent(supabasePath);
+                    const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, finalFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+                    
+                    if (error) {
+                        alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                        throw error;
+                    }
                 }
 
                 // Update data
@@ -1417,7 +1435,22 @@
                             }
                         }
                     } catch(uploadErr) {
-                        console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", uploadErr);
+                        console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). Supabase Storage로 직접 업로드를 시도합니다.", uploadErr);
+                        const folderName = isNameOnly ? oldMenuName : newMenuName;
+                        const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                        const encodedFilePath = encodeURIComponent(supabasePath);
+                        const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                        const { data, error } = await supabaseClient.storage
+                            .from('hansoll-files')
+                            .upload(storageKey, finalFile, {
+                                cacheControl: '3600',
+                                upsert: true
+                            });
+                        
+                        if (error) {
+                            alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                            throw error;
+                        }
                     }
                     finalFileName = finalFile.name;
                 }
