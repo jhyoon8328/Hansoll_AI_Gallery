@@ -154,7 +154,7 @@
     <!-- Navigation Menu (Dynamically populated by JS) -->
     <nav class="flex-1 overflow-y-auto p-4 custom-scrollbar">
       <div class="space-y-1">
-        <p id="menu-total-count-display" class="px-4 pb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Menu</p>
+        <div id="menu-total-count-display" class="px-4 pb-4"></div>
         <div id="menu-container"></div>
       </div>
     </nav>
@@ -556,7 +556,10 @@
       
       const totalCountDisplay = document.getElementById('menu-total-count-display');
       if (totalCountDisplay) {
-        totalCountDisplay.innerHTML = `MENU <span class="ml-1 opacity-70 normal-case">- 총 ${totalActiveCount}개의 메뉴가 등록되어 있습니다.</span>`;
+        totalCountDisplay.innerHTML = `
+          <div class="text-[15px] font-semibold text-[#1d4ed8] uppercase mb-1 tracking-wider">MENU</div>
+          <div class="text-xs font-bold text-slate-400 opacity-70 normal-case tracking-normal">총 ${totalActiveCount}개의 메뉴가 등록되어 있습니다.</div>
+        `;
       }
       lucide.createIcons();
     }
