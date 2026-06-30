@@ -385,6 +385,7 @@
     let currentBrandSlug = null;
     let openMenuSlug = null;
     let openSubMenus = {};
+    let activeSubMenuTitle = null;
 
     function initMenu() {
       const menuContainer = document.getElementById('menu-container');
@@ -394,6 +395,22 @@
         const isOpen = openMenuSlug === item.slug;
         const isActive = currentBrandSlug === item.slug;
 
+        let activeCount = 0;
+        if (item.subItems) {
+          item.subItems.forEach(sub => {
+            const isObj = typeof sub === 'object';
+            if (isObj) {
+              if (sub.isHeader && sub.children) {
+                activeCount += sub.children.filter(c => (c.status === 'Y' || c.status === 'y') && !c.isPrivate).length;
+              } else if (!sub.isHeader) {
+                if ((sub.status === 'Y' || sub.status === 'y') && !sub.isPrivate) activeCount++;
+              }
+            } else {
+              activeCount++;
+            }
+          });
+        }
+
         const wrapper = document.createElement('div');
         wrapper.className = "mb-2 last:mb-0";
 
@@ -402,7 +419,7 @@
         btn.innerHTML = `
           <div class="flex items-center gap-3 flex-1 category-text-area" style="cursor:pointer; padding-right:10px;">
             ${item.logoUrl ? `<img src="${item.logoUrl}" class="h-5 w-5 object-contain" alt="${item.title} logo" />` : `<i data-lucide="${item.icon}" class="h-5 w-5"></i>`}
-            <span class="text-[15px] font-semibold">${item.title}</span>
+            <span class="text-[15px] font-semibold">${item.title} <span class="text-[13px] opacity-70 ml-0.5">(${activeCount})</span></span>
           </div>
           <div class="category-arrow-area p-2 -mr-2" style="cursor:pointer;">
             <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 text-slate-400"></i>
@@ -448,7 +465,8 @@
                 const childMenuId = child.menuId || childTitle;
                 const childBtn = document.createElement('a');
                 childBtn.href = "#";
-                childBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 text-slate-500 hover:bg-slate-50 hover:text-blue-600 pl-6 text-[13px]`;
+                const isChildActive = childTitle === activeSubMenuTitle;
+                childBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 pl-6 text-[13px] ${isChildActive ? 'bg-blue-50 text-blue-700 font-extrabold shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
                 childBtn.innerHTML = `
                   <span class="truncate">${childTitle}</span>
                   <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${childMenuId.replace(/'/g, "\\'")}', '${childTitle.replace(/'/g, "\\'")}', '${childDesc.replace(/'/g, "\\'")}')">
@@ -483,7 +501,8 @@
           const subMenuId = (isObj ? sub.menuId : null) || subTitle;
           const subBtn = document.createElement('a');
           subBtn.href = "#";
-          subBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 text-slate-500 hover:bg-slate-50 hover:text-blue-600 pl-6 text-[13px]`;
+          const isSubActive = subTitle === activeSubMenuTitle;
+          subBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 pl-6 text-[13px] ${isSubActive ? 'bg-blue-50 text-blue-700 font-extrabold shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
           subBtn.innerHTML = `
             <span class="truncate">${subTitle}</span>
             <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${subMenuId.replace(/'/g, "\\'")}', '${subTitle.replace(/'/g, "\\'")}', '${subDesc.replace(/'/g, "\\'")}')">
@@ -504,39 +523,27 @@
 
         textArea.onclick = (e) => {
           e.stopPropagation();
-          if (isOpen) {
-            openMenuSlug = null;
-            initMenu();
-          } else {
-            openMenuSlug = item.slug;
-            const iframe = document.querySelector('iframe[title="Admin Page"]');
-            if (iframe) {
-              // Admin page is open, just toggle the accordion without navigating away
-              initMenu();
-            } else {
-              startBrandTransition(item.slug);
-              document.getElementById('sidebar').classList.add('-translate-x-full');
-              document.getElementById('sidebar-backdrop').classList.add('hidden');
-            }
+          // 메뉴 리스트는 열고 닫지 않음
+          startBrandTransition(item.slug);
+          
+          if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebar-backdrop');
+            if (sidebar) sidebar.classList.add('-translate-x-full');
+            if (backdrop) backdrop.classList.add('hidden');
+            if (typeof isSidebarOpen !== 'undefined') isSidebarOpen = false;
           }
         };
 
         arrowArea.onclick = (e) => {
           e.stopPropagation();
+          // 중앙 화면은 변경하지 않고 메뉴 리스트만 열고 닫음
           if (isOpen) {
             openMenuSlug = null;
-            initMenu();
           } else {
             openMenuSlug = item.slug;
-            const iframe = document.querySelector('iframe[title="Admin Page"]');
-            if (iframe) {
-              initMenu();
-            } else {
-              renderBrandPage(item.slug);
-              document.getElementById('sidebar').classList.add('-translate-x-full');
-              document.getElementById('sidebar-backdrop').classList.add('hidden');
-            }
           }
+          initMenu();
         };
 
         wrapper.appendChild(btn);
@@ -811,6 +818,7 @@
 
       currentBrandSlug = null;
       openMenuSlug = null;
+      activeSubMenuTitle = null;
       updateBreadcrumb("홈", "AI 업무 혁신 플랫폼");
       initMenu(); // Refresh menu highlighting
 
@@ -851,6 +859,7 @@
 
       currentBrandSlug = brandSlug;
       if (openMenuSlug !== brandSlug) openMenuSlug = brandSlug;
+      activeSubMenuTitle = null;
       initMenu();
 
       const particleKey = 'particle_shown_' + brandSlug;
@@ -899,6 +908,7 @@
       currentBrandSlug = brandSlug;
       // Ensure the accordion for this brand opens if it was closed
       if (forceOpen && openMenuSlug !== brandSlug) openMenuSlug = brandSlug;
+      activeSubMenuTitle = null;
       initMenu(); // Refresh menu UI
 
       const brandData = menuData.find(b => b.slug === brandSlug);
@@ -923,7 +933,7 @@
               const childTitle = child.title;
               const childDesc = child.description || "";
               subItemsHTML += `
-                <a href="#" onclick="openSubMenu('${brandData.title}', '${childTitle}')" class="group relative flex flex-col items-center sm:items-start justify-center sm:justify-between overflow-hidden rounded-xl bg-white/10 p-4 sm:px-5 sm:py-5 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40 text-center sm:text-left min-h-[100px] sm:min-h-[120px]">
+                <a href="#" onclick="openSubMenu('${brandData.title.replace(/'/g, "\\'")}', '${childTitle.replace(/'/g, "\\'")}')" class="group relative flex flex-col items-center sm:items-start justify-center sm:justify-between overflow-hidden rounded-xl bg-white/10 p-4 sm:px-5 sm:py-5 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40 text-center sm:text-left min-h-[100px] sm:min-h-[120px]">
                   <div class="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 mb-1 sm:mb-2 w-full justify-center sm:justify-start">
                     <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-500">
                       <i data-lucide="arrow-right" class="h-4 w-4 opacity-80 group-hover:opacity-100"></i>
@@ -941,7 +951,7 @@
         } else {
           // Fallback if there are subitems without header
           subItemsHTML += `
-            <a href="#" onclick="openSubMenu('${brandData.title}', '${subTitle}')" class="group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-white/10 px-3 py-5 sm:px-4 sm:py-6 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40">
+            <a href="#" onclick="openSubMenu('${brandData.title.replace(/'/g, "\\'")}', '${subTitle.replace(/'/g, "\\'")}')" class="group relative flex flex-col items-center justify-center overflow-hidden rounded-xl bg-white/10 px-3 py-5 sm:px-4 sm:py-6 text-white shadow-lg backdrop-blur-md ring-1 ring-white/20 transition-all duration-300 hover:-translate-y-1 hover:bg-white/20 hover:shadow-2xl hover:ring-white/40">
               <div class="mb-2 sm:mb-3 flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/20 transition-transform duration-300 group-hover:scale-110 group-hover:bg-blue-500">
                 <i data-lucide="arrow-right" class="h-4 w-4 sm:h-5 sm:w-5 opacity-80 group-hover:opacity-100"></i>
               </div>
@@ -987,8 +997,27 @@
       if (!canNavigate()) return;
       pushNavState({ type: 'submenu', brand: brandTitle, sub: subTitle });
       
+      activeSubMenuTitle = subTitle;
+      initMenu(); // Update sidebar immediately to show selection
+
+      
       const brandData = menuData.find(b => b.title === brandTitle);
-      const subItem = brandData?.subItems?.find(s => s.title === subTitle);
+      let subItem = null;
+      if (brandData && brandData.subItems) {
+        for (const s of brandData.subItems) {
+          if (s.title === subTitle) {
+            subItem = s;
+            break;
+          }
+          if (s.isHeader && s.children) {
+            const child = s.children.find(c => c.title === subTitle);
+            if (child) {
+              subItem = child;
+              break;
+            }
+          }
+        }
+      }
       const fileName = subItem ? subItem.fileName : "";
 
       // Determine theme based on subTitle
