@@ -154,7 +154,7 @@
     <!-- Navigation Menu (Dynamically populated by JS) -->
     <nav class="flex-1 overflow-y-auto p-4 custom-scrollbar">
       <div class="space-y-1">
-        <p class="px-4 pb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Menu</p>
+        <p id="menu-total-count-display" class="px-4 pb-2 text-xs font-bold tracking-wider text-slate-400 uppercase">Menu</p>
         <div id="menu-container"></div>
       </div>
     </nav>
@@ -390,6 +390,7 @@
     function initMenu() {
       const menuContainer = document.getElementById('menu-container');
       menuContainer.innerHTML = '';
+      let totalActiveCount = 0;
 
       menuData.forEach((item) => {
         const isOpen = openMenuSlug === item.slug;
@@ -410,6 +411,8 @@
             }
           });
         }
+        
+        totalActiveCount += activeCount;
 
         const wrapper = document.createElement('div');
         wrapper.className = "mb-2 last:mb-0";
@@ -550,7 +553,11 @@
         wrapper.appendChild(subContainer);
         menuContainer.appendChild(wrapper);
       });
-
+      
+      const totalCountDisplay = document.getElementById('menu-total-count-display');
+      if (totalCountDisplay) {
+        totalCountDisplay.innerHTML = `MENU <span class="ml-1 opacity-70">(${totalActiveCount})</span>`;
+      }
       lucide.createIcons();
     }
 
