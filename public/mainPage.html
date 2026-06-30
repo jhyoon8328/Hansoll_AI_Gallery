@@ -405,6 +405,54 @@
                 height: auto;
                 padding: 4rem 0;
             }
+            .carousel-container {
+                width: 70vw;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto; /* 모바일에서 스크롤 허용 */
+            }
+            .top-section {
+                overflow: visible; /* 잘림 방지 */
+                min-height: 70vh;
+            }
+            .carousel-container {
+                width: 85vw; /* 모바일에서 캐러셀 패널이 화면 중앙에 위치하도록 너비 확장 */
+            }
+            .panel {
+                padding: 1.5rem 1rem;
+            }
+            .nav-left { left: 2%; }
+            .nav-right { right: 2%; }
+            .nav-arrow {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            .benefits-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+            .benefit-card {
+                padding: 1rem 0.5rem;
+            }
+            .benefit-value {
+                font-size: 1.4rem;
+            }
+            .workflow-viz {
+                transform: scale(0.65);
+                min-height: 140px;
+            }
+            .chart-container {
+                transform: scale(0.9);
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>

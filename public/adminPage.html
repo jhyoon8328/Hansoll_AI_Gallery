@@ -10,6 +10,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SortableJS for Drag and Drop -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -367,6 +369,25 @@
                 </div>
             </div>
 
+            <!-- Attachments Section -->
+            <div class="mt-8 pt-6 border-t border-slate-100">
+                <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+                    <i data-lucide="paperclip" class="w-4 h-4 text-slate-500"></i> 첨부파일 관리 (다중 첨부 가능)
+                </h4>
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                    <div id="attachments-drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:bg-slate-100 hover:border-blue-400 transition-colors mb-4" ondragover="handleAttachmentDragOver(event)" ondragleave="handleAttachmentDragLeave(event)" ondrop="handleAttachmentDrop(event)" onclick="document.getElementById('attachments-file-input').click()">
+                        <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
+                        <p class="text-sm text-slate-500" id="attachments-drop-zone-text">첨부할 파일을 드래그하거나 클릭하여 선택하세요.</p>
+                        <input type="file" id="attachments-file-input" class="hidden" multiple onchange="handleAttachmentFileSelect(event)">
+                    </div>
+                    
+                    <div id="attachments-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                        <!-- Filled by JS -->
+                        <p class="text-xs text-slate-400 text-center py-2">등록된 첨부파일이 없습니다.</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
                 <button onclick="closeEditMenuModal()" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
                 <button onclick="submitEditMenu()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2" id="submit-edit-menu-btn">
@@ -385,6 +406,7 @@
 
         const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function loadMenuData(retries = 10) {
             try {
@@ -714,12 +736,22 @@
                     hasMatchingSubItems = true;
                     const isChecked = status === 'Y' ? 'checked' : '';
                     
+                    let subFileNameHtml = "";
+                    if (typeof sub === 'object') {
+                        if (sub.fileName && sub.fileName !== "정보 없음") {
+                            subFileNameHtml = `<span class="text-xs text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.fileName}">${sub.fileName}</span>`;
+                        } else if (sub.urlAddress) {
+                            subFileNameHtml = `<span class="text-xs text-blue-500 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.urlAddress}">🔗 URL 링크</span>`;
+                        }
+                    }
+
                     return `
                     <div class="flex items-center justify-between p-3 bg-white border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="grip-vertical" class="w-4 h-4 text-slate-300 cursor-move sub-drag-handle hover:text-slate-500"></i>
-                            <i data-lucide="file-code-2" class="w-4 h-4 text-slate-400"></i>
-                            <span class="text-sm font-medium text-slate-700">${title}</span>
+                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 shrink-0 text-slate-300 cursor-move sub-drag-handle hover:text-slate-500"></i>
+                            <i data-lucide="file-code-2" class="w-4 h-4 shrink-0 text-slate-400"></i>
+                            <span class="text-sm font-medium text-slate-700 whitespace-nowrap">${title}</span>
+                            ${subFileNameHtml}
                         </div>
                             <div class="flex items-center gap-3">
                                 <label class="flex items-center gap-1 cursor-pointer">
@@ -876,14 +908,18 @@
             if(!confirm(`'${title}' 메뉴를 삭제하시겠습니까? 관련된 물리적 경로 및 파일이 모두 영구 삭제됩니다.`)) return;
 
             try {
-                const res = await fetch('http://localhost:3000/api/delete-menu', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: cat.title, menuName: title })
-                });
+                try {
+                    const res = await fetch('http://localhost:3000/api/delete-menu', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ category: cat.title, menuName: title })
+                    });
 
-                if(!res.ok) {
-                    console.error("Failed to delete physical folder");
+                    if(!res.ok) {
+                        console.error("Failed to delete physical folder");
+                    }
+                } catch(localErr) {
+                    console.warn("로컬 서버가 구동 중이지 않습니다. 삭제 작업은 DB에서만 진행됩니다.", localErr);
                 }
                 
                 // MenualPage (말풍선/매뉴얼) 테이블의 연관 데이터도 함께 삭제
@@ -948,22 +984,26 @@
 
             try {
                 if (oldName !== newName) {
-                    const res = await fetch('http://localhost:3000/api/rename-cat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ oldName, newName })
-                    });
-                    
-                    const result = await res.json();
-                    if (!res.ok) {
-                        if (result.error === 'ALREADY_EXISTS') {
-                            return alert('해당 이름의 폴더가 이미 존재합니다.');
+                    try {
+                        const res = await fetch('http://localhost:3000/api/rename-cat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ oldName, newName })
+                        });
+                        
+                        const result = await res.json();
+                        if (!res.ok) {
+                            if (result.error === 'ALREADY_EXISTS') {
+                                return alert('해당 이름의 폴더가 이미 존재합니다.');
+                            }
+                            if (result.error === 'OLD_DIR_NOT_FOUND') {
+                                console.warn('기존 폴더가 존재하지 않지만 메타데이터는 변경합니다.');
+                            } else {
+                                console.error('Failed to rename folder on local server:', result.error);
+                            }
                         }
-                        if (result.error === 'OLD_DIR_NOT_FOUND') {
-                            console.warn('기존 폴더가 존재하지 않지만 메타데이터는 변경합니다.');
-                        } else {
-                            throw new Error(result.error || 'Failed to rename folder');
-                        }
+                    } catch(localErr) {
+                        console.warn("로컬 서버가 구동 중이지 않습니다. 메타데이터만 변경됩니다.", localErr);
                     }
                 }
 
@@ -1027,11 +1067,17 @@
             
             try {
                 await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            } catch(e) {
+                console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", e);
+            }
+
+            try {
                 await saveData();
                 closeCategoryModal();
                 renderMenuManager();
             } catch(e) {
-                alert("폴더 생성에 실패했습니다.");
+                alert("카테고리 저장에 실패했습니다.");
+                console.error(e);
             }
         }
 
@@ -1147,22 +1193,39 @@
             formData.append('file', finalFile);
 
             try {
-                // Upload file (로컬 서버용, Vercel 환경에서는 실패하지만 DB 저장은 진행)
+                // 1. 항상 Supabase Storage로 직접 업로드 (가장 확실한 방법)
+                const folderName = menuName;
+                const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                const encodedFilePath = encodeURIComponent(supabasePath);
+                const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                const { data, error } = await supabaseClient.storage
+                    .from('hansoll-files')
+                    .upload(storageKey, finalFile, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+                
+                if (error) {
+                    alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                    throw error;
+                }
+
+                // 2. 로컬 서버(Antigravity 환경)용 백업 업로드 시도
                 try {
                     let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                     if(!res.ok) {
                         if (res.status === 409) {
-                            if (confirm("동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                            if (confirm("로컬에 동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                 formData.append('overwrite', 'true');
                                 res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
-                                if (!res.ok) console.warn("Upload failed after overwrite request");
+                                if (!res.ok) console.warn("Local upload failed after overwrite request");
                             }
                         } else {
-                            console.warn("Upload failed");
+                            console.warn("Local upload failed");
                         }
                     }
                 } catch(uploadErr) {
-                    console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", uploadErr);
+                    console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                 }
 
                 // Update data
@@ -1271,10 +1334,140 @@
             
             document.getElementById('edit-menu-modal').classList.remove('hidden');
             lucide.createIcons();
+            
+            // Load Attachments
+            loadMenuAttachments(sub.menuId || title);
+        }
+
+        async function loadMenuAttachments(menuId) {
+            const listDiv = document.getElementById('attachments-list');
+            listDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">조회 중...</p>';
+            
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?MenuId=eq.${encodeURIComponent(menuId)}`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                });
+                if (res.ok) {
+                    const attachments = await res.json();
+                    if (attachments.length === 0) {
+                        listDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">등록된 첨부파일이 없습니다.</p>';
+                    } else {
+                        listDiv.innerHTML = attachments.map(att => {
+                            const safePath = att.storage_path.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            const safeMenuId = menuId.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            return `
+                                <div class="flex items-center justify-between p-2 bg-white border border-slate-200 rounded text-sm">
+                                    <div class="flex items-center gap-2 overflow-hidden">
+                                        <i data-lucide="file" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                        <span class="truncate text-slate-700 font-medium" title="${att.file_name}">${att.file_name}</span>
+                                        <span class="text-xs text-slate-400 shrink-0">(${(att.file_size / 1024).toFixed(1)} KB)</span>
+                                    </div>
+                                    <button onclick="deleteAttachment(${att.id}, '${safePath}', '${safeMenuId}')" class="text-rose-500 hover:text-rose-700 p-1 shrink-0">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('');
+                        lucide.createIcons();
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to load attachments", e);
+                listDiv.innerHTML = '<p class="text-xs text-rose-500 text-center py-2">조회 실패</p>';
+            }
         }
 
         function closeEditMenuModal() {
             document.getElementById('edit-menu-modal').classList.add('hidden');
+        }
+
+        // Attachments Handlers
+        function handleAttachmentDragOver(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.add('bg-slate-100', 'border-blue-400');
+        }
+        function handleAttachmentDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.remove('bg-slate-100', 'border-blue-400');
+        }
+        function handleAttachmentDrop(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.remove('bg-slate-100', 'border-blue-400');
+            if (e.dataTransfer.files.length > 0) {
+                uploadAttachments(e.dataTransfer.files);
+            }
+        }
+        function handleAttachmentFileSelect(e) {
+            if (e.target.files.length > 0) {
+                uploadAttachments(e.target.files);
+            }
+            e.target.value = '';
+        }
+
+        async function uploadAttachments(files) {
+            const cat = globalMenuData[currentEditCatIndex];
+            const sub = cat.subItems[currentEditSubIndex];
+            const menuId = sub.menuId || (typeof sub === 'string' ? sub : sub.title);
+            
+            document.getElementById('attachments-drop-zone-text').innerText = "업로드 중... 잠시만 기다려주세요.";
+            
+            try {
+                for(let i=0; i<files.length; i++) {
+                    const file = files[i];
+                    const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+                    const storagePath = `attachments/${menuId}/${uuid}_${file.name}`;
+                    const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, file, { cacheControl: '3600', upsert: true });
+                        
+                    if (error) throw error;
+                    
+                    // Insert to DB
+                    await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            MenuId: menuId,
+                            file_name: file.name,
+                            storage_path: storagePath,
+                            file_size: file.size
+                        })
+                    });
+                }
+                alert("첨부파일이 성공적으로 업로드되었습니다.");
+                loadMenuAttachments(menuId);
+            } catch(e) {
+                alert("파일 업로드 중 오류가 발생했습니다: " + e.message);
+                console.error(e);
+            } finally {
+                document.getElementById('attachments-drop-zone-text').innerText = "첨부할 파일을 드래그하거나 클릭하여 선택하세요.";
+            }
+        }
+
+        async function deleteAttachment(id, storagePath, menuId) {
+            if(!confirm("이 첨부파일을 정말 삭제하시겠습니까?")) return;
+            try {
+                // Delete from DB
+                await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                });
+                
+                // Try delete from Storage (optional, since DB is main record, but good to clean up)
+                const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                await supabaseClient.storage.from('hansoll-files').remove([storageKey]);
+                
+                loadMenuAttachments(menuId);
+            } catch(e) {
+                alert("삭제 중 오류가 발생했습니다.");
+                console.error(e);
+            }
         }
 
         function toggleEditNameOnlyMode() {
@@ -1406,18 +1599,36 @@
                     formData.append('menuName', newMenuName);
                     formData.append('file', finalFile);
 
+                    // 1. 항상 Supabase Storage로 직접 업로드
+                    const folderName = isNameOnly ? oldMenuName : newMenuName;
+                    const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                    const encodedFilePath = encodeURIComponent(supabasePath);
+                    const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, finalFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+                    
+                    if (error) {
+                        alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                        throw error;
+                    }
+
+                    // 2. 로컬 서버 백업용 업로드
                     try {
                         let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                         if(!res.ok) {
                             if (res.status === 409) {
-                                if (confirm("기존 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                                if (confirm("로컬 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                     formData.append('overwrite', 'true');
                                     res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
                                 }
                             }
                         }
                     } catch(uploadErr) {
-                        console.warn("로컬 파일 업로드 서버 연결 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", uploadErr);
+                        console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                     }
                     finalFileName = finalFile.name;
                 }

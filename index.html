@@ -400,11 +400,13 @@
         const btn = document.createElement('button');
         btn.className = `flex w-full items-center justify-between rounded-lg px-4 py-3 text-left transition-colors duration-200 ${isActive || isOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600'}`;
         btn.innerHTML = `
-          <div class="flex items-center gap-3">
+          <div class="flex items-center gap-3 flex-1 category-text-area" style="cursor:pointer; padding-right:10px;">
             ${item.logoUrl ? `<img src="${item.logoUrl}" class="h-5 w-5 object-contain" alt="${item.title} logo" />` : `<i data-lucide="${item.icon}" class="h-5 w-5"></i>`}
             <span class="text-[15px] font-semibold">${item.title}</span>
           </div>
-          <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 text-slate-400"></i>
+          <div class="category-arrow-area p-2 -mr-2" style="cursor:pointer;">
+            <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 text-slate-400"></i>
+          </div>
         `;
 
         const subContainer = document.createElement('div');
@@ -497,7 +499,11 @@
 
         subContainer.appendChild(subList);
 
-        btn.onclick = () => {
+        const textArea = btn.querySelector('.category-text-area');
+        const arrowArea = btn.querySelector('.category-arrow-area');
+
+        textArea.onclick = (e) => {
+          e.stopPropagation();
           if (isOpen) {
             openMenuSlug = null;
             initMenu();
@@ -509,6 +515,24 @@
               initMenu();
             } else {
               startBrandTransition(item.slug);
+              document.getElementById('sidebar').classList.add('-translate-x-full');
+              document.getElementById('sidebar-backdrop').classList.add('hidden');
+            }
+          }
+        };
+
+        arrowArea.onclick = (e) => {
+          e.stopPropagation();
+          if (isOpen) {
+            openMenuSlug = null;
+            initMenu();
+          } else {
+            openMenuSlug = item.slug;
+            const iframe = document.querySelector('iframe[title="Admin Page"]');
+            if (iframe) {
+              initMenu();
+            } else {
+              renderBrandPage(item.slug);
               document.getElementById('sidebar').classList.add('-translate-x-full');
               document.getElementById('sidebar-backdrop').classList.add('hidden');
             }
@@ -640,6 +664,7 @@
       if (!isRestore) {
         pushNavState({ type: 'admin' });
       }
+      if (window.removeAttachmentsContainer) window.removeAttachmentsContainer();
       updateAdminButtonState(true);
       setBackButtonTheme('dark');
       updateBreadcrumb("시스템 관리", "관리자 대시보드");
@@ -780,6 +805,7 @@
     function renderDashboard() {
       closeSidebarIfMobile();
       if (!canNavigate()) return;
+      if (window.removeAttachmentsContainer) window.removeAttachmentsContainer();
       pushNavState({ type: 'dashboard' });
       setBackButtonTheme('dark');
 
@@ -818,6 +844,7 @@
 
     function startBrandTransition(brandSlug) {
       if (!canNavigate()) return;
+      if (window.removeAttachmentsContainer) window.removeAttachmentsContainer();
 
       const brandData = menuData.find(b => b.slug === brandSlug);
       if (!brandData) return;
@@ -1264,9 +1291,130 @@
             </div>
           `;
         }
-        lucide.createIcons();
+      }
+
+      lucide.createIcons();
+
+      // 첨부파일 로드 (하드코딩된 메뉴 포함 모든 메뉴 공통 실행)
+      const menuId = subItem && subItem.menuId ? subItem.menuId : subTitle;
+      fetchAndRenderAttachments(menuId);
+    }
+
+    window.removeAttachmentsContainer = function() {
+      const existingContainer = document.getElementById('attachments-floating-container');
+      if (existingContainer) existingContainer.remove();
+    };
+
+    async function fetchAndRenderAttachments(menuId) {
+      // 기존 첨부파일 버튼/컨테이너 제거
+      window.removeAttachmentsContainer();
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?MenuId=eq.${encodeURIComponent(menuId)}`, {
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        });
+        
+        if (res.ok) {
+            const attachments = await res.json();
+            if (attachments && attachments.length > 0) {
+                // 첨부파일 UI 생성
+                const container = document.createElement('div');
+                container.id = 'attachments-floating-container';
+                container.className = 'fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none';
+                
+                // 파일 리스트 드롭다운 (숨겨져 있음)
+                const listHtml = attachments.map(att => {
+                    const storageKey = btoa(encodeURIComponent(att.storage_path)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const downloadUrl = `https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/${storageKey}?download=${encodeURIComponent(att.file_name)}`;
+                    return `
+                        <a href="${downloadUrl}" download="${att.file_name}" onclick="if(window.closeAttachmentsDropdown) window.closeAttachmentsDropdown()" class="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group cursor-pointer pointer-events-auto">
+                            <div class="p-2 bg-blue-50 text-blue-500 rounded-lg group-hover:bg-blue-100 transition-colors shrink-0">
+                                <i data-lucide="download" class="w-4 h-4"></i>
+                            </div>
+                            <div class="flex flex-col min-w-0 overflow-hidden">
+                                <span class="text-sm font-semibold text-slate-700 truncate group-hover:text-blue-600 transition-colors">${att.file_name}</span>
+                                <span class="text-xs text-slate-400 font-medium">${(att.file_size / 1024).toFixed(1)} KB</span>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div id="attachments-backdrop" class="fixed inset-0 z-40 hidden pointer-events-auto" onclick="window.closeAttachmentsDropdown()"></div>
+                    <div id="attachments-dropdown" tabindex="-1" class="z-50 pointer-events-auto w-72 bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-2xl opacity-0 translate-y-4 scale-95 transition-all duration-300 transform origin-bottom-right hidden flex flex-col overflow-hidden max-h-96 outline-none">
+                        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <i data-lucide="paperclip" class="w-4 h-4 text-slate-500"></i> 첨부파일 (${attachments.length})
+                            </h4>
+                        </div>
+                        <div class="overflow-y-auto custom-scrollbar">
+                            ${listHtml}
+                        </div>
+                    </div>
+                    
+                    <button onclick="toggleAttachmentsDropdown()" class="z-50 pointer-events-auto flex items-center gap-2 px-5 py-3 bg-slate-800/90 backdrop-blur-md text-white rounded-full shadow-xl hover:bg-blue-600 hover:scale-105 transition-all duration-300 text-sm font-bold border border-white/10 group">
+                        <i data-lucide="paperclip" class="w-4 h-4 group-hover:-rotate-12 transition-transform"></i> 
+                        첨부파일 <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">${attachments.length}</span>
+                    </button>
+                `;
+                
+                document.body.appendChild(container);
+                lucide.createIcons();
+            }
+        }
+      } catch (e) {
+        console.error("Failed to load attachments for user view", e);
       }
     }
+
+    window.closeAttachmentsDropdown = function() {
+        const dropdown = document.getElementById('attachments-dropdown');
+        const backdrop = document.getElementById('attachments-backdrop');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+            dropdown.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+            if (backdrop) backdrop.classList.add('hidden');
+            setTimeout(() => {
+                dropdown.classList.add('hidden');
+            }, 300);
+        }
+    };
+
+    window.toggleAttachmentsDropdown = function() {
+        const dropdown = document.getElementById('attachments-dropdown');
+        const backdrop = document.getElementById('attachments-backdrop');
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            if (backdrop) backdrop.classList.remove('hidden');
+            // Allow display:block to apply before animating opacity
+            setTimeout(() => {
+                dropdown.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+                dropdown.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                dropdown.focus();
+            }, 10);
+        } else {
+            window.closeAttachmentsDropdown();
+        }
+    };
+
+    // Close dropdown on outside click
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('attachments-dropdown');
+        const container = document.getElementById('attachments-floating-container');
+        if (dropdown && !dropdown.classList.contains('hidden')) {
+            // Check if the click is outside the container
+            if (container && !container.contains(e.target)) {
+                window.closeAttachmentsDropdown();
+            }
+        }
+    });
+
+    // Close dropdown on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.closeAttachmentsDropdown();
+        }
+    });
 
     function handleLogout() {
       if (confirm('로그아웃 하시겠습니까?')) {
@@ -1342,6 +1490,30 @@
           
           let dep = sessionStorage.getItem('ms_department') || '';
           let name = sessionStorage.getItem('ms_displayName') || (session.user && session.user.user_metadata && session.user.user_metadata.full_name) || '';
+          
+          // 정상적인 부서/이름 정보가 없는 경우 (새 탭 접속으로 sessionStorage 유실 등)
+          // 강제로 로그아웃하고 OpenPage 화면으로 이동시킵니다.
+          if (!dep) {
+            console.warn("부서 정보가 없습니다. 정상적인 로그인 정보 획득에 실패하여 강제 로그아웃 합니다.");
+            window.supabaseClient.auth.signOut().then(() => {
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('ms_department');
+                sessionStorage.removeItem('ms_displayName');
+                document.body.classList.add('is-logged-out');
+                
+                const content = document.getElementById('main-content');
+                if (content) {
+                    content.innerHTML = `
+                        <div class="w-full h-full relative bg-black">
+                            <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
+                        </div>
+                    `;
+                }
+                const userInfoContainer = document.getElementById('header-user-info-container');
+                if (userInfoContainer) userInfoContainer.classList.add('hidden');
+            });
+            return; // 이후 로직 실행 중단
+          }
           
           if (name) {
             let userInfoStr = dep ? `${dep} / ${name}` : name;
@@ -1723,7 +1895,7 @@
 
   <!-- Detail View Modal -->
   <div id="tooltip-detail-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
         <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i data-lucide="info" class="w-5 h-5 text-blue-500"></i> 기능 상세 정보
@@ -1985,7 +2157,14 @@
     // Modals no longer close on background click to prevent accidental data loss,
     // they require clicking the explicit Close/Cancel buttons.
 
-
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        const detailModal = document.getElementById('tooltip-detail-modal');
+        if (detailModal && !detailModal.classList.contains('hidden')) {
+          closeTooltipDetail();
+        }
+      }
+    });
   </script>
 </body>
 </html>

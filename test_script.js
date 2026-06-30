@@ -462,14 +462,18 @@
             if(!confirm(`'${title}' 메뉴를 삭제하시겠습니까? 관련된 물리적 경로 및 파일이 모두 영구 삭제됩니다.`)) return;
 
             try {
-                const res = await fetch('http://localhost:3000/api/delete-menu', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ category: cat.title, menuName: title })
-                });
+                try {
+                    const res = await fetch('http://localhost:3000/api/delete-menu', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ category: cat.title, menuName: title })
+                    });
 
-                if(!res.ok) {
-                    console.error("Failed to delete physical folder");
+                    if(!res.ok) {
+                        console.error("Failed to delete physical folder");
+                    }
+                } catch(localErr) {
+                    console.warn("로컬 서버가 구동 중이지 않습니다. 삭제 작업은 DB에서만 진행됩니다.", localErr);
                 }
 
                 cat.subItems.splice(subIndex, 1);
@@ -520,22 +524,26 @@
 
             try {
                 if (oldName !== newName) {
-                    const res = await fetch('http://localhost:3000/api/rename-cat', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ oldName, newName })
-                    });
-                    
-                    const result = await res.json();
-                    if (!res.ok) {
-                        if (result.error === 'ALREADY_EXISTS') {
-                            return alert('해당 이름의 폴더가 이미 존재합니다.');
+                    try {
+                        const res = await fetch('http://localhost:3000/api/rename-cat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ oldName, newName })
+                        });
+                        
+                        const result = await res.json();
+                        if (!res.ok) {
+                            if (result.error === 'ALREADY_EXISTS') {
+                                return alert('해당 이름의 폴더가 이미 존재합니다.');
+                            }
+                            if (result.error === 'OLD_DIR_NOT_FOUND') {
+                                console.warn('기존 폴더가 존재하지 않지만 메타데이터는 변경합니다.');
+                            } else {
+                                console.error('Failed to rename folder on local server:', result.error);
+                            }
                         }
-                        if (result.error === 'OLD_DIR_NOT_FOUND') {
-                            console.warn('기존 폴더가 존재하지 않지만 메타데이터는 변경합니다.');
-                        } else {
-                            throw new Error(result.error || 'Failed to rename folder');
-                        }
+                    } catch(localErr) {
+                        console.warn("로컬 서버가 구동 중이지 않습니다. 메타데이터만 변경됩니다.", localErr);
                     }
                 }
 
@@ -597,11 +605,17 @@
             
             try {
                 await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            } catch(e) {
+                console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", e);
+            }
+
+            try {
                 await saveData();
                 closeCategoryModal();
                 renderMenuManager();
             } catch(e) {
-                alert("폴더 생성에 실패했습니다.");
+                alert("카테고리 저장에 실패했습니다.");
+                console.error(e);
             }
         }
 

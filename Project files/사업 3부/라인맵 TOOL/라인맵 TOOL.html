@@ -1,0 +1,1486 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>통합 라인맵 조회</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" />
+  <style>
+    :root {
+      --paper: #f3efe6;
+      --card: #fcfaf5;
+      --card-2: #f7f3ea;
+      --ink: #191e24;
+      --ink-2: #2b333b;
+      --muted: #6b7178;
+      --line: #ddd5c6;
+      --line-strong: #c9c0ad;
+      --accent: #b5532a;
+      --accent-deep: #8f3f1e;
+      --accent-soft: #f3e1d4;
+      --sage: #2f6b5e;
+      --danger: #a72d1d;
+      --shadow-sm: 0 1px 2px rgba(25,30,36,.05), 0 2px 8px rgba(25,30,36,.04);
+      --shadow-md: 0 10px 30px rgba(25,30,36,.08), 0 2px 6px rgba(25,30,36,.05);
+      --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      --font-mono: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      background-color: var(--paper);
+      background-image:
+        linear-gradient(rgba(25,30,36,.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(25,30,36,.022) 1px, transparent 1px);
+      background-size: 30px 30px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      position: relative;
+      padding: 30px 36px 26px;
+      background:
+        radial-gradient(120% 160% at 0% 0%, #222a32 0%, #14181d 60%, #10141a 100%);
+      color: #f1ece2;
+      border-bottom: 1px solid #0c0f13;
+    }
+    header::before {
+      content: "";
+      position: absolute; inset: 0 0 auto 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent) 0%, #d98a4f 50%, var(--accent) 100%);
+    }
+    .kicker {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      color: #d98a4f;
+      margin-bottom: 12px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .kicker::after {
+      content: ""; flex: 1; height: 1px;
+      background: linear-gradient(90deg, rgba(217,138,79,.5), transparent);
+      max-width: 220px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: #fbf8f2;
+    }
+    .sub { color: rgba(241,236,226,.62); font-size: 13.5px; max-width: 720px; }
+
+    main { padding: 26px 36px 44px; max-width: 1640px; margin: 0 auto; }
+
+    /* ---------- Toolbar ---------- */
+    .toolbar {
+      display: grid;
+      grid-template-columns: minmax(230px, 1.5fr) repeat(5, minmax(116px, 1fr)) auto;
+      gap: 14px;
+      align-items: end;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px 20px;
+      box-shadow: var(--shadow-md);
+      animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+    }
+    label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 7px;
+    }
+    input, select {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line-strong);
+      border-radius: 9px;
+      background: #fffefb;
+      color: var(--ink);
+      padding: 9px 12px;
+      font: inherit;
+      font-size: 13.5px;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input::placeholder { color: #a59c8c; }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    select {
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%236b7178' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 30px;
+    }
+    input[type="file"] { padding: 6px 8px; font-size: 12.5px; cursor: pointer; }
+    input[type="file"]::file-selector-button {
+      font: inherit; font-size: 12px; font-weight: 600;
+      margin-right: 12px; padding: 7px 14px;
+      border: 0; border-radius: 7px; cursor: pointer;
+      background: var(--ink); color: #f4efe5;
+      transition: background .15s;
+    }
+    input[type="file"]::file-selector-button:hover { background: var(--accent); }
+
+    /* folder buttons */
+    .folder-row { display: flex; gap: 8px; margin-top: 8px; }
+    .btn {
+      flex: 1; min-height: 38px; padding: 8px 10px;
+      font: inherit; font-size: 12.5px; font-weight: 600;
+      border-radius: 8px; cursor: pointer; white-space: nowrap;
+      border: 1px solid var(--line-strong); background: #fffefb; color: var(--ink-2);
+      transition: background .15s, border-color .15s, color .15s, transform .05s;
+    }
+    .btn:hover { border-color: var(--accent); color: var(--accent-deep); }
+    .btn:active { transform: translateY(1px); }
+    .btn-accent { background: var(--ink); color: #f4efe5; border-color: var(--ink); }
+    .btn-accent:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn:disabled:hover { border-color: var(--line-strong); color: var(--ink-2); background: #fffefb; }
+
+    /* toggle */
+    .toggle {
+      display: flex; align-items: center; gap: 9px;
+      margin-bottom: 0; cursor: pointer; white-space: nowrap;
+      font-family: var(--font-sans); font-size: 13px; font-weight: 600;
+      letter-spacing: 0; text-transform: none; color: var(--ink-2);
+      padding: 9px 4px;
+    }
+    .toggle input { width: 18px; height: 18px; min-height: 0; margin: 0; accent-color: var(--accent); cursor: pointer; }
+
+    /* ---------- Status ---------- */
+    .status {
+      margin: 16px 4px 18px;
+      color: var(--muted);
+      min-height: 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      display: flex; align-items: center; gap: 9px;
+    }
+    .status::before {
+      content: ""; width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); flex: none;
+    }
+
+    /* ---------- Summary metrics ---------- */
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .metric {
+      position: relative; overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px 18px;
+      box-shadow: var(--shadow-sm);
+      transition: transform .18s ease, box-shadow .18s ease;
+      animation: rise .5s cubic-bezier(.2,.7,.2,1) both;
+    }
+    .summary .metric:nth-child(1){ animation-delay:.04s } 
+    .summary .metric:nth-child(2){ animation-delay:.08s }
+    .summary .metric:nth-child(3){ animation-delay:.12s }
+    .summary .metric:nth-child(4){ animation-delay:.16s }
+    .metric::after {
+      content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 100%;
+      background: linear-gradient(90deg, var(--accent), transparent 70%);
+      transform: scaleX(0); transform-origin: left; transition: transform .25s ease;
+    }
+    .metric:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+    .metric:hover::after { transform: scaleX(1); }
+    .metric .metric-label {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .metric b {
+      display: block;
+      font-family: var(--font-mono);
+      font-size: 26px; font-weight: 600; letter-spacing: -.01em;
+      color: var(--ink); line-height: 1.1;
+    }
+
+    /* ---------- Panel + table ---------- */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      animation: rise .5s cubic-bezier(.2,.7,.2,1) both; animation-delay:.18s;
+    }
+    .panel h2 {
+      margin: 0;
+      padding: 16px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      color: var(--ink);
+      background: linear-gradient(180deg, var(--card-2), var(--card));
+      border-bottom: 1px solid var(--line);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .panel h2::before {
+      content: ""; width: 9px; height: 9px; border-radius: 2px;
+      background: var(--accent); transform: rotate(45deg);
+    }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; min-width: 1140px; border-collapse: collapse; table-layout: auto; }
+    thead th {
+      position: sticky; top: 0; z-index: 1;
+      text-align: left;
+      font-family: var(--font-mono);
+      font-size: 10.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+      background: var(--card-2);
+      padding: 13px 16px;
+      border-bottom: 2px solid var(--line-strong);
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #eee7d8;
+      vertical-align: top;
+      overflow-wrap: normal; word-break: keep-all;
+    }
+    tbody tr { transition: background .14s; }
+    tbody tr:hover td { background: #f6efe2; }
+    tbody tr:hover td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+    tbody tr:last-child td { border-bottom: 0; }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 7px;
+      background: var(--ink);
+      color: #f4efe5;
+      font-family: var(--font-mono);
+      font-size: 11.5px; font-weight: 500; letter-spacing: .02em;
+      white-space: nowrap;
+    }
+    .style-cell {
+      display: grid;
+      grid-template-columns: 64px minmax(240px, 1fr);
+      gap: 14px; align-items: start;
+    }
+    .thumb {
+      width: 62px; height: 62px;
+      border-radius: 8px; object-fit: cover;
+      border: 1px solid var(--line-strong);
+      background: #f3eee3;
+      box-shadow: var(--shadow-sm);
+    }
+    .thumb.empty-thumb {
+      display: grid; place-items: center;
+      color: #b3a98f; font-size: 10px;
+      font-family: var(--font-mono); letter-spacing: .05em;
+    }
+    .style-title {
+      display: block; line-height: 1.4; max-width: 520px;
+      white-space: normal; overflow-wrap: break-word; word-break: normal;
+      font-weight: 600; color: var(--ink-2); font-size: 13.5px;
+    }
+    .num-cell { white-space: nowrap; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+    .num-cell b { font-weight: 600; font-size: 14px; color: var(--ink); }
+    .dpr-line {
+      display: inline-block; margin-top: 6px;
+      color: var(--sage); font-family: var(--font-mono);
+      font-size: 12px; font-weight: 600;
+      background: #e7f0ec; padding: 2px 8px; border-radius: 6px;
+    }
+    .due { color: var(--accent-deep); font-weight: 700; font-size: 12.5px; }
+    .cut-date {
+      color: var(--danger); font-weight: 700; font-size: 12.5px;
+      font-family: var(--font-mono); margin-top: 4px;
+    }
+    .muted { color: var(--muted); font-size: 12px; }
+    .empty {
+      padding: 56px 24px; color: var(--muted); text-align: center;
+      font-family: var(--font-mono); font-size: 13px; letter-spacing: .03em;
+    }
+
+    @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+    @media (max-width: 1080px) {
+      .toolbar, .summary { grid-template-columns: 1fr; }
+      main, header { padding-left: 18px; padding-right: 18px; }
+      h1 { font-size: 25px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      * { animation: none !important; transition: none !important; }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div class="kicker">Line Map Console</div>
+    <h1>통합 라인맵 조회</h1>
+    <div class="sub">주요 4개 공장 라인맵을 자동 감지해서 스타일, 라인, 납기, Cut date, 수량, DPR을 조회합니다.</div>
+  </header>
+
+  <main>
+    <section class="toolbar">
+      <div>
+        <label for="file">라인맵 엑셀 / 폴더</label>
+        <input id="file" type="file" accept=".xlsx,.xlsm,.xls" multiple />
+        <div class="folder-row">
+          <button id="pickFolder" type="button" class="btn">📁 폴더 지정</button>
+          <button id="reloadFolder" type="button" class="btn btn-accent" disabled>최신 자동 불러오기</button>
+        </div>
+      </div>
+      <div>
+        <label for="factory">공장</label>
+        <select id="factory"><option value="">전체</option></select>
+      </div>
+      <div>
+        <label for="buyer">바이어</label>
+        <select id="buyer"><option value="">전체</option></select>
+      </div>
+      <div>
+        <label for="line">라인</label>
+        <select id="line"><option value="">전체</option></select>
+      </div>
+      <div>
+        <label for="due">납기</label>
+        <select id="due"><option value="">전체</option></select>
+      </div>
+      <div>
+        <label for="query">스타일 검색</label>
+        <input id="query" placeholder="예: 1153047, Lane Bryant" />
+      </div>
+      <div>
+        <label for="showPast" class="toggle">
+          <input id="showPast" type="checkbox" />
+          지난 납기 포함
+        </label>
+      </div>
+    </section>
+
+    <div id="status" class="status">엑셀 파일을 선택해주세요. 처음 열 때 인터넷 연결이 필요할 수 있습니다.</div>
+
+    <section class="summary">
+      <div class="metric"><span class="metric-label">조회 건수</span><b id="count">0</b></div>
+      <div class="metric"><span class="metric-label">사용 라인</span><b id="lines">0</b></div>
+      <div class="metric"><span class="metric-label">운용 기간</span><b id="range">-</b></div>
+      <div class="metric"><span class="metric-label">공장</span><b id="factoryName">-</b></div>
+    </section>
+
+    <section class="panel">
+      <h2>라인 운용 리스트</h2>
+      <div id="table"><div class="empty">아직 읽은 라인맵이 없습니다.</div></div>
+    </section>
+  </main>
+
+  <script>
+    const MONTHS = {
+      JAN: 1, JANUARY: 1,
+      FEB: 2, FEBRUARY: 2,
+      MAR: 3, MARCH: 3,
+      APR: 4, APRIL: 4,
+      MAY: 5,
+      JUN: 6, JUNE: 6,
+      JUL: 7, JULY: 7,
+      AUG: 8, AUGUST: 8,
+      SEP: 9, SEPT: 9, SEPTEMBER: 9,
+      OCT: 10, OCTOBER: 10,
+      NOV: 11, NOVEMBER: 11,
+      DEC: 12, DECEMBER: 12,
+    };
+    const state = { jobs: [], filtered: [] };
+    const els = {
+      file: document.querySelector("#file"),
+      status: document.querySelector("#status"),
+      buyer: document.querySelector("#buyer"),
+      line: document.querySelector("#line"),
+      due: document.querySelector("#due"),
+      query: document.querySelector("#query"),
+      showPast: document.querySelector("#showPast"),
+      factory: document.querySelector("#factory"),
+      pickFolder: document.querySelector("#pickFolder"),
+      reloadFolder: document.querySelector("#reloadFolder"),
+      table: document.querySelector("#table"),
+      count: document.querySelector("#count"),
+      lines: document.querySelector("#lines"),
+      range: document.querySelector("#range"),
+      factoryName: document.querySelector("#factoryName"),
+    };
+
+    function clean(value) {
+      if (value === undefined || value === null) return "";
+      return String(value).replace(/\s+/g, " ").trim();
+    }
+    function cell(sheet, row, col) {
+      const address = XLSX.utils.encode_cell({ r: row - 1, c: col - 1 });
+      return sheet[address] ? sheet[address].v : "";
+    }
+    function cellObject(sheet, row, col) {
+      const address = XLSX.utils.encode_cell({ r: row - 1, c: col - 1 });
+      return sheet[address] || null;
+    }
+    function sheetBounds(sheet) {
+      const ref = sheet["!ref"];
+      return ref ? XLSX.utils.decode_range(ref) : { s: { r: 0, c: 0 }, e: { r: 0, c: 0 } };
+    }
+    function excelDate(value) {
+      if (value instanceof Date) return value;
+      if (typeof value === "number") {
+        const parsed = XLSX.SSF.parse_date_code(value);
+        if (parsed) return new Date(parsed.y, parsed.m - 1, parsed.d);
+      }
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    }
+    function monthHeader(cellInfo) {
+      const displayed = clean(cellInfo?.w || cellInfo?.v);
+      let match = displayed.match(/(\d{1,2})\s*[-/.]\s*(20\d{2})/);
+      if (match) return { year: Number(match[2]), month: Number(match[1]) };
+      match = displayed.match(/(20\d{2})\s*[-/.]\s*(\d{1,2})/);
+      if (match) return { year: Number(match[1]), month: Number(match[2]) };
+      const d = excelDate(cellInfo?.v);
+      if (!d) return null;
+      let year = d.getFullYear();
+      let month = d.getMonth() + 1;
+      if (d.getDate() > 25) {
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+      }
+      return { year, month };
+    }
+    function isoDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    function shortDate(value) {
+      if (!value) return "-";
+      const d = new Date(value + "T00:00:00");
+      return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+    function fullDate(value) {
+      if (!value) return "-";
+      const d = new Date(value + "T00:00:00");
+      return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+    }
+    function monthLabel(value) {
+      const [year, month] = value.split("-").map(Number);
+      return `${year}년 ${month}월`;
+    }
+    function formatNumber(value) {
+      return value ? Math.round(value).toLocaleString() : "-";
+    }
+    function normalizeDisplayText(value) {
+      let text = clean(value);
+      const replacements = [
+        [/lần\s*(\d+)/gi, "run $1"],
+        [/hàng\s*kẻ/gi, "stripe goods"],
+        [/đẩy\s*thêm\s*công\s*nhân\s*đảm\s*bảo\s*lịch\s*xuất\s*trên\s*1\s*chuyền/gi, "add workers to secure delivery schedule on one line"],
+        [/giảm\s*công\s*nhân\s*để\s*chạy\s*hàng\s*đi\s*chuyền\s*(\d+\+?\d*)/gi, "reduce workers and move production to line $1"],
+        [/thúc\s*đẩy\s*đảm\s*bảo\s*tiến\s*độ/gi, "expedite to secure schedule"],
+        [/kế\s*hoạch/gi, "plan"],
+        [/thực\s*hiện/gi, "actual"],
+        [/chênh\s*lệch/gi, "variance"],
+      ];
+      replacements.forEach(([pattern, replacement]) => {
+        text = text.replace(pattern, replacement);
+      });
+      return text;
+    }
+    function numberFromText(value) {
+      const match = clean(value).replace(/,/g, "").match(/\d+(?:\.\d+)?/);
+      return match ? Number(match[0]) : 0;
+    }
+    function monthNumber(value) {
+      const upper = clean(value).replace(/[^A-Za-z]/g, "").toUpperCase();
+      if (!upper) return null;
+      return MONTHS[upper] || MONTHS[upper.slice(0, 3)] || null;
+    }
+    function parseNamedDate(text, baseYear) {
+      const value = clean(text);
+      const slash = value.match(/(\d{1,2})\s*[\/-]\s*([A-Za-z]+)/i);
+      if (slash) {
+        const day = Number(slash[1]);
+        const month = monthNumber(slash[2]);
+        if (month) return isoDate(new Date(baseYear, month - 1, day));
+      }
+      return "";
+    }
+    function parseAllDueDates(text, baseYear) {
+      const dates = [];
+      const value = clean(text);
+      let match;
+      const named = /(\d{1,2})\s*[\/-]\s*([A-Za-z]+)/gi;
+      while ((match = named.exec(value))) {
+        const day = Number(match[1]);
+        const month = monthNumber(match[2]);
+        if (month) dates.push(isoDate(new Date(baseYear, month - 1, day)));
+      }
+      const numeric = /(\d{1,2})\s*\/\s*(\d{1,2})/g;
+      while ((match = numeric.exec(value))) {
+        const first = Number(match[1]);
+        const second = Number(match[2]);
+        const month = first > 12 ? second : first;
+        const day = first > 12 ? first : second;
+        const d = new Date(baseYear, month - 1, day);
+        if (month >= 1 && month <= 12 && day >= 1 && day <= 31 && d.getMonth() === month - 1) dates.push(isoDate(d));
+      }
+      return [...new Set(dates)].sort();
+    }
+    function todayDateOnly() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+    function addDays(d, days) {
+      const copy = new Date(d.getTime());
+      copy.setDate(copy.getDate() + days);
+      return copy;
+    }
+    function isOpenByDue(job, today = todayDateOnly()) {
+      if (!job.dueDates || !job.dueDates.length) return true;
+      return job.dueDates.some(value => new Date(value + "T00:00:00") >= today);
+    }
+
+    function thiensonDateAxis(sheet, maxCol) {
+      const ranges = [];
+      (sheet["!merges"] || []).forEach(merge => {
+        const startRow = merge.s.r + 1;
+        const endRow = merge.e.r + 1;
+        if (startRow === 2 && endRow === 2) {
+          const header = monthHeader(cellObject(sheet, 2, merge.s.c + 1));
+          if (header) ranges.push({ start: merge.s.c + 1, end: merge.e.c + 1, year: header.year, month: header.month });
+        }
+      });
+      const axis = new Map();
+      ranges.forEach(range => {
+        for (let col = range.start; col <= Math.min(range.end, maxCol); col++) {
+          const day = col - range.start + 1;
+          const d = new Date(range.year, range.month - 1, day);
+          if (d.getMonth() === range.month - 1) axis.set(col, d);
+        }
+      });
+      return axis;
+    }
+    function isLineNumber(value) {
+      const n = Number(clean(value));
+      return Number.isInteger(n) && n >= 1 && n <= 99;
+    }
+    function styleText(value) {
+      return normalizeDisplayText(clean(value).replace(/^STYLE\s*:\s*/i, ""));
+    }
+    function textInRange(sheet, row, startCol, endCol, pattern) {
+      const found = [];
+      for (let col = startCol; col <= endCol; col++) {
+        const value = clean(cell(sheet, row, col));
+        if (value && pattern.test(value)) found.push(value);
+      }
+      return found;
+    }
+    function firstBuyer(sheet, row, startCol, endCol) {
+      const values = textInRange(sheet, row, startCol, endCol, /Buyer\s*:|Kh[aá]ch\s*h[aà]ng\s*:|Khach\s*hang\s*:/i);
+      if (!values.length) return "Lane Bryant";
+      return values[0]
+        .replace(/^Buyer\s*:\s*/i, "")
+        .replace(/^Kh[aá]ch\s*h[aà]ng\s*:\s*/i, "")
+        .replace(/^Khach\s*hang\s*:\s*/i, "")
+        .replace(/\s*-\s*(HOL|FA)\d{2}\s*$/i, "");
+    }
+    function quantityInRange(sheet, row, startCol, endCol) {
+      for (let col = startCol; col <= endCol; col++) {
+        const value = clean(cell(sheet, row, col));
+        if (/^SLKH\s*:|^SL\s*K[ẾE]\s*HO[AẠ]CH\s*:|^S[ỐO]\s*L[ƯU][ỢO]NG\s*:/i.test(value)) {
+          for (let next = col + 1; next <= Math.min(endCol, col + 4); next++) {
+            const n = numberFromText(cell(sheet, row, next));
+            if (n) return n;
+          }
+        }
+      }
+      for (let col = startCol; col <= endCol; col++) {
+        const n = numberFromText(cell(sheet, row, col));
+        if (n) return n;
+      }
+      return 0;
+    }
+    function groupKey(job) {
+      return [job.buyer, job.style.toUpperCase(), job.dueText, Math.round(job.orderQty || 0)].join("|");
+    }
+    function applySharedLineDpr(jobs) {
+      const groups = new Map();
+      jobs.forEach(job => {
+        const key = groupKey(job);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(job);
+      });
+      groups.forEach(group => {
+        const lineCount = new Set(group.map(job => job.line)).size || 1;
+        const totalLineDays = group.reduce((sum, job) => sum + (job.days || 0), 0) || 1;
+        const totalQty = group.find(job => job.orderQty)?.orderQty || 0;
+        const groupDpr = totalQty && totalLineDays ? totalQty / totalLineDays : 0;
+        group.forEach(job => {
+          job.sharedLineCount = lineCount;
+          job.totalLineDays = totalLineDays;
+          job.lineOrderQty = groupDpr ? groupDpr * (job.days || 0) : (job.orderQty || 0);
+          job.dpr = groupDpr || (job.lineOrderQty && job.days ? job.lineOrderQty / job.days : 0);
+        });
+      });
+      return jobs;
+    }
+
+    function normalizeZipPath(base, target) {
+      if (!target) return "";
+      if (target.startsWith("/")) return target.slice(1);
+      const stack = base.split("/");
+      stack.pop();
+      target.split("/").forEach(part => {
+        if (!part || part === ".") return;
+        if (part === "..") stack.pop();
+        else stack.push(part);
+      });
+      return stack.join("/");
+    }
+    function allByLocal(node, localName) {
+      return [...node.getElementsByTagName("*")].filter(item => item.localName === localName);
+    }
+    function firstByLocal(node, localName) {
+      return allByLocal(node, localName)[0] || null;
+    }
+    function relMap(xmlText, basePath) {
+      const xml = new DOMParser().parseFromString(xmlText, "application/xml");
+      const map = new Map();
+      allByLocal(xml, "Relationship").forEach(rel => map.set(rel.getAttribute("Id"), normalizeZipPath(basePath, rel.getAttribute("Target"))));
+      return map;
+    }
+    function mimeFromPath(path) {
+      const lower = path.toLowerCase();
+      if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+      if (lower.endsWith(".gif")) return "image/gif";
+      return "image/png";
+    }
+    async function extractImages(buffer) {
+      if (!window.JSZip) return {};
+      const zip = await JSZip.loadAsync(buffer);
+      const workbookXml = await zip.file("xl/workbook.xml")?.async("text");
+      const workbookRelsXml = await zip.file("xl/_rels/workbook.xml.rels")?.async("text");
+      if (!workbookXml || !workbookRelsXml) return {};
+      const workbookDoc = new DOMParser().parseFromString(workbookXml, "application/xml");
+      const workbookRels = relMap(workbookRelsXml, "xl/workbook.xml");
+      const sheets = [];
+      allByLocal(workbookDoc, "sheet").forEach(sheet => {
+        const name = sheet.getAttribute("name");
+        const relId = sheet.getAttribute("r:id") || sheet.getAttribute("id");
+        const path = workbookRels.get(relId);
+        if (name && path) sheets.push({ name, path });
+      });
+      const imagesBySheet = {};
+      for (const sheetInfo of sheets) {
+        const relPath = sheetInfo.path.replace("worksheets/", "worksheets/_rels/") + ".rels";
+        const sheetRelsXml = await zip.file(relPath)?.async("text");
+        if (!sheetRelsXml) continue;
+        const sheetRels = relMap(sheetRelsXml, sheetInfo.path);
+        let drawingPath = "";
+        for (const path of sheetRels.values()) {
+          if (path.includes("/drawings/") && path.endsWith(".xml")) drawingPath = path;
+        }
+        if (!drawingPath) continue;
+        const drawingXml = await zip.file(drawingPath)?.async("text");
+        const drawingRelsXml = await zip.file(drawingPath.replace("drawings/", "drawings/_rels/") + ".rels")?.async("text");
+        if (!drawingXml || !drawingRelsXml) continue;
+        const drawingRels = relMap(drawingRelsXml, drawingPath);
+        const drawingDoc = new DOMParser().parseFromString(drawingXml, "application/xml");
+        const sheetImages = [];
+        allByLocal(drawingDoc, "twoCellAnchor").concat(allByLocal(drawingDoc, "oneCellAnchor")).forEach(anchor => {
+          const from = firstByLocal(anchor, "from");
+          const col = Number(firstByLocal(from || anchor, "col")?.textContent || -1) + 1;
+          const row = Number(firstByLocal(from || anchor, "row")?.textContent || -1) + 1;
+          const blip = firstByLocal(anchor, "blip");
+          const relId = blip?.getAttribute("r:embed") || blip?.getAttribute("embed");
+          const mediaPath = drawingRels.get(relId);
+          if (row > 0 && col > 0 && mediaPath) sheetImages.push({ row, col, mediaPath });
+        });
+        for (const image of sheetImages) {
+          const file = zip.file(image.mediaPath);
+          if (!file) continue;
+          const base64 = await file.async("base64");
+          image.src = `data:${mimeFromPath(image.mediaPath)};base64,${base64}`;
+        }
+        imagesBySheet[sheetInfo.name] = sheetImages.filter(image => image.src);
+      }
+      return imagesBySheet;
+    }
+    function findImage(images, row, startCol, blockEnd, endCol) {
+      if (!images || !images.length) return "";
+      const candidates = images
+        .filter(image => image.row >= row && image.row <= blockEnd && image.col >= startCol && image.col <= endCol)
+        .sort((a, b) => (Math.abs(a.col - startCol) * 10 + Math.abs(a.row - row)) - (Math.abs(b.col - startCol) * 10 + Math.abs(b.row - row)));
+      return candidates[0]?.src || "";
+    }
+
+    function monthNameToNumber(value) {
+      const upper = clean(value).replace(/[^A-Za-z]/g, "").toUpperCase();
+      if (!upper) return null;
+      return MONTHS[upper] || MONTHS[upper.slice(0, 3)] || null;
+    }
+    function parseYearFromWorkbook(workbook, fallback = new Date().getFullYear()) {
+      for (const name of workbook.SheetNames) {
+        const sheet = workbook.Sheets[name];
+        const bounds = sheetBounds(sheet);
+        for (let row = 1; row <= Math.min(bounds.e.r + 1, 5); row++) {
+          for (let col = 1; col <= Math.min(bounds.e.c + 1, 80); col++) {
+            const value = clean(cell(sheet, row, col));
+            const match = value.match(/20\d{2}/);
+            if (match) return Number(match[0]);
+          }
+        }
+      }
+      return fallback;
+    }
+    function axisFromMonthRows(sheet, maxRow, maxCol, workbookYear) {
+      let dayRow = 0;
+      for (let row = 1; row <= Math.min(maxRow, 8); row++) {
+        let count = 0;
+        for (let col = 2; col <= maxCol; col++) {
+          const n = Number(cell(sheet, row, col));
+          if (Number.isInteger(n) && n >= 1 && n <= 31) count += 1;
+        }
+        if (count >= 15) {
+          dayRow = row;
+          break;
+        }
+      }
+      if (!dayRow) return new Map();
+      const monthRow = Math.max(1, dayRow - 1);
+      // Month-name / date headers are used ONLY to seed the first month.
+      const headers = [];
+      for (let col = 2; col <= maxCol; col++) {
+        const value = cell(sheet, monthRow, col);
+        let month = monthNameToNumber(value);
+        let year = workbookYear;
+        const d = excelDate(value);
+        if (d) {
+          month = d.getMonth() + 1;
+          year = d.getFullYear();
+        }
+        if (month) headers.push({ col, month, year });
+      }
+      // First column that actually carries a day number.
+      let firstDayCol = 0;
+      for (let col = 2; col <= maxCol; col++) {
+        const n = Number(cell(sheet, dayRow, col));
+        if (Number.isInteger(n) && n >= 1 && n <= 31) { firstDayCol = col; break; }
+      }
+      if (!firstDayCol) return new Map();
+      // Seed = the header active at / just before the first day column.
+      let seed = null;
+      headers.forEach(h => { if (h.col <= firstDayCol) seed = h; });
+      if (!seed && headers.length) seed = headers[0];
+      if (!seed) return new Map();
+      // Walk the day row and start a new month whenever the day number resets
+      // downward (e.g. 31 -> 1). The mapping is driven by the day row, which is
+      // always correct, instead of header column positions. This makes the axis
+      // robust to month labels that are merged a column early/late (the cause of
+      // F1's 7/31 -> 8/31 mislabel and dropped month-end columns).
+      const axis = new Map();
+      let curMonth = seed.month, curYear = seed.year, prevDay = null;
+      for (let col = 2; col <= maxCol; col++) {
+        const day = Number(cell(sheet, dayRow, col));
+        if (Number.isInteger(day) && day >= 1 && day <= 31) {
+          if (prevDay !== null && day < prevDay) {
+            curMonth += 1;
+            if (curMonth > 12) { curMonth = 1; curYear += 1; }
+          }
+          const d = new Date(curYear, curMonth - 1, day);
+          if (d.getMonth() === curMonth - 1) axis.set(col, d);
+          prevDay = day;
+        }
+      }
+      return axis;
+    }
+    // ----- Shared helpers for bounding the LAST style block in a line -----
+    function isExtentContent(value) {
+      const t = clean(value);
+      if (!t) return false;
+      if (/[A-Za-z/]/.test(t)) return true;          // titles, PO codes, dates like 5/11
+      return /^\d{3,}$/.test(t.replace(/,/g, ""));   // real quantities, not bare day numbers
+    }
+    // The last style on a line has no following style to bound it. Instead of
+    // running to the calendar's end (which produced 150-210 "sewing days"),
+    // derive the end column from where real content actually stops. Bare day
+    // numbers and the day-axis footer row are ignored; a gap of >14 empty
+    // day-columns is treated as the end of the production bar.
+    function lastBlockEndCol(sheet, row, blockEnd, startCol, axMax) {
+      let last = startCol, gap = 0;
+      for (let col = startCol + 1; col <= axMax; col++) {
+        let has = false;
+        for (let r = row; r <= blockEnd; r++) {
+          if (isExtentContent(cell(sheet, r, col))) { has = true; break; }
+        }
+        if (has) { last = col; gap = 0; }
+        else { gap += 1; if (gap > 14 && last > startCol) break; }
+      }
+      return last;
+    }
+    function qtyFromText(value) {
+      const text = clean(value);
+      if (!text) return 0;
+      const afterEquals = text.split("=").pop();
+      const unitMatch = afterEquals.match(/([\d,]+(?:\.\d+)?)\s*(?:PCS|SET|pcs|set)/i);
+      if (unitMatch) return numberFromText(unitMatch[1]);
+      const all = [...text.matchAll(/([\d,]+(?:\.\d+)?)\s*(?:PCS|SET|pcs|set)/gi)];
+      if (all.length) return numberFromText(all[all.length - 1][1]);
+      return 0;
+    }
+    function isRealStyleTitle(value) {
+      const text = clean(value);
+      if (!text) return false;
+      if (/^\d+(\.\d+)?$/.test(text)) return false;
+      if (/^\d+\s*(H|PCS\/H|PCS\s*\/\s*H)$/i.test(text)) return false;
+      if (/^(finish|no emb|emb|ppm|fppm|output|balance)$/i.test(text)) return false;
+      return /[A-Za-z#]/.test(text);
+    }
+    function buyerFromTitle(title) {
+      const text = clean(title);
+      const pairs = [
+        [/CARHART/i, "CARHART"],
+        [/KOHL|BJ\d/i, "KOHLS"],
+        [/TALBOTS/i, "TALBOTS"],
+        [/JCP/i, "JCP"],
+        [/SAMS|MEMBER/i, "SAMS"],
+        [/W-?Mart|Walmart|Wal mart/i, "Walmart"],
+        [/\bANF\b|A&F/i, "ANF / A&F"],
+        [/\bLOFT\b|\bLOS\b/i, "LOFT / LOS"],
+        [/VSL|Victoria'?s?\s*Secret|\bVS\b/i, "Victoria's Secret"],
+        [/\bPINK\b/, "PINK"],
+        [/Duluth/i, "Duluth"],
+        [/Aerie/i, "Aerie"],
+        [/Lane Bryant/i, "Lane Bryant"],
+      ];
+      for (const [pattern, buyer] of pairs) if (pattern.test(text)) return buyer;
+      const fallback = text.split(/\s+/)[0] || "기타";
+      return /^\d+$/.test(fallback) ? "기타" : fallback;
+    }
+    function isHsvBuyerText(value) {
+      const text = clean(value);
+      if (!text) return false;
+      if (/^\d+(\.\d+)?$/.test(text)) return false;
+      if (/^=|TTL|PCS|SET|EX|CRD|EMB|Washing|finish|no emb|fabric|output|^\d{1,2}\s*\/|^\d{1,2}\s*-/i.test(text)) return false;
+      return /Walmart|Wal mart|TALBOTS|ANF|A&F|CAB|MUSINSA|CARHART|PINK|Aerie|VSL|Duluth|JCP|SAMS|Lane Bryant|LOFT|Target/i.test(text);
+    }
+    function cleanHsvBuyer(value) {
+      const text = clean(value);
+      if (/Walmart|Wal mart/i.test(text)) return text.replace(/Wal mart/i, "Walmart");
+      return normalizeDisplayText(text);
+    }
+    function cleanHsvStyle(value) {
+      return normalizeDisplayText(clean(value)).replace(/^STYLE\s*:\s*/i, "");
+    }
+    function styleCandidateFromDetails(details) {
+      return details.find(value => {
+        const text = normalizeDisplayText(clean(value));
+        if (!text) return false;
+        if (/투입|투가|Q.?TY|PCS|SET|DELI|LỊCH|LICH|CUT|^\d+\s*H$/i.test(text)) return false;
+        if (/\d{1,2}\s*\/\s*\d{1,2}/.test(text)) return false;
+        return true;
+      }) || "";
+    }
+    function displayBlockStyle(title, buyer, details) {
+      const plainTitle = normalizeDisplayText(title);
+      const candidate = styleCandidateFromDetails(details);
+      const generic = plainTitle.toUpperCase() === buyer.toUpperCase()
+        || /^(TALBOTS|CHICO'?S?|A&F|ANF|VS|PINK)$/i.test(plainTitle);
+      if (candidate && generic) return `${plainTitle} · ${candidate}`;
+      return plainTitle;
+    }
+    function blockJobFactoryName(workbook) {
+      const names = workbook.SheetNames.join(" ");
+      if (/Factory\s*1|Factory\s*2/i.test(names)) return "Hansollindo Klaten";
+      return "PT. Sadua";
+    }
+    function parseBlockWorkbook(workbook, imageMap = {}) {
+      const jobs = [];
+      const year = parseYearFromWorkbook(workbook, 2026);
+      const factoryName = blockJobFactoryName(workbook);
+      workbook.SheetNames.forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const bounds = sheetBounds(sheet);
+        const maxRow = bounds.e.r + 1;
+        const maxCol = bounds.e.c + 1;
+        const axis = axisFromMonthRows(sheet, maxRow, maxCol, year);
+        if (!axis.size) return;
+        const lineRows = [];
+        for (let row = 1; row <= maxRow; row++) {
+          if (isLineNumber(cell(sheet, row, 1))) lineRows.push([row, Number(cell(sheet, row, 1))]);
+        }
+        lineRows.forEach(([row, line], idx) => {
+          const nextRow = idx + 1 < lineRows.length ? lineRows[idx + 1][0] : maxRow + 1;
+          const blockEnd = Math.min(nextRow - 1, row + 5);
+          const starts = [];
+          for (let col = 2; col <= maxCol; col++) if (clean(cell(sheet, row, col))) starts.push(col);
+          starts.forEach((startCol, pos) => {
+            const title = normalizeDisplayText(clean(cell(sheet, row, startCol)));
+            if (!isRealStyleTitle(title) || ["pp", "pp ok"].includes(title.toLowerCase())) return;
+            const nextStart = pos + 1 < starts.length ? starts[pos + 1] : null;
+            const endCol = nextStart ? nextStart - 1 : lastBlockEndCol(sheet, row, blockEnd, startCol, Math.max(...axis.keys()));
+            const cols = [...axis.keys()].filter(col => startCol <= col && col <= endCol);
+            if (!cols.length) return;
+            const detailTexts = [];
+            for (let r = row + 1; r <= blockEnd; r++) {
+              for (let c = startCol; c <= endCol; c++) {
+                const value = clean(cell(sheet, r, c));
+                if (value) detailTexts.push(value);
+              }
+            }
+            const qtyText = detailTexts.filter(v => /Q.?TY|PCS|SET/i.test(v)).join(" / ");
+            const dueText = normalizeDisplayText(detailTexts.filter(v =>
+              /DELI|LỊCH|LICH|\d{1,2}\s*\/\s*\d{1,2}/i.test(v) &&
+              !/투입|투가|CUT|Cut date/i.test(v)
+            ).join(" / "));
+            const startDate = new Date(Math.min(...cols.map(col => axis.get(col).getTime())));
+            const endDate = new Date(Math.max(...cols.map(col => axis.get(col).getTime())));
+            const days = Math.round((endDate - startDate) / 86400000) + 1;
+            const dueDates = parseAllDueDates(dueText, startDate.getFullYear());
+            const qty = qtyFromText(qtyText);
+            const buyer = buyerFromTitle(title);
+            const rawCutText = normalizeDisplayText(detailTexts.filter(v => /투입|투가|CUT|Cut date/i.test(v)).join(" / "));
+            const fallbackCutDate = isoDate(addDays(startDate, -5));
+            const calculatedCutFactory = factoryName === "Hansollindo Klaten" || factoryName === "PT. Sadua";
+            jobs.push({
+              factory: factoryName,
+              sheet: sheetName,
+              line: `${sheetName}-${line}`,
+              buyer,
+              style: displayBlockStyle(title, buyer, detailTexts),
+              imageSrc: findImage(imageMap[sheetName], row, startCol, blockEnd, endCol),
+              start: isoDate(startDate),
+              end: isoDate(endDate),
+              days,
+              orderQty: qty,
+              lineOrderQty: qty,
+              sharedLineCount: 1,
+              totalLineDays: days,
+              dpr: qty && days ? qty / days : 0,
+              dueText,
+              dueDates,
+              dueMonths: [...new Set(dueDates.map(value => value.slice(0, 7)))],
+              cutText: calculatedCutFactory ? fullDate(fallbackCutDate) : (rawCutText || fullDate(fallbackCutDate)),
+              cutDates: calculatedCutFactory ? [fallbackCutDate] : (parseAllDueDates(rawCutText, startDate.getFullYear()).length ? parseAllDueDates(rawCutText, startDate.getFullYear()) : [fallbackCutDate]),
+            });
+          });
+        });
+      });
+      return applySharedLineDpr(jobs).sort((a, b) => `${a.start}${a.line}${a.style}`.localeCompare(`${b.start}${b.line}${b.style}`));
+    }
+    // HSV detail/meta text that should never be treated as a buyer or a style.
+    function isMetaHsv(value) {
+      const t = clean(value);
+      if (!t) return true;
+      if (/^\d+(\.\d+)?$/.test(t)) return true;
+      if (/PCS|SET|\bTTL\b|Fabric|mill|Washing|EMB|finish|no emb|output|^=|color\b|\bCRD\b|\bEX\b|\/day|투입|투가/i.test(t)) return true;
+      if (/^\d{1,2}\s*[\/-]/.test(t)) return true;
+      return false;
+    }
+    const HSV_BUYER = /Walmart|Wal mart|TALBOTS|ANF|A&F|CAB|MUSINSA|CARHART|PINK|Aerie|VSL|Duluth|JCP|SAMS|Lane Bryant|LOFT|Target/i;
+    // A valid HSV style/PO: an alphanumeric code (HQ263935, FFS 99-03-..., NB46...)
+    // OR a pure numeric PO number of 4+ digits (e.g. 263013558 used for TALBOTS).
+    // Rejects dates (6/18-...), quantities, ratios, day numbers and meta words.
+    function isHsvStyleCandidate(value) {
+      const t = clean(value);
+      if (!t) return false;
+      if (/^\d{1,2}\s*[\/-]/.test(t)) return false;
+      if (/PCS|SET|\bTTL\b|Fabric|mill|Washing|EMB|finish|no emb|output|^=|color\b|\bCRD\b|\bEX\b|\/day|투입|투가|납기/i.test(t)) return false;
+      if (/[A-Za-z#]/.test(t)) return true;
+      return /^\d{4,}$/.test(t.replace(/[\s,]/g, ""));
+    }
+    function parseHsvWorkbook(workbook, imageMap = {}) {
+      const jobs = [];
+      const year = parseYearFromWorkbook(workbook, 2026);
+      workbook.SheetNames.filter(name => /^HSV/i.test(name)).forEach(sheetName => {
+        const sheet = workbook.Sheets[sheetName];
+        const bounds = sheetBounds(sheet);
+        const maxRow = bounds.e.r + 1;
+        const maxCol = bounds.e.c + 1;
+        const axis = axisFromMonthRows(sheet, maxRow, maxCol, year);
+        if (!axis.size) return;
+        const axMax = Math.max(...axis.keys());
+        const lineRows = [];
+        for (let row = 1; row <= maxRow; row++) {
+          const line = clean(cell(sheet, row, 2));
+          if (/HSV\d?_?L|미배정/i.test(line)) lineRows.push([row, line.replace(/\s+/g, " ")]);
+        }
+        lineRows.forEach(([row, line], idx) => {
+          const nextRow = idx + 1 < lineRows.length ? lineRows[idx + 1][0] : maxRow + 1;
+          const blockEnd = Math.min(nextRow - 1, row + 4);
+          // Block starts = any non-meta text cell on the line row. This covers
+          // BOTH HSV layouts: HSV2 (buyer on the line row, PO style on row+1) and
+          // HSV1 (PO/style codes placed directly on the line row, dates on row+1).
+          const starts = [];
+          for (let col = 3; col <= maxCol; col++) {
+            const top = cell(sheet, row, col);
+            if (!isMetaHsv(top) && /[A-Za-z]/.test(clean(top))) starts.push(col);
+          }
+          const uniqueStarts = [...new Set(starts)].sort((a, b) => a - b);
+          let lastBuyer = "";
+          uniqueStarts.forEach((startCol, pos) => {
+            const lineText = clean(cell(sheet, row, startCol));
+            const plus1 = clean(cell(sheet, row + 1, startCol));
+            let buyer, style;
+            if (isHsvStyleCandidate(plus1)) {
+              // HSV2 layout: line row = buyer, row+1 = PO style (incl. numeric PO).
+              buyer = cleanHsvBuyer(lineText);
+              style = cleanHsvStyle(cell(sheet, row + 1, startCol));
+            } else {
+              // HSV1 layout: line row cell IS the style; infer the buyer.
+              style = cleanHsvStyle(lineText);
+              const m = lineText.match(HSV_BUYER);
+              buyer = m ? cleanHsvBuyer(m[0]) : (lastBuyer || "기타");
+            }
+            const bm = lineText.match(HSV_BUYER);
+            if (bm) lastBuyer = cleanHsvBuyer(bm[0]);
+            if (!isHsvStyleCandidate(style)) return;
+            const nextStart = pos + 1 < uniqueStarts.length ? uniqueStarts[pos + 1] : null;
+            const endCol = nextStart ? nextStart - 1 : lastBlockEndCol(sheet, row, blockEnd, startCol, axMax);
+            const cols = [...axis.keys()].filter(col => startCol <= col && col <= endCol);
+            if (!cols.length) return;
+            const detailTexts = [];
+            for (let r = row; r <= blockEnd; r++) {
+              for (let c = startCol; c <= endCol; c++) {
+                const value = clean(cell(sheet, r, c));
+                if (value) detailTexts.push(value);
+              }
+            }
+            const dueText = normalizeDisplayText(detailTexts.filter(v =>
+              /\d{1,2}\s*\/\s*\d{1,2}|\d{1,2}\s*-\s*[\d,]+|EX|CRD/i.test(v) &&
+              !/TTL|\/day|투가|투입|CUT/i.test(v)
+            ).join(" / "));
+            const ttlQty = detailTexts.map(v => clean(v).match(/TTL\s*:?\s*([\d,]+)/i)).find(Boolean);
+            const qty = ttlQty ? numberFromText(ttlQty[1]) : qtyFromText(detailTexts.join(" / "));
+            const startDate = new Date(Math.min(...cols.map(col => axis.get(col).getTime())));
+            const endDate = new Date(Math.max(...cols.map(col => axis.get(col).getTime())));
+            const days = Math.round((endDate - startDate) / 86400000) + 1;
+            const dueDates = parseAllDueDates(dueText, startDate.getFullYear());
+            jobs.push({
+              factory: "Hansollvina",
+              sheet: sheetName,
+              line,
+              buyer,
+              style,
+              imageSrc: findImage(imageMap[sheetName], row, startCol, blockEnd, endCol),
+              start: isoDate(startDate),
+              end: isoDate(endDate),
+              days,
+              orderQty: qty,
+              lineOrderQty: qty,
+              sharedLineCount: 1,
+              totalLineDays: days,
+              dpr: qty && days ? qty / days : 0,
+              dueText,
+              dueDates,
+              dueMonths: [...new Set(dueDates.map(value => value.slice(0, 7)))],
+              cutText: fullDate(isoDate(addDays(startDate, -5))),
+              cutDates: [isoDate(addDays(startDate, -5))],
+            });
+          });
+        });
+      });
+      return applySharedLineDpr(jobs).sort((a, b) => `${a.start}${a.line}${a.style}`.localeCompare(`${b.start}${b.line}${b.style}`));
+    }
+
+    function parseThiensonWorkbook(workbook, imageMap = {}) {
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const bounds = sheetBounds(sheet);
+      const maxRow = bounds.e.r + 1;
+      const maxCol = bounds.e.c + 1;
+      const axis = thiensonDateAxis(sheet, maxCol);
+      const baseYear = [...axis.values()][0]?.getFullYear() || new Date().getFullYear();
+      const lineRows = [];
+      for (let row = 1; row <= maxRow; row++) {
+        if (isLineNumber(cell(sheet, row, 1))) lineRows.push([row, Number(cell(sheet, row, 1))]);
+      }
+      const jobs = [];
+      lineRows.forEach(([row, line], idx) => {
+        const nextRow = idx + 1 < lineRows.length ? lineRows[idx + 1][0] : maxRow + 1;
+        const blockEnd = nextRow - 1;
+        const starts = [];
+        for (let col = 2; col <= maxCol; col++) {
+          if (/^STYLE\s*:/i.test(clean(cell(sheet, row, col)))) starts.push(col);
+        }
+        starts.forEach((startCol, pos) => {
+          const nextStart = pos + 1 < starts.length ? starts[pos + 1] : null;
+          const endCol = nextStart ? nextStart - 1 : lastBlockEndCol(sheet, row, blockEnd, startCol, Math.max(...axis.keys()));
+          const dateCols = [...axis.keys()].filter(col => startCol <= col && col <= endCol);
+          if (!dateCols.length) return;
+          const style = styleText(cell(sheet, row, startCol));
+          const startDate = new Date(Math.min(...dateCols.map(col => axis.get(col).getTime())));
+          const endDate = new Date(Math.max(...dateCols.map(col => axis.get(col).getTime())));
+          const dueText = normalizeDisplayText(textInRange(sheet, row + 1, startCol, endCol, /LỊCH\s*XUẤT|LICH\s*XUAT|NGÀY\s*XUẤT|NGAY\s*XUAT|DELIVERY|SHIP/i)
+            .join(" / ")
+            .replace(/LỊCH\s*XUẤT\s*:\s*/gi, "")
+            .replace(/LICH\s*XUAT\s*:\s*/gi, "")
+            .replace(/NGÀY\s*XUẤT\s*:\s*/gi, "")
+            .replace(/NGAY\s*XUAT\s*:\s*/gi, "")
+            .replace(/DELIVERY\s*:\s*/gi, "")
+            .replace(/SHIP\s*:\s*/gi, ""));
+          const dueDates = parseAllDueDates(dueText, baseYear);
+          const cutText = normalizeDisplayText(textInRange(sheet, row + 4, startCol, endCol, /Cut date|NGÀY\s*CẮT|NGAY\s*CAT|CẮT|CAT/i)
+            .join(" / ")
+            .replace(/Cut date\s*:\s*/gi, "")
+            .replace(/NGÀY\s*CẮT\s*:\s*/gi, "")
+            .replace(/NGAY\s*CAT\s*:\s*/gi, ""));
+          const cutDates = parseAllDueDates(cutText, baseYear);
+          const fallbackCutDate = isoDate(addDays(startDate, -5));
+          const qty = quantityInRange(sheet, row + 2, startCol, endCol);
+          const days = Math.round((endDate - startDate) / 86400000) + 1;
+          jobs.push({
+            factory: "THIENSON",
+            line,
+            buyer: firstBuyer(sheet, row + 2, startCol, endCol),
+            style,
+            imageSrc: findImage(imageMap[sheetName], row, startCol, blockEnd, endCol),
+            start: isoDate(startDate),
+            end: isoDate(endDate),
+            days,
+            orderQty: qty,
+            lineOrderQty: qty,
+            sharedLineCount: 1,
+            totalLineDays: days,
+            dpr: qty && days ? qty / days : 0,
+            dueText,
+            dueDates,
+            dueMonths: [...new Set(dueDates.map(value => value.slice(0, 7)))],
+            cutText: cutText || fullDate(fallbackCutDate),
+            cutDates: cutDates.length ? cutDates : [fallbackCutDate],
+          });
+        });
+      });
+      return applySharedLineDpr(jobs)
+        .sort((a, b) => `${a.start}${a.line}${a.style}`.localeCompare(`${b.start}${b.line}${b.style}`));
+    }
+
+    function detectFactory(workbook) {
+      const names = workbook.SheetNames.join(" ");
+      if (/^F1\b|^F2\b/i.test(workbook.SheetNames[0]) || /\bF1\b.*\bF2\b/i.test(names)) return "sadua";
+      if (/Factory\s*1|Factory\s*2/i.test(names)) return "klaten";
+      if (/Linemap|Loading plan/i.test(names)) return "thienson";
+      if (/HSV/i.test(names)) return "hansollvina";
+      return "unknown";
+    }
+    function parseWorkbook(workbook, imageMap = {}) {
+      const factory = detectFactory(workbook);
+      if (factory === "sadua" || factory === "klaten") return parseBlockWorkbook(workbook, imageMap);
+      if (factory === "thienson") return parseThiensonWorkbook(workbook, imageMap);
+      if (factory === "hansollvina") return parseHsvWorkbook(workbook, imageMap);
+      throw new Error("지원하지 않는 라인맵 양식입니다. 공장 양식인지 확인해주세요.");
+    }
+
+    function setStatus(message, warn = false) {
+      els.status.textContent = message;
+      els.status.style.color = warn ? "#a45b00" : "var(--muted)";
+    }
+    function fillSelect(select, values) {
+      select.innerHTML = '<option value="">전체</option>';
+      values.forEach(value => {
+        const option = document.createElement("option");
+        if (typeof value === "object") {
+          option.value = value.value;
+          option.textContent = value.label;
+          option.title = value.label;
+        } else {
+          option.value = value;
+          option.textContent = value;
+          option.title = value;
+        }
+        select.appendChild(option);
+      });
+    }
+    function factoryDisplaySet(jobs) {
+      return [...new Set(jobs.map(job => job.factory).filter(Boolean))];
+    }
+    function updateFactoryCard() {
+      const sel = els.factory.value;
+      els.factoryName.textContent = sel || factoryDisplaySet(state.jobs).join(", ") || "-";
+    }
+    // Build 바이어 / 라인 / 납기 options from ONLY the selected factory's jobs
+    // (or all factories when 공장 = 전체). Keeps current picks if still valid.
+    function populateScopedFilters() {
+      const fac = els.factory.value;
+      const scope = fac ? state.jobs.filter(job => job.factory === fac) : state.jobs;
+      const keepBuyer = els.buyer.value, keepLine = els.line.value, keepDue = els.due.value;
+      fillSelect(els.buyer, [...new Set(scope.map(job => job.buyer).filter(value => value && value !== "기타" && !/^\d+$/.test(value)))].sort());
+      fillSelect(els.line, [...new Set(scope.map(job => String(job.line)))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })));
+      const dueMonths = [...new Set(scope.flatMap(job => job.dueMonths || []))]
+        .sort()
+        .map(value => ({ value, label: monthLabel(value) }));
+      fillSelect(els.due, dueMonths);
+      if ([...els.buyer.options].some(o => o.value === keepBuyer)) els.buyer.value = keepBuyer;
+      if ([...els.line.options].some(o => o.value === keepLine)) els.line.value = keepLine;
+      if ([...els.due.options].some(o => o.value === keepDue)) els.due.value = keepDue;
+    }
+    function loadJobs(jobs, filename) {
+      state.jobs = jobs;
+      fillSelect(els.factory, factoryDisplaySet(jobs).sort());
+      els.factory.value = "";
+      populateScopedFilters();
+      updateFactoryCard();
+      setStatus(`${filename}: ${jobs.length.toLocaleString()}개 구간을 읽었습니다.`);
+      applyFilters();
+    }
+    function applyFilters() {
+      const factory = els.factory.value;
+      const buyer = els.buyer.value;
+      const line = els.line.value;
+      const due = els.due.value;
+      const query = els.query.value.trim().toLowerCase();
+      const showPast = els.showPast.checked;
+      const today = todayDateOnly();
+      state.filtered = state.jobs.filter(job => {
+        if (!showPast && !isOpenByDue(job, today)) return false;
+        if (factory && job.factory !== factory) return false;
+        if (buyer && job.buyer !== buyer) return false;
+        if (line && String(job.line) !== line) return false;
+        if (due && !(job.dueMonths || []).includes(due)) return false;
+        if (query && !`${job.style} ${job.buyer} ${job.dueText} ${job.cutText}`.toLowerCase().includes(query)) return false;
+        return true;
+      });
+      render();
+    }
+    function renderSummary(rows) {
+      els.count.textContent = rows.length.toLocaleString();
+      els.lines.textContent = new Set(rows.map(row => row.line)).size.toLocaleString();
+      if (!rows.length) {
+        els.range.textContent = "-";
+        return;
+      }
+      const starts = rows.map(row => row.start).sort();
+      const ends = rows.map(row => row.end).sort();
+      els.range.textContent = `${shortDate(starts[0])}~${shortDate(ends[ends.length - 1])}`;
+    }
+    function renderTable(rows) {
+      if (!rows.length) {
+        els.table.innerHTML = '<div class="empty">조건에 맞는 라인 운용 구간이 없습니다.</div>';
+        return;
+      }
+      const limited = rows.slice(0, 250);
+      els.table.innerHTML = `
+        <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:92px">라인</th>
+              <th style="width:120px">봉제 기간</th>
+              <th style="width:130px">바이어</th>
+              <th style="min-width:440px">사진 / 스타일</th>
+              <th style="width:155px">예상 수량 / DPR</th>
+              <th style="width:270px">납기 / CUT DATE</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${limited.map(job => `
+              <tr>
+                <td><span class="tag">Line ${job.line}</span></td>
+                <td><b>${shortDate(job.start)}~${shortDate(job.end)}</b><br><span class="muted">봉제 ${job.days}일</span></td>
+                <td>${job.buyer}</td>
+                <td>
+                  <div class="style-cell">
+                    ${job.imageSrc ? `<img class="thumb" src="${job.imageSrc}" alt="">` : `<div class="thumb empty-thumb">No img</div>`}
+                    <div><b class="style-title">${job.style}</b><br><span class="muted">${job.sharedLineCount > 1 ? `${job.sharedLineCount}라인 배정` : ""}</span></div>
+                  </div>
+                </td>
+                <td class="num-cell">
+                  <b>${formatNumber(job.lineOrderQty)}</b><br>
+                  ${job.sharedLineCount > 1 ? `<span class="muted">총 ${formatNumber(job.orderQty)} / ${job.totalLineDays}라인일</span>` : `<span class="muted">총 ${formatNumber(job.orderQty)}</span>`}
+                  <span class="dpr-line">DPR ${formatNumber(job.dpr)}</span>
+                </td>
+                <td>
+                  <div class="due">납기: ${job.dueText || "-"}</div>
+                  <div class="cut-date">CUT DATE: ${job.cutText || job.cutDates.map(fullDate).join(", ") || "-"}</div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        </div>
+      `;
+    }
+    function render() {
+      renderSummary(state.filtered);
+      renderTable(state.filtered);
+    }
+
+    [els.buyer, els.line, els.due, els.query, els.showPast].forEach(el => {
+      el.addEventListener("input", applyFilters);
+      el.addEventListener("change", applyFilters);
+    });
+    els.factory.addEventListener("change", () => {
+      populateScopedFilters();
+      updateFactoryCard();
+      applyFilters();
+    });
+    // ----- shared reading pipeline -----
+    async function workbookFromBuffer(buffer) {
+      return XLSX.read(buffer, { type: "array", cellDates: true });
+    }
+    async function fileToJobs(file) {
+      const buffer = await file.arrayBuffer();
+      const workbook = await workbookFromBuffer(buffer);
+      const imageMap = window.JSZip ? await extractImages(buffer) : {};
+      return parseWorkbook(workbook, imageMap);
+    }
+    // Load one or many attached files (manual selection). Latest-per-factory is
+    // resolved by the folder flow; manual attach simply merges everything chosen.
+    async function loadFiles(fileList) {
+      const files = [...fileList];
+      if (!files.length) return;
+      if (!window.XLSX) {
+        setStatus("엑셀 읽기 스크립트를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.", true);
+        return;
+      }
+      setStatus("엑셀 내용과 사진을 정리하는 중입니다...");
+      try {
+        let all = [];
+        const names = [];
+        for (const f of files) { all = all.concat(await fileToJobs(f)); names.push(f.name); }
+        loadJobs(all, files.length > 1 ? `${files.length}개 파일` : names[0]);
+      } catch (error) {
+        setStatus(`엑셀을 읽지 못했습니다: ${error.message}`, true);
+      }
+    }
+    els.file.addEventListener("change", () => loadFiles(els.file.files));
+
+    // ----- OneDrive (synced local folder) auto-load via File System Access API -----
+    const FACTORY_HINTS = [
+      { key: "thienson", re: /thien.?son|vnhn/i },
+      { key: "sadua", re: /sadua/i },
+      { key: "klaten", re: /klaten|hansollindo/i },
+      { key: "hansollvina", re: /hansollvina|(^|[^a-z])hsv/i },
+    ];
+    function guessFactoryFromName(name) {
+      const hit = FACTORY_HINTS.find(h => h.re.test(name));
+      return hit ? hit.key : null;
+    }
+    let dirHandle = null;
+    async function collectXlsx(handle, out, depth = 0) {
+      if (depth > 4) return;
+      for await (const entry of handle.values()) {
+        if (entry.kind === "file") {
+          if (/\.xls[xm]?$/i.test(entry.name) && !/^~\$/.test(entry.name)) out.push(entry);
+        } else if (entry.kind === "directory") {
+          await collectXlsx(entry, out, depth + 1);
+        }
+      }
+    }
+    async function loadLatestFromFolder() {
+      if (!dirHandle) { setStatus("먼저 '폴더 지정'으로 라인맵 폴더를 선택해주세요.", true); return; }
+      try {
+        let perm = await dirHandle.queryPermission({ mode: "read" });
+        if (perm !== "granted") perm = await dirHandle.requestPermission({ mode: "read" });
+        if (perm !== "granted") { setStatus("폴더 접근 권한이 거부되었습니다.", true); return; }
+      } catch (e) {}
+      setStatus("폴더에서 라인맵을 찾는 중입니다...");
+      const handles = [];
+      try { await collectXlsx(dirHandle, handles); }
+      catch (e) { setStatus(`폴더를 읽지 못했습니다: ${e.message}`, true); return; }
+      if (!handles.length) { setStatus("폴더에서 .xlsx 파일을 찾지 못했습니다.", true); return; }
+      const files = [];
+      for (const h of handles) { try { files.push(await h.getFile()); } catch (e) {} }
+      // pick newest file per factory using the filename hint (no need to open them all)
+      const latest = {}; const unknown = [];
+      for (const f of files) {
+        const key = guessFactoryFromName(f.name);
+        if (key) { if (!latest[key] || f.lastModified > latest[key].lastModified) latest[key] = f; }
+        else unknown.push(f);
+      }
+      let picked = Object.values(latest);
+      if (!picked.length && unknown.length) {
+        unknown.sort((a, b) => b.lastModified - a.lastModified);
+        picked = unknown.slice(0, 6); // fall back to recent files; content-detect below
+      }
+      if (!picked.length) { setStatus("라인맵으로 인식되는 파일이 없습니다.", true); return; }
+      setStatus(`${picked.length}개 파일을 읽는 중입니다...`);
+      // open picked files, confirm factory by content, keep newest per detected factory
+      const byFactory = {};
+      for (const f of picked) {
+        try {
+          const buffer = await f.arrayBuffer();
+          const wb = await workbookFromBuffer(buffer);
+          const fac = detectFactory(wb);
+          if (fac === "unknown") continue;
+          if (byFactory[fac] && f.lastModified <= byFactory[fac].mtime) continue;
+          const imageMap = window.JSZip ? await extractImages(buffer) : {};
+          byFactory[fac] = { jobs: parseWorkbook(wb, imageMap), mtime: f.lastModified, name: f.name };
+        } catch (e) {}
+      }
+      const groups = Object.values(byFactory);
+      if (!groups.length) { setStatus("파일을 읽지 못했습니다.", true); return; }
+      const all = groups.flatMap(g => g.jobs);
+      const facList = Object.keys(byFactory).join(", ");
+      loadJobs(all, `폴더 최신 ${groups.length}개 공장 (${facList})`);
+    }
+    async function pickFolder() {
+      if (!window.showDirectoryPicker) {
+        setStatus("이 브라우저는 폴더 자동 읽기를 지원하지 않습니다. Chrome 또는 Edge에서 열어주세요. (파일 첨부는 그대로 사용 가능)", true);
+        return;
+      }
+      try {
+        dirHandle = await window.showDirectoryPicker({ mode: "read" });
+        els.reloadFolder.disabled = false;
+        saveDirHandle(dirHandle);
+        await loadLatestFromFolder();
+      } catch (e) {
+        if (e && e.name !== "AbortError") setStatus(`폴더를 열지 못했습니다: ${e.message}`, true);
+      }
+    }
+    els.pickFolder.addEventListener("click", pickFolder);
+    els.reloadFolder.addEventListener("click", loadLatestFromFolder);
+
+    // best-effort: remember the chosen folder across sessions (works on http/https;
+    // may not persist when opened directly as a file://, in which case just re-pick)
+    const IDB_NAME = "linemap-tool", IDB_STORE = "handles";
+    function openIdb() {
+      return new Promise((res, rej) => {
+        const r = indexedDB.open(IDB_NAME, 1);
+        r.onupgradeneeded = () => r.result.createObjectStore(IDB_STORE);
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      });
+    }
+    async function saveDirHandle(h) {
+      try { const db = await openIdb(); db.transaction(IDB_STORE, "readwrite").objectStore(IDB_STORE).put(h, "dir"); } catch (e) {}
+    }
+    async function restoreDirHandle() {
+      try {
+        const db = await openIdb();
+        const req = db.transaction(IDB_STORE, "readonly").objectStore(IDB_STORE).get("dir");
+        req.onsuccess = () => { if (req.result) { dirHandle = req.result; els.reloadFolder.disabled = false; } };
+      } catch (e) {}
+    }
+    if (!window.showDirectoryPicker) { els.pickFolder.disabled = true; els.reloadFolder.disabled = true; }
+    else { restoreDirHandle(); }
+  </script>
+</body>
+</html>

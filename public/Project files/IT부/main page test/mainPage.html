@@ -427,6 +427,54 @@
                 height: auto;
                 padding: 4rem 0;
             }
+            .carousel-container {
+                width: 70vw;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: auto; /* 모바일에서 스크롤 허용 */
+            }
+            .top-section {
+                overflow: visible; /* 잘림 방지 */
+                min-height: 70vh;
+            }
+            .carousel-container {
+                width: 85vw; /* 모바일에서 캐러셀 패널이 화면 중앙에 위치하도록 너비 확장 */
+            }
+            .panel {
+                padding: 1.5rem 1rem;
+            }
+            .nav-left { left: 2%; }
+            .nav-right { right: 2%; }
+            .nav-arrow {
+                width: 35px;
+                height: 35px;
+                font-size: 1rem;
+            }
+            .benefits-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 0.8rem;
+            }
+            .benefit-card {
+                padding: 1rem 0.5rem;
+            }
+            .benefit-value {
+                font-size: 1.4rem;
+            }
+            .workflow-viz {
+                transform: scale(0.65);
+                min-height: 140px;
+            }
+            .chart-container {
+                transform: scale(0.9);
+            }
+            header h1 {
+                font-size: 1.8rem;
+            }
         }
     </style>
 </head>
@@ -564,7 +612,7 @@
                     const activeCategories = data.filter(d => (d.menu_type === 'category' || d.menu_type === '카테고리') && d.YN_use !== false);
                     
                     departmentData = activeCategories.map(dept => {
-                        const subItems = data.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === dept.menu_name) && sub.YN_use !== false);
+                        const subItems = data.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === dept.menu_name) && sub.YN_use !== false && sub.YN_view !== 'Y');
                         return { department: dept.menu_name, count: subItems.length };
                     });
                     
@@ -626,6 +674,7 @@
             const totalPanels = panels.length;
 
             function updateCarousel() {
+                const isMobile = window.innerWidth <= 768;
                 panels.forEach((panel, index) => {
                     let offset = index - activeIndex;
                     if (offset < -1) offset += totalPanels;
@@ -633,22 +682,25 @@
                     
                     if (offset === 0) {
                         // Active Center Panel
-                        panel.style.transform = `translateX(0) scale(1.1)`;
+                        panel.style.transform = isMobile ? `translateX(0) scale(1)` : `translateX(0) scale(1.1)`;
                         panel.style.opacity = 1;
                         panel.style.zIndex = 3;
                         panel.style.filter = 'none';
+                        panel.style.pointerEvents = 'auto';
                     } else if (offset === -1) {
                         // Left Panel
-                        panel.style.transform = `translateX(-55%) scale(0.85)`;
-                        panel.style.opacity = 0.5;
+                        panel.style.transform = isMobile ? `translateX(-100%) scale(1)` : `translateX(-55%) scale(0.85)`;
+                        panel.style.opacity = isMobile ? 0 : 0.5;
                         panel.style.zIndex = 1;
-                        panel.style.filter = 'blur(4px)';
+                        panel.style.filter = isMobile ? 'none' : 'blur(4px)';
+                        panel.style.pointerEvents = 'none';
                     } else if (offset === 1) {
                         // Right Panel
-                        panel.style.transform = `translateX(55%) scale(0.85)`;
-                        panel.style.opacity = 0.5;
+                        panel.style.transform = isMobile ? `translateX(100%) scale(1)` : `translateX(55%) scale(0.85)`;
+                        panel.style.opacity = isMobile ? 0 : 0.5;
                         panel.style.zIndex = 1;
-                        panel.style.filter = 'blur(4px)';
+                        panel.style.filter = isMobile ? 'none' : 'blur(4px)';
+                        panel.style.pointerEvents = 'none';
                     }
                 });
             }
@@ -677,6 +729,22 @@
                 updateCarousel();
                 startCarousel();
             };
+
+            // Touch Swipe Support
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            carousel.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+                stopCarousel();
+            }, {passive: true});
+            
+            carousel.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                if (touchEndX < touchStartX - 50) moveCarousel(1);
+                if (touchEndX > touchStartX + 50) moveCarousel(-1);
+                startCarousel();
+            }, {passive: true});
 
             // Pause on hover
             carousel.addEventListener('mouseenter', stopCarousel);
