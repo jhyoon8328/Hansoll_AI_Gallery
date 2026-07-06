@@ -10,7 +10,7 @@
   <!-- Suppress Tailwind CDN warning -->
   <script>
     const originalWarn = console.warn;
-    console.warn = function(...args) {
+    console.warn = function (...args) {
       if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com should not be used in production')) return;
       originalWarn.apply(console, args);
     };
@@ -112,11 +112,13 @@
     body.is-logged-out header {
       display: none !important;
     }
-    body.is-logged-out > div.flex-1 {
+
+    body.is-logged-out>div.flex-1 {
       height: 100vh;
       margin: 0 !important;
       padding: 0 !important;
     }
+
     body.is-logged-out main {
       height: 100vh;
       margin: 0 !important;
@@ -129,7 +131,9 @@
 <body class="h-screen bg-[#f5f7fb] text-slate-900 overflow-hidden flex">
 
   <!-- Sidebar Backdrop -->
-  <div id="sidebar-backdrop" class="fixed inset-0 bg-slate-900/50 z-40 hidden opacity-0 transition-opacity duration-300 md:hidden" onclick="toggleSidebar()"></div>
+  <div id="sidebar-backdrop"
+    class="fixed inset-0 bg-slate-900/50 z-40 hidden opacity-0 transition-opacity duration-300 md:hidden"
+    onclick="toggleSidebar()"></div>
 
   <!-- ==================== SIDEBAR ==================== -->
   <aside id="sidebar"
@@ -144,7 +148,8 @@
         <div class="flex flex-col overflow-hidden">
           <span class="truncate text-xs font-bold uppercase tracking-wider text-slate-500">Hansoll Textile</span>
           <span
-            class="truncate text-[17px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors duration-200">AI GALLERY</span>
+            class="truncate text-[17px] font-extrabold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors duration-200">AI
+            GALLERY</span>
         </div>
       </div>
     </div>
@@ -161,7 +166,8 @@
 
     <!-- Sidebar Footer -->
     <div class="border-t border-slate-100 p-4 shrink-0 bg-slate-50/50 flex justify-center items-center">
-      <img src="imgFile/HS_logo5.png" alt="Hansoll Textile Logo" class="w-4/5 h-auto object-contain opacity-80 hover:opacity-100 transition-opacity">
+      <img src="imgFile/HS_logo5.png" alt="Hansoll Textile Logo"
+        class="w-4/5 h-auto object-contain opacity-80 hover:opacity-100 transition-opacity">
     </div>
   </aside>
 
@@ -173,11 +179,13 @@
       class="h-[70px] flex-shrink-0 flex items-center justify-between bg-white border-b border-slate-200/80 px-3 sm:px-8 z-30 relative">
       <div class="flex items-center gap-2 sm:gap-4 max-w-[50%]">
         <!-- Hamburger Button -->
-        <button onclick="toggleSidebar()" class="md:hidden flex items-center justify-center p-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
+        <button onclick="toggleSidebar()"
+          class="md:hidden flex items-center justify-center p-1.5 rounded-md hover:bg-slate-100 text-slate-500 transition-colors shrink-0">
           <i data-lucide="menu" class="w-5 h-5"></i>
         </button>
         <div class="flex items-center text-[11px] sm:text-sm font-medium text-slate-500 truncate" id="breadcrumb">
-          <span class="hover:text-blue-600 cursor-pointer transition-colors truncate" onclick="renderDashboard()">시스템 관리</span>
+          <span class="hover:text-blue-600 cursor-pointer transition-colors truncate" onclick="renderDashboard()">시스템
+            관리</span>
           <span class="mx-2 text-slate-300">/</span>
           <span class="text-slate-900 font-semibold">대시보드</span>
         </div>
@@ -192,10 +200,15 @@
 
         <div class="flex items-center gap-2 sm:gap-4">
           <div class="relative hidden sm:block">
-            <i data-lucide="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-blue-500 transition-colors" onclick="triggerSearch()"></i>
-            <input type="text" id="global-search-input" onkeydown="handleSearch(event)" oninput="document.getElementById('search-clear-btn').classList.toggle('hidden', !this.value)" placeholder="메뉴 검색..."
+            <i data-lucide="search"
+              class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-blue-500 transition-colors"
+              onclick="triggerSearch()"></i>
+            <input type="text" id="global-search-input" onkeydown="handleSearch(event)"
+              oninput="document.getElementById('search-clear-btn').classList.toggle('hidden', !this.value)"
+              placeholder="메뉴 검색..."
               class="h-9 w-48 rounded-full border border-slate-200 bg-slate-50 pl-9 pr-9 text-sm outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-1 focus:ring-blue-500">
-            <button id="search-clear-btn" onclick="clearSearch()" class="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
+            <button id="search-clear-btn" onclick="clearSearch()"
+              class="absolute right-2.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
               <i data-lucide="x" class="h-3.5 w-3.5"></i>
             </button>
           </div>
@@ -224,7 +237,8 @@
     <!-- Main Dashboard -->
     <main class="flex-1 overflow-y-auto custom-scrollbar flex relative">
       <!-- Global Back Button -->
-      <button id="global-back-btn" onclick="goBack()" style="display: none !important;" class="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 hidden group">
+      <button id="global-back-btn" onclick="goBack()" style="display: none !important;"
+        class="absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 hidden group">
         <i data-lucide="arrow-left" class="w-5 h-5 transition-transform group-hover:-translate-x-1"></i>
       </button>
 
@@ -244,7 +258,7 @@
       const sidebar = document.getElementById('sidebar');
       const backdrop = document.getElementById('sidebar-backdrop');
       if (!sidebar || !backdrop) return;
-      
+
       isSidebarOpen = !isSidebarOpen;
       if (isSidebarOpen) {
         sidebar.classList.remove('-translate-x-full');
@@ -277,12 +291,12 @@
           cache: 'no-store'
         });
 
-        if(res.ok) {
+        if (res.ok) {
           const flatData = await res.json();
           if (flatData && flatData.length > 0) {
             const categories = flatData.filter(d => d.menu_type === 'category' || d.menu_type === '카테고리');
             categories.sort((a, b) => ((a.menu_meta && a.menu_meta.sortOrder) || 0) - ((b.menu_meta && b.menu_meta.sortOrder) || 0));
-            
+
             const reconstructedData = categories.map(cat => {
               const meta = cat.menu_meta || {};
               let subItems = flatData.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === cat.menu_name)).map(sub => {
@@ -295,12 +309,13 @@
                   fileName: sub.file_path || "",
                   menuId: sub.MenuId || sub.menu_name,
                   urlAddress: sub.url_address || "",
+                  isNew: sub.YN_New === true,
                   sortOrder: subMeta.sortOrder || 0
                 };
               });
-              
+
               subItems.sort((a, b) => a.sortOrder - b.sortOrder);
-              
+
               return {
                 title: cat.menu_name,
                 slug: meta.slug || "",
@@ -308,6 +323,7 @@
                 icon: meta.icon || "",
                 status: cat.YN_use ? 'Y' : 'N',
                 isPrivate: cat.YN_view === 'Y',
+                isNew: cat.YN_New === true,
                 displayPhrase: meta.displayPhrase || "",
                 bgColor: meta.bgColor || "",
                 textColor: meta.textColor || "",
@@ -331,7 +347,7 @@
             window.menuData = menuData;
           }
         }
-        
+
         // MenualPage (말풍선/매뉴얼) 데이터 전체 로드 (MenuId 컬럼 부재 우회 및 검색 기능용)
         try {
           const manualRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/MenualPage?select=*`, {
@@ -341,15 +357,15 @@
             },
             cache: 'no-store'
           });
-          if(manualRes.ok) {
+          if (manualRes.ok) {
             window.globalMenualData = await manualRes.json();
           } else {
             window.globalMenualData = [];
           }
-        } catch(e) {
+        } catch (e) {
           window.globalMenualData = [];
         }
-      } catch(e) {
+      } catch (e) {
         console.error("Failed to load menu data", e);
         // Alert if running locally without the server
         if (window.location.protocol === 'file:') {
@@ -360,11 +376,11 @@
     }
 
     document.addEventListener("DOMContentLoaded", async () => {
-      await loadMenuData(true);
       const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
       if (!isLoggedIn) {
         return; // Prevent rendering dashboard if showing OpenPage
       }
+      await loadMenuData(true);
       if (window.isPortalInitialized) return;
       window.isPortalInitialized = true;
 
@@ -373,7 +389,7 @@
         try {
           const savedState = JSON.parse(savedStateStr);
           restoreState(savedState);
-        } catch(e) {
+        } catch (e) {
           renderDashboard();
         }
       } else {
@@ -391,18 +407,27 @@
       const menuContainer = document.getElementById('menu-container');
       menuContainer.innerHTML = '';
       let totalActiveCount = 0;
+      const newBadgeHtmlLeft = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center mr-1.5 shadow-sm leading-none animate-pulse">N</span>`;
+      const newBadgeHtmlRight = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center ml-1.5 shadow-sm leading-none animate-pulse">N</span>`;
 
       menuData.forEach((item) => {
         const isOpen = openMenuSlug === item.slug;
         const isActive = currentBrandSlug === item.slug;
 
         let activeCount = 0;
+        let hasNewSubItem = false;
+        
         if (item.subItems) {
           item.subItems.forEach(sub => {
             const isObj = typeof sub === 'object';
             if (isObj) {
+              if (sub.isNew) hasNewSubItem = true;
+              
               if (sub.isHeader && sub.children) {
                 activeCount += sub.children.filter(c => (c.status === 'Y' || c.status === 'y') && !c.isPrivate).length;
+                sub.children.forEach(c => {
+                  if (c.isNew) hasNewSubItem = true;
+                });
               } else if (!sub.isHeader) {
                 if ((sub.status === 'Y' || sub.status === 'y') && !sub.isPrivate) activeCount++;
               }
@@ -411,7 +436,8 @@
             }
           });
         }
-        
+
+        const showCategoryNew = item.isNew || hasNewSubItem;
         totalActiveCount += activeCount;
 
         const wrapper = document.createElement('div');
@@ -420,9 +446,13 @@
         const btn = document.createElement('button');
         btn.className = `flex w-full items-center justify-between rounded-lg px-4 py-3 text-left transition-colors duration-200 ${isActive || isOpen ? 'bg-blue-50 text-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-blue-600'}`;
         btn.innerHTML = `
-          <div class="flex items-center gap-3 flex-1 category-text-area" style="cursor:pointer; padding-right:10px;">
-            ${item.logoUrl ? `<img src="${item.logoUrl}" class="h-5 w-5 object-contain" alt="${item.title} logo" />` : `<i data-lucide="${item.icon}" class="h-5 w-5"></i>`}
-            <span class="text-[15px] font-semibold">${item.title} <span class="text-[13px] opacity-70 ml-0.5">(${activeCount})</span></span>
+          <div class="flex items-center gap-3 flex-1 category-text-area overflow-hidden" style="cursor:pointer; padding-right:10px;">
+            ${item.logoUrl ? `<img src="${item.logoUrl}" class="h-5 w-5 shrink-0 object-contain" alt="${item.title} logo" />` : `<i data-lucide="${item.icon}" class="h-5 w-5 shrink-0"></i>`}
+            <div class="flex items-center truncate" title="${item.title}">
+              <span class="text-[13px] font-medium truncate">${item.title}</span>
+              <span class="text-[13px] opacity-70 ml-1">(${activeCount})</span>
+              ${showCategoryNew ? newBadgeHtmlRight : ''}
+            </div>
           </div>
           <div class="category-arrow-area p-2 -mr-2" style="cursor:pointer;">
             <i data-lucide="${isOpen ? 'chevron-up' : 'chevron-down'}" class="h-4 w-4 text-slate-400"></i>
@@ -450,10 +480,13 @@
             const isSubOpen = openSubMenus[subTitle]; // Track state globally
 
             const headerBtn = document.createElement('button');
-            headerBtn.className = "relative flex items-center justify-between px-3 py-2 text-sm font-bold text-slate-700 hover:text-blue-600 transition-colors select-none w-full text-left rounded-md hover:bg-slate-50";
+            headerBtn.className = "relative flex items-center justify-between px-3 py-2 text-[13px] font-medium text-slate-700 hover:text-blue-600 transition-colors select-none w-full text-left rounded-md hover:bg-slate-50";
             headerBtn.innerHTML = `
-              <span class="truncate">${subTitle}</span>
-              ${children && children.length > 0 ? `<i data-lucide="${isSubOpen ? 'chevron-up' : 'chevron-down'}" class="h-3.5 w-3.5 text-slate-400"></i>` : ''}
+              <div class="flex items-center truncate" title="${subTitle}">
+                ${(isObj && sub.isNew) ? newBadgeHtmlLeft : ''}
+                <span class="truncate">${subTitle}</span>
+              </div>
+              ${children && children.length > 0 ? `<i data-lucide="${isSubOpen ? 'chevron-up' : 'chevron-down'}" class="h-3.5 w-3.5 shrink-0 text-slate-400"></i>` : ''}
             `;
 
             headerDiv.appendChild(headerBtn);
@@ -469,9 +502,12 @@
                 const childBtn = document.createElement('a');
                 childBtn.href = "#";
                 const isChildActive = childTitle === activeSubMenuTitle;
-                childBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 pl-6 text-[13px] ${isChildActive ? 'bg-blue-50 text-blue-700 font-extrabold shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
+                childBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-[13px] font-medium transition-colors duration-200 pl-6 ${isChildActive ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
                 childBtn.innerHTML = `
-                  <span class="truncate">${childTitle}</span>
+                  <div class="flex items-center truncate" title="${childTitle}">
+                    ${child.isNew ? newBadgeHtmlLeft : ''}
+                    <span class="truncate">${childTitle}</span>
+                  </div>
                   <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${childMenuId.replace(/'/g, "\\'")}', '${childTitle.replace(/'/g, "\\'")}', '${childDesc.replace(/'/g, "\\'")}')">
                     <i data-lucide="help-circle" class="h-3.5 w-3.5"></i>
                   </div>
@@ -505,9 +541,12 @@
           const subBtn = document.createElement('a');
           subBtn.href = "#";
           const isSubActive = subTitle === activeSubMenuTitle;
-          subBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 pl-6 text-[13px] ${isSubActive ? 'bg-blue-50 text-blue-700 font-extrabold shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
+          subBtn.className = `relative flex items-center justify-between rounded-md px-3 py-2 text-[13px] font-medium transition-colors duration-200 pl-6 ${isSubActive ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100' : 'text-slate-500 hover:bg-slate-50 hover:text-blue-600'}`;
           subBtn.innerHTML = `
-            <span class="truncate">${subTitle}</span>
+            <div class="flex items-center truncate" title="${subTitle}">
+              ${(isObj && sub.isNew) ? newBadgeHtmlLeft : ''}
+              <span class="truncate">${subTitle}</span>
+            </div>
             <div class="p-1 -mr-1 shrink-0 z-10 cursor-pointer text-slate-400 hover:text-blue-500 transition-colors" onclick="showMenuTooltip(event, '${subMenuId.replace(/'/g, "\\'")}', '${subTitle.replace(/'/g, "\\'")}', '${subDesc.replace(/'/g, "\\'")}')">
               <i data-lucide="help-circle" class="h-3.5 w-3.5"></i>
             </div>
@@ -528,7 +567,7 @@
           e.stopPropagation();
           // 메뉴 리스트는 열고 닫지 않음
           startBrandTransition(item.slug);
-          
+
           if (window.innerWidth < 768) {
             const sidebar = document.getElementById('sidebar');
             const backdrop = document.getElementById('sidebar-backdrop');
@@ -553,7 +592,7 @@
         wrapper.appendChild(subContainer);
         menuContainer.appendChild(wrapper);
       });
-      
+
       const totalCountDisplay = document.getElementById('menu-total-count-display');
       if (totalCountDisplay) {
         totalCountDisplay.innerHTML = `
@@ -610,7 +649,7 @@
       const btn = document.getElementById('global-back-btn');
       if (!btn) return;
       btn.className = "absolute top-6 left-6 z-50 flex items-center justify-center w-10 h-10 rounded-full shadow-lg transition-all duration-300 group " + (navHistory.length > 1 ? "" : "hidden");
-      
+
       if (theme === 'dark') { // Light background -> Dark button
         btn.classList.add('bg-white', 'text-slate-800', 'border', 'border-slate-200', 'hover:bg-slate-100');
       } else { // Dark background -> Light button
@@ -638,7 +677,7 @@
     function canNavigate() {
       const iframe = document.querySelector('iframe[title="Admin Page"]');
       if (iframe) {
-        if(confirm("관리자 페이지에서 나가시겠습니까?\n작업 중이던 내용이 유실될 수 있습니다.")) {
+        if (confirm("관리자 페이지에서 나가시겠습니까?\n작업 중이던 내용이 유실될 수 있습니다.")) {
           updateAdminButtonState(false);
           return true;
         } else {
@@ -685,7 +724,7 @@
       updateAdminButtonState(true);
       setBackButtonTheme('dark');
       updateBreadcrumb("시스템 관리", "관리자 대시보드");
-      
+
       const content = document.getElementById('main-content');
       content.innerHTML = `
         <div class="w-full h-full relative bg-slate-50">
@@ -699,8 +738,8 @@
       if (!input) return;
       const keyword = input.value.trim().toLowerCase();
       if (!keyword) {
-         renderDashboard();
-         return;
+        renderDashboard();
+        return;
       }
       renderSearchResults(keyword);
     }
@@ -717,7 +756,7 @@
       const input = document.getElementById('global-search-input');
       input.value = '';
       document.getElementById('search-clear-btn').classList.add('hidden');
-      
+
       const breadcrumb = document.getElementById('breadcrumb');
       if (breadcrumb && breadcrumb.innerText.includes('검색 결과')) {
         renderDashboard();
@@ -729,9 +768,9 @@
       pushNavState({ type: 'search', keyword: keyword });
       setBackButtonTheme('dark');
       updateBreadcrumb("검색 결과", '"' + keyword + '" 검색 결과');
-      
+
       const content = document.getElementById('main-content');
-      
+
       let allSubItems = [];
       menuData.forEach(dept => {
         if (dept.subItems) {
@@ -750,18 +789,18 @@
       const results = allSubItems.filter(entry => {
         const subTitle = entry.item.title;
         const subMenuId = entry.item.menuId || subTitle;
-        
+
         // 전역 로드된 MenualPage 데이터에서 MenuId가 일치하는 최신 항목을 찾음
         const manualEntries = (window.globalMenualData || []).filter(m => m.MenuId === subMenuId);
         manualEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         const manualEntry = manualEntries[0] || {};
-        
+
         // 자체 로컬 저장소 캐시 (수정 직후 반영용)
         const localData = (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subMenuId] || (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subTitle] || {};
-        
+
         const customTitle = (localData.title || manualEntry.Title || subTitle).toLowerCase();
         const customKeywords = (localData.keywords || manualEntry.KeyWord || "").toLowerCase();
-        
+
         return customTitle.includes(keyword) || customKeywords.includes(keyword);
       });
 
@@ -780,16 +819,16 @@
       let resultsHTML = results.map(entry => {
         const subTitle = entry.item.title;
         const subMenuId = entry.item.menuId || subTitle;
-        
+
         const manualEntries = (window.globalMenualData || []).filter(m => m.MenuId === subMenuId);
         manualEntries.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         const manualEntry = manualEntries[0] || {};
-        
+
         const localData = (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subMenuId] || (JSON.parse(localStorage.getItem('hansoll_tooltips')) || {})[subTitle] || {};
-        
+
         const displayTitle = localData.title || manualEntry.Title || subTitle;
         const desc = localData.description || manualEntry.HowToUse || entry.item.description || "(설명 없음)";
-        
+
         return `
           <div class="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-all cursor-pointer flex flex-col items-start text-left hover:-translate-y-0.5"
                onclick="openSubMenu('${entry.brand}', '${subTitle.replace(/'/g, "\\\\'")}')">
@@ -844,7 +883,7 @@
     // --- DOT TRANSITION LOGIC ---
     window.currentTransitionData = null;
     window.onDotTransitionComplete = null;
-    
+
     // Listen for postMessage from the iframe to bypass CORS restrictions
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'DOT_TRANSITION_COMPLETE') {
@@ -892,14 +931,14 @@
       updateBreadcrumb(brandData.title, "개요");
 
       const content = document.getElementById('main-content');
-      
+
       // Pass data via URL parameters to guarantee the iframe gets it even if CORS blocks window.parent
       const params = new URLSearchParams({
         text: window.currentTransitionData.text,
         bgColor: window.currentTransitionData.bgColor,
         textColor: window.currentTransitionData.textColor
       });
-      
+
       content.innerHTML = `
         <div class="w-full h-full relative" style="background-color: ${window.currentTransitionData.bgColor};">
           <iframe src="dot_transition.html?${params.toString()}" class="w-full h-full border-none absolute inset-0"></iframe>
@@ -1006,11 +1045,11 @@
       closeSidebarIfMobile();
       if (!canNavigate()) return;
       pushNavState({ type: 'submenu', brand: brandTitle, sub: subTitle });
-      
+
       activeSubMenuTitle = subTitle;
       initMenu(); // Update sidebar immediately to show selection
 
-      
+
       const brandData = menuData.find(b => b.title === brandTitle);
       let subItem = null;
       if (brandData && brandData.subItems) {
@@ -1128,12 +1167,12 @@
           const statusText = document.getElementById('download-status');
           statusText.textContent = "다운로드 중...";
           statusText.className = "text-xs font-semibold text-orange-600";
-          
+
           try {
             // Supabase URL for CMPH_실행_orig.bat
             const batUrl = "https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/UHJvamVjdCUyMGZpbGVzJTJGJUVDJTgyJUFDJUVDJTk3JTg1JTIwMyVFQiVCNiU4MCUyRkNNUEglMjBSZWNhcCUyMFRvb2wlMkZDTVBIXyVFQyU4QiVBNCVFRCU5NiU4OV9vcmlnLmJhdA";
             const res = await fetch(batUrl);
-            
+
             let blob;
             if (res.ok) {
               blob = await res.blob();
@@ -1168,7 +1207,7 @@
         if (subItem && (subItem.fileName || subItem.urlAddress)) {
           const folderName = subItem.folderName || subTitle;
           const filePath = `Project files/${brandTitle}/${folderName}/${subItem.fileName}`;
-          
+
           let absolutePathDisplay = `Supabase Storage: hansoll-files`;
 
 
@@ -1196,20 +1235,20 @@
                 <p class="text-slate-500 text-sm font-semibold">URL을 불러오는 중입니다...</p>
               </div>
             `;
-            
+
             const supabasePath = `${brandTitle}/${folderName}/${subItem.fileName}`;
             const encodedFilePath = encodeURIComponent(supabasePath);
             const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
             const fetchUrl = `https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/${storageKey}?t=${Date.now()}`;
-            
+
             fetch(filePath)
               .then(res => {
-                if(res.ok) return res.text();
+                if (res.ok) return res.text();
                 throw new Error("Local file not found");
               })
               .catch(() => {
                 return fetch(fetchUrl).then(res => {
-                  if(!res.ok) throw new Error("File not found");
+                  if (!res.ok) throw new Error("File not found");
                   return res.text();
                 });
               })
@@ -1244,7 +1283,7 @@
             const encodedFilePath = encodeURIComponent(supabasePath);
             const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
             const supabaseUrl = `https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/${storageKey}?t=${Date.now()}`;
-            
+
             // 파일이 실제로 존재하는지 먼저 확인
             content.innerHTML = `
               <div class="w-full h-full flex-1 flex flex-col items-center justify-center bg-slate-50">
@@ -1277,16 +1316,16 @@
                     let mimeType = blob.type;
                     const lowerName = subItem.fileName ? subItem.fileName.toLowerCase() : '';
                     if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) {
-                        mimeType = 'text/html; charset=utf-8';
+                      mimeType = 'text/html; charset=utf-8';
                     } else if (lowerName.endsWith('.pdf')) {
-                        mimeType = 'application/pdf';
+                      mimeType = 'application/pdf';
                     } else if (lowerName.endsWith('.py')) {
-                        mimeType = 'text/plain; charset=utf-8';
+                      mimeType = 'text/plain; charset=utf-8';
                     }
-                    
+
                     const fileBlob = new Blob([blob], { type: mimeType });
                     const blobUrl = URL.createObjectURL(fileBlob);
-                    
+
                     content.innerHTML = `
                       <div class="w-full h-full flex-1 flex flex-col bg-white overflow-hidden">
                         <iframe src="${blobUrl}" class="w-full h-full flex-1 border-0"></iframe>
@@ -1339,7 +1378,7 @@
       fetchAndRenderAttachments(menuId);
     }
 
-    window.removeAttachmentsContainer = function() {
+    window.removeAttachmentsContainer = function () {
       const existingContainer = document.getElementById('attachments-floating-container');
       if (existingContainer) existingContainer.remove();
     };
@@ -1350,22 +1389,22 @@
 
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?MenuId=eq.${encodeURIComponent(menuId)}`, {
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+          headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
         });
-        
+
         if (res.ok) {
-            const attachments = await res.json();
-            if (attachments && attachments.length > 0) {
-                // 첨부파일 UI 생성
-                const container = document.createElement('div');
-                container.id = 'attachments-floating-container';
-                container.className = 'fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none';
-                
-                // 파일 리스트 드롭다운 (숨겨져 있음)
-                const listHtml = attachments.map(att => {
-                    const storageKey = btoa(encodeURIComponent(att.storage_path)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-                    const downloadUrl = `https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/${storageKey}?download=${encodeURIComponent(att.file_name)}`;
-                    return `
+          const attachments = await res.json();
+          if (attachments && attachments.length > 0) {
+            // 첨부파일 UI 생성
+            const container = document.createElement('div');
+            container.id = 'attachments-floating-container';
+            container.className = 'fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 pointer-events-none';
+
+            // 파일 리스트 드롭다운 (숨겨져 있음)
+            const listHtml = attachments.map(att => {
+              const storageKey = btoa(encodeURIComponent(att.storage_path)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+              const downloadUrl = `https://yuklsrhmcbdanswxysrw.supabase.co/storage/v1/object/public/hansoll-files/${storageKey}?download=${encodeURIComponent(att.file_name)}`;
+              return `
                         <a href="${downloadUrl}" download="${att.file_name}" onclick="if(window.closeAttachmentsDropdown) window.closeAttachmentsDropdown()" class="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 group cursor-pointer pointer-events-auto">
                             <div class="p-2 bg-blue-50 text-blue-500 rounded-lg group-hover:bg-blue-100 transition-colors shrink-0">
                                 <i data-lucide="download" class="w-4 h-4"></i>
@@ -1376,9 +1415,9 @@
                             </div>
                         </a>
                     `;
-                }).join('');
+            }).join('');
 
-                container.innerHTML = `
+            container.innerHTML = `
                     <div id="attachments-backdrop" class="fixed inset-0 z-40 hidden pointer-events-auto" onclick="window.closeAttachmentsDropdown()"></div>
                     <div id="attachments-dropdown" tabindex="-1" class="z-50 pointer-events-auto w-72 bg-white/95 backdrop-blur-xl border border-slate-200/60 rounded-2xl shadow-2xl opacity-0 translate-y-4 scale-95 transition-all duration-300 transform origin-bottom-right hidden flex flex-col overflow-hidden max-h-96 outline-none">
                         <div class="p-4 border-b border-slate-100 bg-slate-50/50">
@@ -1396,93 +1435,200 @@
                         첨부파일 <span class="bg-white/20 px-2 py-0.5 rounded-full text-xs">${attachments.length}</span>
                     </button>
                 `;
-                
-                document.body.appendChild(container);
-                lucide.createIcons();
-            }
+
+            document.body.appendChild(container);
+            lucide.createIcons();
+          }
         }
       } catch (e) {
         console.error("Failed to load attachments for user view", e);
       }
     }
 
-    window.closeAttachmentsDropdown = function() {
-        const dropdown = document.getElementById('attachments-dropdown');
-        const backdrop = document.getElementById('attachments-backdrop');
-        if (dropdown && !dropdown.classList.contains('hidden')) {
-            dropdown.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
-            dropdown.classList.add('opacity-0', 'translate-y-4', 'scale-95');
-            if (backdrop) backdrop.classList.add('hidden');
-            setTimeout(() => {
-                dropdown.classList.add('hidden');
-            }, 300);
-        }
+    window.closeAttachmentsDropdown = function () {
+      const dropdown = document.getElementById('attachments-dropdown');
+      const backdrop = document.getElementById('attachments-backdrop');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        dropdown.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+        dropdown.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+        if (backdrop) backdrop.classList.add('hidden');
+        setTimeout(() => {
+          dropdown.classList.add('hidden');
+        }, 300);
+      }
     };
 
-    window.toggleAttachmentsDropdown = function() {
-        const dropdown = document.getElementById('attachments-dropdown');
-        const backdrop = document.getElementById('attachments-backdrop');
-        if (dropdown.classList.contains('hidden')) {
-            dropdown.classList.remove('hidden');
-            if (backdrop) backdrop.classList.remove('hidden');
-            // Allow display:block to apply before animating opacity
-            setTimeout(() => {
-                dropdown.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
-                dropdown.classList.add('opacity-100', 'translate-y-0', 'scale-100');
-                dropdown.focus();
-            }, 10);
-        } else {
-            window.closeAttachmentsDropdown();
-        }
+    window.toggleAttachmentsDropdown = function () {
+      const dropdown = document.getElementById('attachments-dropdown');
+      const backdrop = document.getElementById('attachments-backdrop');
+      if (dropdown.classList.contains('hidden')) {
+        dropdown.classList.remove('hidden');
+        if (backdrop) backdrop.classList.remove('hidden');
+        // Allow display:block to apply before animating opacity
+        setTimeout(() => {
+          dropdown.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+          dropdown.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+          dropdown.focus();
+        }, 10);
+      } else {
+        window.closeAttachmentsDropdown();
+      }
     };
 
     // Close dropdown on outside click
-    document.addEventListener('click', function(e) {
-        const dropdown = document.getElementById('attachments-dropdown');
-        const container = document.getElementById('attachments-floating-container');
-        if (dropdown && !dropdown.classList.contains('hidden')) {
-            // Check if the click is outside the container
-            if (container && !container.contains(e.target)) {
-                window.closeAttachmentsDropdown();
-            }
+    document.addEventListener('click', function (e) {
+      const dropdown = document.getElementById('attachments-dropdown');
+      const container = document.getElementById('attachments-floating-container');
+      if (dropdown && !dropdown.classList.contains('hidden')) {
+        // Check if the click is outside the container
+        if (container && !container.contains(e.target)) {
+          window.closeAttachmentsDropdown();
         }
+      }
     });
 
     // Close dropdown on Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            window.closeAttachmentsDropdown();
-        }
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        window.closeAttachmentsDropdown();
+      }
     });
 
-    function handleLogout() {
-      if (confirm('로그아웃 하시겠습니까?')) {
-        sessionStorage.removeItem('savedNavState');
-        if (window.supabaseClient) {
-          window.supabaseClient.auth.signOut();
-        } else {
-          sessionStorage.removeItem('isLoggedIn');
-          Object.keys(sessionStorage).forEach(key => {
-            if (key.startsWith('particle_shown_')) sessionStorage.removeItem(key);
-          });
-          document.body.classList.add('is-logged-out');
-          const content = document.getElementById('main-content');
-          content.innerHTML = `
-            <div class="w-full h-full relative bg-black">
-              <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
-            </div>
-          `;
+    // --- 로그인 히스토리 기록 시작 ---
+    function getKSTTime() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const kst = new Date(utc + (9 * 60 * 60 * 1000));
+      const pad = (n) => n.toString().padStart(2, '0');
+      return `${kst.getFullYear()}-${pad(kst.getMonth() + 1)}-${pad(kst.getDate())} ${pad(kst.getHours())}:${pad(kst.getMinutes())}:${pad(kst.getSeconds())}`;
+    }
+
+    async function recordLoginHistory(userNameId) {
+      try {
+        if (!window.supabaseClient) return;
+        
+        const { data: userInfo, error: fetchErr } = await window.supabaseClient
+          .from('user_info')
+          .select('*')
+          .ilike('nm_email', `%${userNameId}%`)
+          .limit(1)
+          .single();
+
+        if (fetchErr || !userInfo) {
+          console.warn("로그인 이력 기록 실패: 해당 사용자 정보를 찾을 수 없습니다.");
+          return;
         }
+
+        // id 및 시스템 자동 생성 메타데이터(created_at 등), 그리고 에러가 발생한 세부 HR 컬럼들을 제외한 핵심 정보만 추출
+        const { 
+          id, created_at, updated_at, created_by, updated_by, 
+          lvduty_cd, lvduty_nm, nm_email_full, 
+          ...historyData 
+        } = userInfo;
+        historyData.login_time = getKSTTime();
+
+        const { data: insertedData, error: insertErr } = await window.supabaseClient
+          .from('login_history')
+          .insert(historyData)
+          .select('id')
+          .single();
+
+        if (insertErr) {
+          console.error("로그인 이력 저장 실패:", insertErr);
+        } else if (insertedData) {
+          sessionStorage.setItem('loginHistoryId', insertedData.id);
+          sessionStorage.setItem('loginTimeMs', Date.now().toString());
+          sessionStorage.setItem('loginTimeKST', historyData.login_time);
+        }
+      } catch (err) {
+        console.error("recordLoginHistory 오류:", err);
+      }
+    }
+
+    async function updateLogoutHistory(isAutoLogout = false) {
+      const historyId = sessionStorage.getItem('loginHistoryId');
+      const loginTimeMs = sessionStorage.getItem('loginTimeMs');
+      const loginTimeKST = sessionStorage.getItem('loginTimeKST');
+      if (!historyId || !window.supabaseClient) return;
+
+      try {
+        const updateData = { logout_time: getKSTTime() };
+        
+        if (isAutoLogout) {
+          updateData.auto_logout = 'Y';
+          updateData.logout_time = loginTimeKST || getKSTTime();
+          updateData.duration_seconds = 0;
+        } else if (loginTimeMs) {
+          updateData.duration_seconds = Math.floor((Date.now() - parseInt(loginTimeMs, 10)) / 1000);
+        }
+
+        await window.supabaseClient
+          .from('login_history')
+          .update(updateData)
+          .eq('id', historyId);
+      } catch (err) {
+        console.error("로그아웃 이력 업데이트 실패:", err);
+      }
+    }
+
+    window.addEventListener('beforeunload', (e) => {
+      const historyId = sessionStorage.getItem('loginHistoryId');
+      const loginTimeMs = sessionStorage.getItem('loginTimeMs');
+      if (historyId) {
+        const SUPABASE_URL_LOCAL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+        const SUPABASE_ANON_KEY_LOCAL = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+        const updateData = { logout_time: getKSTTime() };
+        if (loginTimeMs) {
+          updateData.duration_seconds = Math.floor((Date.now() - parseInt(loginTimeMs, 10)) / 1000);
+        }
+        
+        fetch(`${SUPABASE_URL_LOCAL}/rest/v1/login_history?id=eq.${historyId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY_LOCAL,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY_LOCAL}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify(updateData),
+          keepalive: true
+        }).catch(err => console.error("beforeunload 로그아웃 이력 기록 실패:", err));
+      }
+    });
+    // --- 로그인 히스토리 기록 끝 ---
+
+    async function handleLogout() {
+      if (confirm('로그아웃 하시겠습니까?')) {
+        await updateLogoutHistory(false);
+        if (window.supabaseClient) {
+          window.supabaseClient.auth.signOut().catch(e => console.error("로그아웃 중 오류 발생:", e));
+        }
+        
+        // 모든 브라우저 저장소 완벽 초기화 (토큰 잔여물 강제 삭제)
+        sessionStorage.clear();
+        localStorage.clear(); 
+
+        // 캐시를 무시하고 서버에서 새로 페이지를 받아오도록 강제 리로드 (로그아웃 토큰 포함 방지)
+        window.location.href = window.location.pathname + "?logout=success&t=" + new Date().getTime();
       }
     }
 
     // Initialize application
     async function initializeApp() {
       lucide.createIcons();
-      
+
       const supabaseUrl = 'https://yuklsrhmcbdanswxysrw.supabase.co';
       const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
       window.supabaseClient = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+      // [추가] 브라우저 새 창/새 탭 접속 시 기존 세션 폐기 후 로그아웃 상태로 전환
+      // 단, 로그인 완료 후 돌아오는 콜백(access_token 포함)이거나 에러 콜백인 경우는 제외
+      const isOAuthRedirect = window.location.hash.includes('access_token=') || window.location.hash.includes('error_description=');
+      if (!sessionStorage.getItem('isPortalSessionActive') && !isOAuthRedirect) {
+        await window.supabaseClient.auth.signOut().catch(() => {});
+        localStorage.removeItem('sb-yuklsrhmcbdanswxysrw-auth-token');
+      }
+      sessionStorage.setItem('isPortalSessionActive', 'true');
 
       // --- 에러 디버깅 코드 추가 ---
       if (window.location.hash && window.location.hash.includes('error_description=')) {
@@ -1501,17 +1647,40 @@
           document.body.classList.remove('is-logged-out');
 
           // --- Microsoft Graph API로 부서 및 이름 가져오기 ---
+          let userNameId = sessionStorage.getItem('userNameId');
+          if (!userNameId && session && session.user && session.user.email) {
+            userNameId = session.user.email.split('@')[0];
+            sessionStorage.setItem('userNameId', userNameId);
+            
+
+            // [추가] 로그인 이력 저장 로직 호출 (중복 기록 방지를 위해 sessionStorage에 세션 ID가 없는 경우만)
+            if (!sessionStorage.getItem('loginHistoryId')) {
+              if (typeof recordLoginHistory === 'function') {
+                await recordLoginHistory(userNameId);
+              } else {
+                console.warn("recordLoginHistory 함수가 정의되지 않아 로그인 이력을 저장하지 않습니다.");
+              }
+            }
+          }
+
+          // jhyoon 팝업 로직은 하단 INITIAL_SESSION 처리부로 이동됨
+
           if (session.provider_token) {
             try {
-              const res = await fetch('https://graph.microsoft.com/v1.0/me?$select=displayName,department,officeLocation', {
+              const res = await fetch('https://graph.microsoft.com/v1.0/me?$select=id,displayName,givenName,surname,userPrincipalName,mail,jobTitle,department,officeLocation,employeeId,businessPhones,mobilePhone,companyName,country,city,state,userType', {
                 headers: { 'Authorization': `Bearer ${session.provider_token}` }
               });
               if (res.ok) {
                 const data = await res.json();
-                console.log('MS Graph API에서 가져온 사용자 정보:', data); // 디버깅용 콘솔 출력 추가
-                
-                if (data.department) sessionStorage.setItem('ms_department', data.department);
-                
+                console.log('MS Graph API에서 가져온 사용자 정보:', data); // F12 콘솔에서 직급 확인 가능
+
+                if (data.department) {
+                  sessionStorage.setItem('ms_department', data.department);
+                } else if (data.userType === 'Guest') {
+                  // 게스트 계정인데 부서가 없는 경우, 자동 로그아웃 방지를 위해 가상의 부서 할당
+                  sessionStorage.setItem('ms_department', 'Guest');
+                }
+
                 // 회사 정책에 따라 한글 이름이 officeLocation에 저장되어 있음
                 let korName = '';
                 if (data.officeLocation) {
@@ -1519,56 +1688,81 @@
                 } else if (data.displayName) {
                   korName = data.displayName;
                 }
-                
+
                 if (korName) sessionStorage.setItem('ms_displayName', korName);
               }
             } catch (err) {
               console.error('MS Graph API Error:', err);
             }
           }
-          
-          let dep = sessionStorage.getItem('ms_department') || '';
-          let name = sessionStorage.getItem('ms_displayName') || (session.user && session.user.user_metadata && session.user.user_metadata.full_name) || '';
-          
+
+          let dep = sessionStorage.getItem('ms_department');
+          let name = sessionStorage.getItem('ms_displayName');
+
+          if (dep === 'null' || dep === 'undefined') dep = '';
+          else dep = dep || '';
+
+          if (name === 'null' || name === 'undefined') name = '';
+          else name = name || (session.user && session.user.user_metadata && session.user.user_metadata.full_name) || '';
+
+          // [추가] 부서 정보가 없는 경우 (새 탭 복원 시 Graph API 미작동) DB에서 정보 복구 시도
+          if (!dep) {
+            const uid = sessionStorage.getItem('userNameId');
+            if (uid) {
+              try {
+                const { data: dbUser } = await window.supabaseClient
+                  .from('user_info')
+                  .select('*')
+                  .ilike('nm_email', `%${uid}%`)
+                  .limit(1)
+                  .single();
+                if (dbUser) {
+                  const dbDep = dbUser.nm_dept || dbUser.lvduty_nm || dbUser.department;
+                  const dbName = dbUser.emp_nm || dbUser.nm_kor || dbUser.name || dbUser.displayName;
+                  if (dbDep) {
+                    sessionStorage.setItem('ms_department', dbDep);
+                    dep = dbDep;
+                  }
+                  if (dbName) {
+                    sessionStorage.setItem('ms_displayName', dbName);
+                    name = dbName;
+                  }
+                }
+              } catch (e) {
+                console.warn("DB에서 부서 정보 복구 실패:", e);
+              }
+            }
+          }
+
           // 정상적인 부서/이름 정보가 없는 경우 (새 탭 접속으로 sessionStorage 유실 등)
           // 강제로 로그아웃하고 OpenPage 화면으로 이동시킵니다.
           if (!dep) {
             console.warn("부서 정보가 없습니다. 정상적인 로그인 정보 획득에 실패하여 강제 로그아웃 합니다.");
-            window.supabaseClient.auth.signOut().then(() => {
-                sessionStorage.removeItem('isLoggedIn');
-                sessionStorage.removeItem('ms_department');
-                sessionStorage.removeItem('ms_displayName');
-                document.body.classList.add('is-logged-out');
-                
-                const content = document.getElementById('main-content');
-                if (content) {
-                    content.innerHTML = `
-                        <div class="w-full h-full relative bg-black">
-                            <iframe src="${encodeURI('Project files/IT부/OpenPage/OpenPage.html')}" class="w-full h-full border-none absolute inset-0"></iframe>
-                        </div>
-                    `;
-                }
-                const userInfoContainer = document.getElementById('header-user-info-container');
-                if (userInfoContainer) userInfoContainer.classList.add('hidden');
-            });
+            sessionStorage.clear();
+            localStorage.clear();
+            window.supabaseClient.auth.signOut().catch(() => {});
+            window.location.href = window.location.pathname + "?logout=success&t=" + new Date().getTime();
             return; // 이후 로직 실행 중단
           }
-          
-          if (name) {
-            let userInfoStr = dep ? `${dep} / ${name}` : name;
-            const userInfoEl = document.getElementById('header-user-info');
-            const userContainer = document.getElementById('header-user-info-container');
-            if(userInfoEl && userContainer) {
-              userInfoEl.innerText = userInfoStr;
-              userContainer.classList.remove('hidden');
-            }
+
+          // 이름이나 부서가 없어도 로그인 상태라면 헤더에 정보를 표시하여 UI가 깨지지 않게 방어
+          const userInfoEl = document.getElementById('header-user-info');
+          const userContainer = document.getElementById('header-user-info-container');
+          if (userInfoEl && userContainer) {
+            let displayDep = dep || '소속없음';
+            let displayName = name || '로컬테스터';
+            userInfoEl.innerText = `${displayDep} / ${displayName}`;
+            userContainer.classList.remove('hidden');
           }
-          
+
           // --- IT부 전용 관리자/수정 버튼 표시 로직 ---
           const adminBtn = document.getElementById('header-admin-btn');
           const detailEditBtn = document.getElementById('detail-edit-btn');
-          
-          if (dep && dep.trim() === 'IT부') {
+
+          // 로컬 환경이거나 IT부인 경우, 또는 임원실 한희택인 경우 관리자 버튼 표시
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const isExecutiveHan = (dep && dep.trim() === '임원실') && (name && name.trim() === '한희택');
+          if ((dep && dep.trim() === 'IT부') || isExecutiveHan || isLocalhost) {
             if (adminBtn) adminBtn.style.display = ''; // flex 적용
             if (detailEditBtn) detailEditBtn.style.display = ''; // flex 적용
           } else {
@@ -1578,18 +1772,67 @@
           // ----------------------------------------------------
 
           if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+            const finalUserNameId = sessionStorage.getItem('userNameId');
+            if (finalUserNameId) {
+              if (!sessionStorage.getItem('ynOpenFetched')) {
+                // 비동기 통신 전 즉시 플래그를 설정하여 Race Condition을 완벽히 차단
+                sessionStorage.setItem('ynOpenFetched', 'true');
+                try {
+                  const { data: userInfoData, error } = await window.supabaseClient
+                    .from('user_info')
+                    .select('yn_open')
+                    .ilike('nm_email', `%${finalUserNameId}%`)
+                    .limit(1)
+                    .maybeSingle();
+
+                  if (error || !userInfoData) {
+                    console.error("사용자 정보 조회 실패 또는 미등록 사용자입니다:", error);
+                    await updateLogoutHistory(true);
+                    if (window.supabaseClient) {
+                      window.supabaseClient.auth.signOut().catch(e => console.error("로그아웃 중 오류 발생:", e));
+                    }
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    alert("사용자 정보가 등록되지 않았습니다. 관리자에게 문의하세요.");
+                    window.location.href = window.location.pathname + "?logout=success&t=" + new Date().getTime();
+                    return;
+                  }
+                  
+                  if (userInfoData && userInfoData.yn_open !== undefined) {
+                    sessionStorage.setItem('yn_open', userInfoData.yn_open);
+                    console.log(`[UserInfo] ${finalUserNameId} 사용자의 yn_open 값:`, userInfoData.yn_open);
+
+                    const isOpen = userInfoData.yn_open === 'Y' || userInfoData.yn_open === true || userInfoData.yn_open === 'true';
+                    if (!isOpen) {
+                      await updateLogoutHistory(true);
+                      if (window.supabaseClient) {
+                        window.supabaseClient.auth.signOut().catch(e => console.error("로그아웃 중 오류 발생:", e));
+                      }
+                      sessionStorage.clear();
+                      localStorage.clear();
+                      alert("해당 페이지에 대한 권한이 없습니다.");
+                      window.location.href = window.location.pathname + "?logout=success&t=" + new Date().getTime();
+                      return;
+                    }
+                  }
+                } catch (err) {
+                  console.error('yn_open 로직 실행 중 오류:', err);
+                  sessionStorage.removeItem('ynOpenFetched'); // 실패 시 다시 조회할 수 있도록 복구
+                }
+              }
+            }
+
             if (window.isPortalInitialized) return;
             window.isPortalInitialized = true;
 
-            if (!window.menuData || window.menuData.length === 0) {
-              await loadMenuData(true);
-            }
+            // MS Graph API 등으로 부서(department) 정보가 갱신되었을 수 있으므로 메뉴 데이터 강제 재로딩 (Private 메뉴 권한 필터링 적용)
+            await loadMenuData(true);
             const savedStateStr = sessionStorage.getItem('savedNavState');
             if (savedStateStr) {
               try {
                 const savedState = JSON.parse(savedStateStr);
                 restoreState(savedState);
-              } catch(e) {
+              } catch (e) {
                 renderDashboard();
               }
             } else {
@@ -1843,125 +2086,161 @@
   </script>
 
   <!-- Auth Modal -->
-  <div id="tooltip-auth-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div id="tooltip-auth-modal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-[320px] transform transition-all">
       <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
         <i data-lucide="lock" class="w-5 h-5 text-blue-500"></i> 관리자 인증
       </h3>
       <p class="text-xs text-slate-500 mb-4 leading-relaxed">말풍선 내용을 수정하려면 비밀번호를 입력해주세요.</p>
-      <input type="password" id="tooltip-pw-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyTooltipAuth()">
+      <input type="password" id="tooltip-pw-input"
+        class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+        placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyTooltipAuth()">
       <div class="flex justify-end gap-2">
-        <button onclick="closeTooltipAuth()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
-        <button onclick="verifyTooltipAuth()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors">확인</button>
+        <button onclick="closeTooltipAuth()"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
+        <button onclick="verifyTooltipAuth()"
+          class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors">확인</button>
       </div>
     </div>
   </div>
 
   <!-- Page Admin Auth Modal -->
-  <div id="page-admin-auth-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
+  <div id="page-admin-auth-modal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-[320px] transform transition-all">
       <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
         <i data-lucide="shield" class="w-5 h-5 text-blue-500"></i> 관리자 로그인
       </h3>
       <p class="text-xs text-slate-500 mb-4 leading-relaxed">관리자 페이지에 접근하려면 로그인해주세요.</p>
-      
+
       <div class="space-y-3 mb-4">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">아이디</label>
-          <input type="text" id="admin-id-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="아이디 입력">
+          <input type="text" id="admin-id-input"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="아이디 입력">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">비밀번호</label>
-          <input type="password" id="admin-pw-input" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyPageAdminAuth()">
+          <input type="password" id="admin-pw-input"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="비밀번호 입력" onkeypress="if(event.key === 'Enter') verifyPageAdminAuth()">
         </div>
       </div>
 
       <div class="flex justify-end gap-2">
-        <button onclick="closePageAdminAuth()" class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
-        <button onclick="verifyPageAdminAuth()" class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20">로그인</button>
+        <button onclick="closePageAdminAuth()"
+          class="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">취소</button>
+        <button onclick="verifyPageAdminAuth()"
+          class="px-4 py-2 rounded-lg text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-sm shadow-blue-600/20">로그인</button>
       </div>
     </div>
   </div>
 
   <!-- Edit Form Modal -->
-  <div id="tooltip-edit-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div id="tooltip-edit-modal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
         <h3 id="edit-modal-title" class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i data-lucide="edit" class="w-5 h-5 text-blue-500"></i> 말풍선 내용 수정
         </h3>
-        <button onclick="closeTooltipEditForm()" class="text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button onclick="closeTooltipEditForm()" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+            data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      
+
       <div class="p-6 overflow-y-auto flex-1 space-y-5 custom-scrollbar">
         <!-- Section 1 -->
         <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">1</span> 제목을 입력해주세요.</label>
-          <input type="text" id="edit-title" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span
+              class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">1</span> 제목을 입력해주세요.</label>
+          <input type="text" id="edit-title"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
         </div>
-        
+
         <!-- Section 2 -->
         <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">2</span> 이 기능을 추가한 이유를 설명해주세요.</label>
-          <textarea id="edit-reason" rows="4" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow" placeholder="예: 반복적인 수작업을 줄이기 위해..."></textarea>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span
+              class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">2</span> 이 기능을 추가한 이유를 설명해주세요.</label>
+          <textarea id="edit-reason" rows="4"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow"
+            placeholder="예: 반복적인 수작업을 줄이기 위해..."></textarea>
         </div>
 
         <!-- Section 3 -->
         <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">3</span> 기능 설명과 사용 방법을 적어주세요.</label>
-          <textarea id="edit-desc" rows="6" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow" placeholder="상세한 설명과 사용법..."></textarea>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span
+              class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">3</span> 기능 설명과 사용 방법을 적어주세요.</label>
+          <textarea id="edit-desc" rows="6"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-shadow"
+            placeholder="상세한 설명과 사용법..."></textarea>
         </div>
-        
+
         <!-- Section 4 -->
         <div>
-          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">4</span> 검색 시 사용되는 키워드를 적어주세요. (구분은 ,로 해주세요.)</label>
-          <input type="text" id="edit-keywords" class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" placeholder="예: 키워드1, 키워드2, 키워드3">
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span
+              class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">4</span> 검색 시 사용되는 키워드를 적어주세요. (구분은 ,로
+            해주세요.)</label>
+          <input type="text" id="edit-keywords"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+            placeholder="예: 키워드1, 키워드2, 키워드3">
         </div>
-        
+
         <!-- Section 5 -->
         <div id="edit-pw-section" class="pt-5 border-t border-slate-100">
-          <label class="block text-sm font-bold text-slate-700 mb-1.5">비밀번호 설정 <span class="text-xs font-normal text-slate-500 ml-1">(4~8자)</span></label>
-          <input type="password" id="edit-pw" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow" placeholder="비밀번호">
+          <label class="block text-sm font-bold text-slate-700 mb-1.5">비밀번호 설정 <span
+              class="text-xs font-normal text-slate-500 ml-1">(4~8자)</span></label>
+          <input type="password" id="edit-pw"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow"
+            placeholder="비밀번호">
         </div>
       </div>
-      
+
       <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
-        <button id="edit-cancel-btn" onclick="closeTooltipEditForm()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">취소</button>
-        <button id="edit-save-btn" onclick="saveTooltipData()" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm shadow-blue-600/20 hover:shadow-md hover:-translate-y-0.5">저장하기</button>
+        <button id="edit-cancel-btn" onclick="closeTooltipEditForm()"
+          class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">취소</button>
+        <button id="edit-save-btn" onclick="saveTooltipData()"
+          class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-sm shadow-blue-600/20 hover:shadow-md hover:-translate-y-0.5">저장하기</button>
       </div>
     </div>
   </div>
 
   <!-- Detail View Modal -->
-  <div id="tooltip-detail-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+  <div id="tooltip-detail-modal"
+    class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col max-h-[90vh]">
       <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center shrink-0">
         <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
           <i data-lucide="info" class="w-5 h-5 text-blue-500"></i> 기능 상세 정보
         </h3>
-        <button onclick="closeTooltipDetail()" class="text-slate-400 hover:text-slate-600 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+        <button onclick="closeTooltipDetail()" class="text-slate-400 hover:text-slate-600 transition-colors"><i
+            data-lucide="x" class="w-5 h-5"></i></button>
       </div>
-      
+
       <div class="p-8 overflow-y-auto flex-1 custom-scrollbar text-[15px] text-slate-700 leading-loose">
         <div class="mb-6 border-b border-slate-200 pb-4">
-          <strong id="detail-title" class="text-blue-700 text-2xl font-extrabold block"></strong> 
+          <strong id="detail-title" class="text-blue-700 text-2xl font-extrabold block"></strong>
         </div>
-        
+
         <div class="mb-6">
-          <div class="font-medium mb-2">이 기능을 만든 이유는</div> 
-          <strong id="detail-reason" class="text-indigo-700 text-[15px] block whitespace-pre-wrap mb-1"></strong> 
+          <div class="font-medium mb-2">이 기능을 만든 이유는</div>
+          <strong id="detail-reason" class="text-indigo-700 text-[15px] block whitespace-pre-wrap mb-1"></strong>
           <div class="font-medium">이고요.</div>
         </div>
-        
+
         <div class="mb-6">
           <div class="font-medium mb-3">사용 방법은 이렇습니다.</div>
           <div id="detail-desc" class="whitespace-pre-wrap text-[15px] font-bold text-indigo-700 leading-relaxed"></div>
         </div>
       </div>
-      
+
       <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end gap-2 shrink-0">
-        <button onclick="closeTooltipDetail()" class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">닫기</button>
-        <button id="detail-edit-btn" onclick="openTooltipAuth(); closeTooltipDetail();" style="display: none;" class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-sm shadow-slate-800/20 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-1.5"><i data-lucide="edit-2" class="w-4 h-4"></i> 수정</button>
+        <button onclick="closeTooltipDetail()"
+          class="px-5 py-2.5 rounded-xl text-sm font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors shadow-sm">닫기</button>
+        <button id="detail-edit-btn" onclick="openTooltipAuth(); closeTooltipDetail();" style="display: none;"
+          class="px-5 py-2.5 rounded-xl text-sm font-bold text-white bg-slate-800 hover:bg-slate-900 transition-all shadow-sm shadow-slate-800/20 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-1.5"><i
+            data-lucide="edit-2" class="w-4 h-4"></i> 수정</button>
       </div>
     </div>
   </div>
@@ -1995,12 +2274,12 @@
       } catch (e) {
         console.error("Failed to parse tooltip data", e);
       }
-      
+
       // Supabase 데이터 없을 시 기존 localStorage에서 Fallback 조회
       try {
         const data = JSON.parse(localStorage.getItem('hansoll_tooltips')) || {};
         return data[menuId] || null;
-      } catch(e) { return null; }
+      } catch (e) { return null; }
     }
 
     function setTooltipData(title, dataObj) {
@@ -2008,7 +2287,7 @@
         const data = JSON.parse(localStorage.getItem('hansoll_tooltips')) || {};
         data[title] = dataObj;
         localStorage.setItem('hansoll_tooltips', JSON.stringify(data));
-      } catch(e) {}
+      } catch (e) { }
     }
 
     async function showMenuTooltip(event, menuId, title, desc) {
@@ -2017,7 +2296,7 @@
         event.preventDefault();
         currentDefaultDesc = desc;
       }
-      
+
       await openTooltipDetail(menuId, title);
     }
 
@@ -2026,15 +2305,15 @@
       const data = await getTooltipDataFromSupabase(menuId) || {};
       currentEditMenuId = menuId;
       currentEditMenuTitle = title;
-      
+
       const displayTitle = title;
       const displayReason = data.reason || "(등록된 이유가 없습니다)";
       const displayDesc = data.description || currentDefaultDesc || "(등록된 설명이 없습니다)";
-      
+
       document.getElementById('detail-title').textContent = displayTitle;
       document.getElementById('detail-reason').textContent = displayReason;
       document.getElementById('detail-desc').textContent = displayDesc;
-      
+
       document.getElementById('tooltip-detail-modal').classList.remove('hidden');
       lucide.createIcons();
     }
@@ -2074,7 +2353,7 @@
       document.getElementById('edit-desc').value = data.description || currentDefaultDesc || "";
       document.getElementById('edit-keywords').value = data.keywords || "";
       document.getElementById('edit-pw').value = data.password || "1234";
-      
+
       document.getElementById('tooltip-edit-modal').classList.remove('hidden');
       lucide.createIcons();
     }
@@ -2086,7 +2365,7 @@
     async function promptAdminAuth() {
       const dep = sessionStorage.getItem('ms_department') || '';
       let name = sessionStorage.getItem('ms_displayName') || '';
-      
+
       if (!name && window.supabaseClient) {
         const { data: { session } } = await window.supabaseClient.auth.getSession();
         if (session && session.user && session.user.user_metadata) {
@@ -2114,7 +2393,7 @@
       const id = document.getElementById('admin-id-input').value;
       const pw = document.getElementById('admin-pw-input').value;
       const savedPw = localStorage.getItem("hansoll_admin_pw") || "admin0000";
-      
+
       if (id === "admin" && pw === savedPw) {
         closePageAdminAuth();
         updateAdminButtonState(true);
@@ -2188,7 +2467,7 @@
       });
 
       closeTooltipEditForm();
-      
+
       // Re-open tooltip immediately to show updated content
       showMenuTooltip(null, currentEditMenuId, currentEditMenuTitle, currentDefaultDesc);
     }
@@ -2196,7 +2475,7 @@
     // Modals no longer close on background click to prevent accidental data loss,
     // they require clicking the explicit Close/Cancel buttons.
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') {
         const detailModal = document.getElementById('tooltip-detail-modal');
         if (detailModal && !detailModal.classList.contains('hidden')) {
@@ -2206,4 +2485,5 @@
     });
   </script>
 </body>
+
 </html>
