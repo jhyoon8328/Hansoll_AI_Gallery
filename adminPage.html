@@ -368,7 +368,7 @@
                         </thead>
                         <tbody id="user-info-tbody" class="divide-y divide-slate-100 text-sm text-slate-700">
                             <tr>
-                                <td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td>
+                                <td colspan="8" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2411,7 +2411,7 @@
         // --- 사용자 목록 조회 ---
         async function fetchUserInfoList() {
             const tbody = document.getElementById('user-info-tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
             
             // 검색 조건 가져오기
             const empNo = document.getElementById('search-emp-no')?.value.trim() || '';
@@ -2420,6 +2420,7 @@
             const lvdutyNm = document.getElementById('search-lvduty-nm')?.value.trim() || '';
             const email = document.getElementById('search-email')?.value.trim() || '';
             const ynOpen = document.getElementById('search-yn-open')?.value || 'all';
+            const clCompany = document.getElementById('search-cl-company')?.value || 'all';
 
             let query = supabaseClient.from('user_info').select('*');
             
@@ -2429,6 +2430,7 @@
             if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
             if (email) query = query.like('nm_email', `%${email}%`);
             if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
+            if (clCompany !== 'all') query = query.eq('cl_company', clCompany);
             
             query = query.order('emp_no', { ascending: true });
 
@@ -2438,7 +2440,7 @@
                 
             if (error) {
                 console.error("fetchUserInfoList Error:", error);
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
                 return;
             }
             
@@ -2468,6 +2470,7 @@
                     <td class="p-4">${user.lvduty_nm || ''}</td>
                     <td class="p-4 text-slate-500">${user.nm_email || ''}</td>
                     <td class="p-4 text-center">${selectHtml}</td>
+                    <td class="p-4 text-center">${user.cl_company || "-"}</td>
                 `;
                 tbody.appendChild(tr);
             });
