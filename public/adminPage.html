@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- SheetJS (xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -73,11 +75,12 @@
         <div class="bg-white shadow-sm rounded-xl mb-8 flex px-4">
             <button class="tab-btn active" onclick="switchTab('home')">Home</button>
             <button class="tab-btn" onclick="switchTab('menu')">메뉴관리</button>
+            <button class="tab-btn" onclick="switchTab('user')">사용자 정보</button>
             <button class="tab-btn" onclick="switchTab('password')">비밀번호 변경</button>
         </div>
 
         <!-- Header -->
-        <div class="flex items-center justify-between mb-10">
+        <div id="admin-header" class="flex items-center justify-between mb-10">
             <div>
                 <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Admin <span class="gradient-text">Dashboard</span></h1>
                 <p class="text-slate-500 font-medium">포털 시스템 관리 및 운영 현황</p>
@@ -181,6 +184,108 @@
             <!-- Categories Container -->
             <div class="space-y-4" id="categories-container">
                 <!-- Categories will be rendered here -->
+            </div>
+        </div>
+
+        <!-- TAB: USER INFO -->
+        <div id="tab-user" class="hidden">
+            <!-- 1. 업로드 영역 (가로 1줄 바 형태) -->
+            <div id="user-upload-zone" ondragover="handleUserDragOver(event)" ondragleave="handleUserDragLeave(event)" ondrop="handleUserDrop(event)" class="glass-card rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center shrink-0">
+                        <i data-lucide="users" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">사용자 정보 관리</h2>
+                        <p class="text-xs text-slate-500">userInfo.xlsx 파일로 데이터를 갱신합니다. (기존 데이터 덮어쓰기)</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <input type="file" id="user-excel-upload" accept=".xlsx, .xls" class="hidden" onchange="handleUserExcelSelect(event)">
+                    <button onclick="document.getElementById('user-excel-upload').click()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-300 flex items-center gap-2 whitespace-nowrap">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                        <span id="user-file-name">파일 선택</span>
+                    </button>
+                    
+                    <button onclick="uploadUserExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-green-500/20 whitespace-nowrap">
+                        <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                        저장(업데이트)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 업로드 상태 표시 -->
+            <div id="user-upload-status" class="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm font-semibold mb-6 hidden text-center border border-blue-200">
+                진행 상태 표시...
+            </div>
+
+            <!-- 검색 필터 영역 -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 text-sm">
+                <div class="flex flex-col gap-3">
+                    <!-- 첫번째 줄 -->
+                    <div class="flex flex-wrap items-center gap-6">
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">사&nbsp;&nbsp;&nbsp;번 :</label>
+                            <input type="text" id="search-emp-no" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="사번 입력">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이&nbsp;&nbsp;&nbsp;름 :</label>
+                            <input type="text" id="search-emp-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="이름 입력">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이 메 일 :</label>
+                            <input type="text" id="search-email" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-48 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="이메일 입력">
+                        </div>
+                    </div>
+                    <!-- 두번째 줄 -->
+                    <div class="flex flex-wrap items-center gap-6">
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">부 서 명 :</label>
+                            <input type="text" id="search-dept-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="부서명 입력">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">직 책 명 :</label>
+                            <input type="text" id="search-lvduty-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="직책명 입력">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">공개여부 :</label>
+                            <select id="search-yn-open" onchange="fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
+                                <option value="all" selected>전체</option>
+                                <option value="Y">Y</option>
+                                <option value="N">N</option>
+                            </select>
+                        </div>
+                        <div class="ml-auto">
+                            <button onclick="fetchUserInfoList()" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                                조회
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 사용자 목록 테이블 영역 -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                            <tr>
+                                <th class="p-4">사번</th>
+                                <th class="p-4">이름</th>
+                                <th class="p-4">부서명</th>
+                                <th class="p-4">직급</th>
+                                <th class="p-4">직책명</th>
+                                <th class="p-4">이메일</th>
+                                <th class="p-4 text-center">공개여부(Y/N)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-info-tbody" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -612,7 +717,7 @@
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content, #tab-home, #tab-menu, #tab-password').forEach(c => {
+            document.querySelectorAll('.tab-content, #tab-home, #tab-menu, #tab-user, #tab-password').forEach(c => {
                 c.classList.remove('block');
                 c.classList.add('hidden');
             });
@@ -628,6 +733,21 @@
             if(target) {
                 target.classList.remove('hidden');
                 target.classList.add('block');
+                
+                // 만약 사용자 정보 탭을 눌렀다면 데이터 로드
+                if (tabId === 'user') {
+                    fetchUserInfoList();
+                }
+            }
+            
+            // Header 보이기/숨기기 (Home 탭에서만 보임)
+            const header = document.getElementById('admin-header');
+            if (header) {
+                if (tabId === 'home') {
+                    header.style.display = 'flex';
+                } else {
+                    header.style.display = 'none';
+                }
             }
             
             sessionStorage.setItem('admin_active_tab', tabId);
@@ -1685,6 +1805,212 @@
             localStorage.setItem("hansoll_admin_pw", newPw);
             alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
             document.getElementById('new-admin-pw').value = "";
+        }
+
+        // --- 사용자 정보 엑셀 업로드 로직 ---
+        let selectedUserExcelFile = null;
+
+        function handleUserExcelSelect(event) {
+            const file = event.target.files[0];
+            processUserSelectedFile(file);
+        }
+
+        function handleUserDragOver(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.add('bg-blue-50', 'border-blue-300');
+        }
+
+        function handleUserDragLeave(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.remove('bg-blue-50', 'border-blue-300');
+        }
+
+        function handleUserDrop(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.remove('bg-blue-50', 'border-blue-300');
+            
+            if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                const file = event.dataTransfer.files[0];
+                processUserSelectedFile(file);
+            }
+        }
+
+        function processUserSelectedFile(file) {
+            if (file) {
+                selectedUserExcelFile = file;
+                document.getElementById('user-file-name').innerText = file.name + " 파일이 선택되었습니다.";
+            }
+        }
+
+        async function uploadUserExcel() {
+            if (!selectedUserExcelFile) {
+                alert("업로드할 엑셀 파일을 먼저 선택해주세요.");
+                return;
+            }
+
+            const confirmUpload = confirm("기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?");
+            if (!confirmUpload) return;
+
+            const statusEl = document.getElementById('user-upload-status');
+            statusEl.classList.remove('hidden');
+            statusEl.innerText = "엑셀 파일을 읽는 중...";
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (json.length === 0) {
+                        alert("엑셀 파일에 데이터가 없습니다.");
+                        statusEl.classList.add('hidden');
+                        return;
+                    }
+
+                    statusEl.innerText = "데이터 변환 중...";
+                    const userNameId = sessionStorage.getItem('userNameId') || 'admin';
+                    
+                    const parsedData = json.map(row => {
+                        return {
+                            emp_no: row['EMP_NO'] ? String(row['EMP_NO']) : '',
+                            emp_nm: row['EMP_NM'] || '',
+                            cd_dept: row['CD_DEPT'] || '',
+                            nm_dept: row['NM_DEPT'] || '',
+                            occp_grd_cd: row['OCCP_GRD_CD'] || '',
+                            occp_grd_nm: row['OCCP_GRD_NM'] || '',
+                            nm_email: row['NM_EMAIL'] || '',
+                            nm_email_full: row['NM_EMAIL_FULL'] || '',
+                            lvduty_cd: row['LVDUTY_CD'] || '',
+                            lvduty_nm: row['LVDUTY_NM'] || '',
+                            yn_open: (row['YN_OPEN'] === 'Y' || row['YN_OPEN'] === true || row['YN_OPEN'] === 'true') ? 'Y' : 'N',
+                            created_by: userNameId,
+                            updated_by: userNameId
+                        };
+                    });
+
+                    statusEl.innerText = "기존 데이터 삭제 중...";
+                    // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
+                    const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
+                    if (deleteError) throw deleteError;
+
+                    statusEl.innerText = "새 데이터 저장 중... (" + parsedData.length + "건)";
+                    
+                    // 대용량일 경우 나눠서 인서트해야 할 수 있지만 일반적으로 한 번에 처리 가능 (Supabase limit 고려)
+                    const chunkSize = 1000;
+                    for (let i = 0; i < parsedData.length; i += chunkSize) {
+                        const chunk = parsedData.slice(i, i + chunkSize);
+                        const { error: insertError } = await supabaseClient.from('user_info').insert(chunk);
+                        if (insertError) throw insertError;
+                    }
+
+                    statusEl.innerText = "업데이트가 완료되었습니다!";
+                    alert("사용자 정보가 성공적으로 업데이트 되었습니다.");
+                    
+                    // 초기화
+                    selectedUserExcelFile = null;
+                    document.getElementById('user-excel-upload').value = '';
+                    document.getElementById('user-file-name').innerHTML = '파일 선택';
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+                    
+                    // 테이블 재로드
+                    fetchUserInfoList();
+
+                } catch (error) {
+                    console.error("Upload Error:", error);
+                    statusEl.innerText = "오류 발생: " + error.message;
+                    alert("업로드 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
+                }
+            };
+            reader.readAsArrayBuffer(selectedUserExcelFile);
+        }
+
+        // --- 사용자 목록 조회 ---
+        async function fetchUserInfoList() {
+            const tbody = document.getElementById('user-info-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
+            
+            // 검색 조건 가져오기
+            const empNo = document.getElementById('search-emp-no')?.value.trim() || '';
+            const empNm = document.getElementById('search-emp-nm')?.value.trim() || '';
+            const deptNm = document.getElementById('search-dept-nm')?.value.trim() || '';
+            const lvdutyNm = document.getElementById('search-lvduty-nm')?.value.trim() || '';
+            const email = document.getElementById('search-email')?.value.trim() || '';
+            const ynOpen = document.getElementById('search-yn-open')?.value || 'all';
+
+            let query = supabaseClient.from('user_info').select('*');
+            
+            if (empNo) query = query.like('emp_no', `%${empNo}%`);
+            if (empNm) query = query.like('emp_nm', `%${empNm}%`);
+            if (deptNm) query = query.like('nm_dept', `%${deptNm}%`);
+            if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
+            if (email) query = query.like('nm_email', `%${email}%`);
+            if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
+            
+            query = query.order('emp_no', { ascending: true });
+
+            const { data, error } = await query;
+                
+            if (error) {
+                console.error("fetchUserInfoList Error:", error);
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            data.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.classList.add('hover:bg-slate-50', 'transition-colors');
+                
+                // YN_OPEN dropdown
+                const selectHtml = `
+                    <select onchange="updateUserOpenStatus('${user.emp_no}', this.value)" class="border border-slate-300 rounded px-2 py-1 text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+                        <option value="Y" ${user.yn_open === 'Y' ? 'selected' : ''}>Y</option>
+                        <option value="N" ${user.yn_open !== 'Y' ? 'selected' : ''}>N</option>
+                    </select>
+                `;
+                
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-900">${user.emp_no}</td>
+                    <td class="p-4 font-bold text-slate-800">${user.emp_nm || ''}</td>
+                    <td class="p-4">${user.nm_dept || ''}</td>
+                    <td class="p-4">${user.occp_grd_nm || ''}</td>
+                    <td class="p-4">${user.lvduty_nm || ''}</td>
+                    <td class="p-4 text-slate-500">${user.nm_email || ''}</td>
+                    <td class="p-4 text-center">${selectHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // --- 사용자 공개여부(YN_OPEN) 수정 ---
+        async function updateUserOpenStatus(empNo, newStatus) {
+            const userNameId = sessionStorage.getItem('userNameId') || 'admin';
+            const nowIso = new Date().toISOString();
+            
+            const { error } = await supabaseClient
+                .from('user_info')
+                .update({ 
+                    yn_open: newStatus,
+                    updated_at: nowIso,
+                    updated_by: userNameId
+                })
+                .eq('emp_no', empNo);
+                
+            if (error) {
+                console.error("updateUserOpenStatus Error:", error);
+                alert("상태 변경 중 오류가 발생했습니다.");
+                // 롤백 처리를 위해 목록 다시 불러오기
+                fetchUserInfoList();
+            }
         }
     </script>
 </body>

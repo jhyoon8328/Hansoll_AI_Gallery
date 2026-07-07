@@ -1,0 +1,2041 @@
+
+        lucide.createIcons();
+
+        let globalMenuData = [];
+        let sortableInstance = null;
+        let selectedFile = null;
+
+        function updateStickyBg() {
+            const bg = document.getElementById('sticky-bg');
+            if (bg) {
+                const st = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+                if (st > 50) {
+                    bg.classList.remove('opacity-0');
+                    bg.classList.add('opacity-100');
+                } else {
+                    bg.classList.remove('opacity-100');
+                    bg.classList.add('opacity-0');
+                }
+            }
+        }
+        document.body.addEventListener('scroll', updateStickyBg);
+        window.addEventListener('scroll', updateStickyBg);
+
+        const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadMenuData(retries = 10) {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?select=*`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    cache: 'no-store'
+                });
+                if (res.ok) {
+                    const flatData = await res.json();
+                    if (flatData && flatData.length > 0) {
+                        const categories = flatData.filter(d => d.menu_type === 'category' || d.menu_type === '카테고리');
+
+                        categories.sort((a, b) => ((a.menu_meta && a.menu_meta.sortOrder) || 0) - ((b.menu_meta && b.menu_meta.sortOrder) || 0));
+
+                        globalMenuData = categories.map(cat => {
+                            const meta = cat.menu_meta || {};
+                            let subItems = flatData.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === cat.menu_name)).map(sub => {
+                                const subMeta = sub.menu_meta || {};
+                                return {
+                                    title: sub.menu_name,
+                                    description: subMeta.description || "",
+                                    status: sub.YN_use ? 'Y' : 'N',
+                                    isPrivate: sub.YN_view === 'Y',
+                                    fileName: sub.file_path || "",
+                                    menuId: sub.MenuId || sub.menu_name,
+                                    folderName: subMeta.folderName || sub.menu_name,
+                                    urlAddress: sub.url_address || "",
+                                    isNew: sub.YN_New === true,
+                                    sortOrder: subMeta.sortOrder || 0
+                                };
+                            });
+
+                            subItems.sort((a, b) => a.sortOrder - b.sortOrder);
+
+                            return {
+                                title: cat.menu_name,
+                                slug: meta.slug || "",
+                                imageUrl: meta.imageUrl || "",
+                                icon: meta.icon || "",
+                                status: cat.YN_use ? 'Y' : 'N',
+                                isPrivate: cat.YN_view === 'Y',
+                                isNew: cat.YN_New === true,
+                                displayPhrase: meta.displayPhrase || "",
+                                bgColor: meta.bgColor || "#050505",
+                                textColor: meta.textColor || "#ffffff",
+                                menuId: cat.MenuId,
+                                subItems: subItems
+                            };
+                        });
+
+                        globalMenuData.forEach(cat => {
+                            if (cat.subItems) {
+                                cat.subItems.forEach(sub => {
+                                    if (typeof sub === 'object' && !sub.menuId) {
+                                        sub.menuId = sub.title;
+                                    }
+                                });
+                            }
+                        });
+                        renderDashboard();
+                        renderMenuManager();
+                        return;
+                    }
+                }
+                throw new Error("Invalid response or empty data");
+            } catch (e) {
+                if (retries > 0) {
+                    console.log(`Failed to load menu data. Retrying in 1s... (${retries} retries left)`);
+                    setTimeout(() => loadMenuData(retries - 1), 1000);
+                    return;
+                }
+                console.error("Failed to load menu data completely", e);
+                try {
+                    if (window.parent && window.parent.menuData) {
+                        globalMenuData = JSON.parse(JSON.stringify(window.parent.menuData));
+                    } else {
+                        throw new Error("No parent data");
+                    }
+                } catch (err) {
+                    globalMenuData = [];
+                }
+                globalMenuData.forEach(cat => {
+                    if (cat.subItems) {
+                        cat.subItems.forEach(sub => {
+                            if (typeof sub === 'object' && !sub.menuId) {
+                                sub.menuId = sub.title;
+                            }
+                        });
+                    }
+                });
+                renderDashboard();
+                renderMenuManager();
+            }
+        }
+
+        window.onload = async () => {
+            await loadMenuData();
+            const activeTab = sessionStorage.getItem('admin_active_tab') || 'home';
+            switchTab(activeTab);
+        };
+
+        async function saveData() {
+            try {
+                const records = [];
+                globalMenuData.forEach((cat, index) => {
+                    records.push({
+                        MenuId: cat.menuId,
+                        menu_path: "",
+                        menu_name: cat.title,
+                        menu_type: '카테고리',
+                        file_path: null,
+                        url_address: "",
+                        YN_use: (cat.status || 'Y') === 'Y',
+                        YN_view: cat.isPrivate ? 'Y' : 'N',
+                        YN_New: cat.isNew ? true : false,
+                        menu_meta: {
+                            icon: cat.icon,
+                            slug: cat.slug,
+                            bgColor: cat.bgColor,
+                            imageUrl: cat.imageUrl,
+                            textColor: cat.textColor,
+                            displayPhrase: cat.displayPhrase,
+                            sortOrder: index
+                        }
+                    });
+
+                    if (cat.subItems) {
+                        cat.subItems.forEach((sub, subIndex) => {
+                            let subTitle = typeof sub === 'string' ? sub : sub.title;
+                            let subDesc = typeof sub === 'string' ? null : sub.description;
+                            let subStatus = typeof sub === 'string' ? 'Y' : (sub.status || 'Y');
+                            let subFile = typeof sub === 'string' ? null : sub.fileName;
+                            let menuId = (typeof sub === 'object' && sub.menuId) ? sub.menuId : subTitle;
+                            let folderName = (typeof sub === 'object' && sub.folderName) ? sub.folderName : subTitle;
+                            let urlAddr = (typeof sub === 'object' && sub.urlAddress) ? sub.urlAddress : "";
+
+                            let typeText = "정보 없음";
+                            let isUrl = false;
+                            if (subFile) {
+                                if (subFile.endsWith('.txt')) { typeText = "URL 링크"; isUrl = true; }
+                                else if (subFile.endsWith('.html')) typeText = "HTML 웹페이지";
+                                else if (subFile.endsWith('.py')) typeText = "파이썬 스크립트";
+                                else if (subFile !== "정보 없음") typeText = "실행 파일 (" + subFile.split('.').pop() + ")";
+                            }
+
+                            records.push({
+                                MenuId: menuId,
+                                menu_path: subFile && subFile !== "정보 없음" ? `Project files/${cat.title}/${folderName}/${subFile}` : "",
+                                menu_name: subTitle,
+                                menu_type: typeText,
+                                file_path: subFile,
+                                url_address: isUrl ? urlAddr : "",
+                                YN_use: subStatus === 'Y',
+                                YN_view: sub.isPrivate ? 'Y' : 'N',
+                                YN_New: (typeof sub === 'object' && sub.isNew) ? true : false,
+                                menu_meta: {
+                                    description: subDesc,
+                                    folderName: folderName,
+                                    parentCategory: cat.title,
+                                    sortOrder: subIndex
+                                }
+                            });
+                        });
+                    }
+                });
+
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?select=MenuId`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                });
+                if (res.ok) {
+                    const currentRecords = await res.json();
+                    const currentIds = currentRecords.map(r => r.MenuId);
+                    const newIds = records.map(r => r.MenuId);
+                    const idsToDelete = currentIds.filter(id => !newIds.includes(id));
+
+                    if (idsToDelete.length > 0) {
+                        await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?MenuId=in.(${idsToDelete.join(',')})`, {
+                            method: 'DELETE',
+                            headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                        });
+                    }
+                }
+
+                const postRes = await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?on_conflict=MenuId`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'resolution=merge-duplicates'
+                    },
+                    body: JSON.stringify(records)
+                });
+                if (!postRes.ok) {
+                    const errText = await postRes.text();
+                    console.error("Supabase upsert failed:", errText);
+                    throw new Error("Supabase upsert failed: " + postRes.statusText);
+                }
+            } catch (e) {
+                console.error("Failed to save menu data", e);
+                alert("메뉴 저장 중 오류가 발생했습니다: " + e.message);
+            }
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content, #tab-home, #tab-menu, #tab-user, #tab-password, #tab-loginHistory').forEach(c => {
+                c.classList.remove('block');
+                c.classList.add('hidden');
+            });
+
+            if (window.event && window.event.target && window.event.target.classList.contains('tab-btn')) {
+                window.event.target.classList.add('active');
+            } else {
+                const btn = document.querySelector(`.tab-btn[onclick*="switchTab('${tabId}')"]`);
+                if (btn) btn.classList.add('active');
+            }
+
+            const target = document.getElementById('tab-' + tabId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('block');
+
+                // 만약 사용자 정보 탭을 눌렀다면 데이터 로드
+                if (tabId === 'user') {
+                    fetchUserInfoList();
+                } else if (tabId === 'loginHistory') {
+                    // 기본 날짜 오늘로 설정
+                    const today = new Date();
+                    // KST (UTC+9) 기준으로 YYYY-MM-DD 추출
+                    const kstOffset = 9 * 60 * 60 * 1000;
+                    const kstDate = new Date(today.getTime() + kstOffset);
+                    const todayStr = kstDate.toISOString().split('T')[0];
+
+                    if (!document.getElementById('log-period-from').value) {
+                        document.getElementById('log-period-from').value = todayStr;
+                        document.getElementById('log-period-to').value = todayStr;
+                        document.getElementById('log-date-from').value = todayStr;
+                        document.getElementById('log-date-to').value = todayStr;
+                        document.getElementById('log-raw-from').value = todayStr;
+                        document.getElementById('log-raw-to').value = todayStr;
+                    }
+                    if (document.getElementById('log-container-period').classList.contains('block')) {
+                        fetchLoginHistory('period');
+                    } else if (document.getElementById('log-container-date').classList.contains('block')) {
+                        fetchLoginHistory('date');
+                    } else {
+                        fetchLoginHistory('raw');
+                    }
+                }
+            }
+
+            // Header 보이기/숨기기 (Home 탭에서만 보임)
+            const header = document.getElementById('admin-header');
+            if (header) {
+                if (tabId === 'home') {
+                    header.style.display = 'flex';
+                } else {
+                    header.style.display = 'none';
+                }
+            }
+
+            sessionStorage.setItem('admin_active_tab', tabId);
+
+            if (tabId === 'home') renderDashboard();
+        }
+
+        // --- DASHBOARD ---
+        function renderDashboard() {
+            let totalDev = 0;
+            let hiddenMenuCount = 0;
+            let hiddenCatCount = 0;
+            let deptCounts = {};
+            let hiddenList = [];
+            let activeDeptCount = 0;
+
+            globalMenuData.forEach(cat => {
+                // 부서 자체가 숨김 처리된 경우 카운트 및 리스트에 추가
+                if (cat.status === 'N') {
+                    hiddenCatCount++;
+                    hiddenList.push({ cat: '카테고리 숨김', name: cat.title });
+                } else {
+                    activeDeptCount++;
+                }
+
+                let activeSubs = 0;
+
+                cat.subItems.forEach(sub => {
+                    const subStatus = sub.status || 'Y';
+                    const isHidden = subStatus === 'N' || cat.status === 'N';
+
+                    // 만약 부서 전체가 숨겨졌다면, 하위 메뉴를 개별적으로 또 리스트에 넣지 않거나 넣거나 선택.
+                    // 기존 로직을 존중하여 숨김 처리된 하위 메뉴도 카운트 및 리스트화
+                    if (isHidden) {
+                        hiddenMenuCount++;
+                        hiddenList.push({ cat: cat.title, name: typeof sub === 'string' ? sub : sub.title });
+                    }
+                    totalDev++;
+                    activeSubs++;
+                });
+
+                // 개발 건수가 1건 이상인 부서만 그래프(리스트)에 표시
+                if (activeSubs > 0) {
+                    deptCounts[cat.title] = activeSubs;
+                }
+            });
+
+            document.getElementById('stat-total').innerHTML = `${totalDev}<span class="text-base font-medium text-slate-400 ml-1">건</span>`;
+            document.getElementById('stat-dept').innerHTML = `${activeDeptCount}<span class="text-base font-medium text-slate-400 ml-1">개</span>`;
+            document.getElementById('stat-hidden-cat').innerHTML = `${hiddenCatCount}<span class="text-base font-medium text-slate-400 ml-1">개</span>`;
+            document.getElementById('stat-hidden').innerHTML = `${hiddenMenuCount}<span class="text-base font-medium text-slate-400 ml-1">건</span>`;
+
+            // Render dept list
+            const deptContainer = document.getElementById('dept-breakdown-list');
+            deptContainer.innerHTML = '';
+            for (const [dept, count] of Object.entries(deptCounts)) {
+                deptContainer.innerHTML += `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <span class="font-semibold text-slate-700">${dept}</span>
+                        <span class="text-sm font-bold text-indigo-600 bg-indigo-100 px-2 py-1 rounded-full">${count}건</span>
+                    </div>
+                `;
+            }
+
+            // Render hidden list
+            const hiddenContainer = document.getElementById('hidden-menus-list');
+            hiddenContainer.innerHTML = '';
+            if (hiddenList.length === 0) {
+                hiddenContainer.innerHTML = '<p class="text-sm text-slate-400 p-2">숨김처리된 메뉴가 없습니다.</p>';
+            } else {
+                hiddenList.forEach(item => {
+                    hiddenContainer.innerHTML += `
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                            <span class="text-xs font-bold px-2 py-1 bg-slate-200 text-slate-600 rounded-md">${item.cat}</span>
+                            <span class="text-sm font-medium text-slate-700">${item.name}</span>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // --- MENU MANAGEMENT ---
+        let collapsedCategories = new Set();
+        let currentMenuFilter = 'all';
+
+        function applyMenuFilter() {
+            currentMenuFilter = document.getElementById('menu-filter-select').value;
+            renderMenuManager();
+        }
+
+        function renderMenuManager() {
+            const container = document.getElementById('categories-container');
+            container.innerHTML = '';
+
+            globalMenuData.forEach((cat, catIndex) => {
+                const isCollapsed = collapsedCategories.has(catIndex);
+                let hasMatchingSubItems = false;
+
+                const subItemsHtml = cat.subItems.map((sub, subIndex) => {
+                    const title = typeof sub === 'string' ? sub : sub.title;
+                    const status = sub.status || 'Y';
+
+                    if (currentMenuFilter === 'active' && status !== 'Y') return '';
+                    if (currentMenuFilter === 'hidden' && status !== 'N') return '';
+
+                    hasMatchingSubItems = true;
+                    const isChecked = status === 'Y' ? 'checked' : '';
+
+                    let subFileNameHtml = "";
+                    if (typeof sub === 'object') {
+                        if (sub.fileName && sub.fileName !== "정보 없음") {
+                            subFileNameHtml = `<span class="text-xs text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.fileName}">${sub.fileName}</span>`;
+                        } else if (sub.urlAddress) {
+                            subFileNameHtml = `<span class="text-xs text-blue-500 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded ml-2 truncate max-w-[200px] inline-block align-middle" title="${sub.urlAddress}">🔗 URL 링크</span>`;
+                        }
+                    }
+
+                    return `
+                    <div class="flex items-center justify-between p-3 bg-white border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                        <div class="flex flex-1 items-center gap-2 overflow-hidden">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 shrink-0 text-slate-300 cursor-move sub-drag-handle hover:text-slate-500"></i>
+                            <i data-lucide="file-code-2" class="w-4 h-4 shrink-0 text-slate-400"></i>
+                            <span class="text-sm font-medium text-slate-700 whitespace-nowrap">${title}</span>
+                            ${subFileNameHtml}
+                        </div>
+                            <div class="flex items-center gap-3">
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <span class="text-xs font-bold text-rose-500">New</span>
+                                    <input type="checkbox" class="w-4 h-4 text-rose-600 bg-slate-50 border-slate-300 rounded focus:ring-rose-500" ${(typeof sub === 'object' && sub.isNew) ? 'checked' : ''} onchange="toggleMenuNew(${catIndex}, ${subIndex})">
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${(typeof sub === 'object' && sub.isPrivate) ? 'checked' : ''} onchange="toggleMenuPrivate(${catIndex}, ${subIndex})">
+                                </label>
+                                <span class="text-xs font-bold ${status === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${status === 'Y' ? '사용중' : '숨김'}</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" ${isChecked} onchange="toggleMenuStatus(${catIndex}, ${subIndex})">
+                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                                <button onclick="openEditMenuModal(${catIndex}, ${subIndex})" class="px-2.5 py-1 text-xs font-bold bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded transition-colors ml-1">변경</button>
+                                <button onclick="deleteMenu(${catIndex}, ${subIndex})" class="px-2.5 py-1 text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 hover:border-rose-300 rounded transition-colors ml-1">삭제</button>
+                            </div>
+                        </div>`;
+                }).join('');
+
+                const catStatus = cat.status || 'Y';
+
+                // Category Filter Logic
+                if (currentMenuFilter === 'active' && catStatus !== 'Y') {
+                    return; // Hide entirely
+                }
+
+                if (currentMenuFilter === 'hidden') {
+                    if (catStatus !== 'N' && !hasMatchingSubItems) {
+                        return; // Hide entirely if category is active AND has no hidden subitems
+                    }
+                }
+
+                const catChecked = catStatus === 'Y' ? 'checked' : '';
+
+                container.innerHTML += `
+                    <div class="glass-card rounded-xl border border-slate-200 overflow-hidden" data-id="${cat.slug}">
+                        <div class="flex items-center justify-between p-4 bg-slate-50 border-b border-slate-200 drag-handle">
+                            <div class="flex items-center gap-3">
+                                <button onclick="event.stopPropagation(); toggleCategoryCollapse(${catIndex})" class="focus:outline-none p-1 hover:bg-slate-200 rounded transition-colors" title="접기/펼치기">
+                                    <i data-lucide="${isCollapsed ? 'chevron-right' : 'chevron-down'}" class="w-5 h-5 text-slate-500"></i>
+                                </button>
+                                <i data-lucide="grip-vertical" class="w-5 h-5 text-slate-400 cursor-move"></i>
+                                <h3 class="font-bold text-slate-800">${cat.title}</h3>
+                            </div>
+                            <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+                                <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
+                                    <span class="text-xs font-bold text-rose-500">New</span>
+                                    <input type="checkbox" class="w-4 h-4 text-rose-600 bg-slate-50 border-slate-300 rounded focus:ring-rose-500" ${cat.isNew ? 'checked' : ''} onchange="toggleCategoryNew(${catIndex})">
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
+                                    <span class="text-xs font-bold text-slate-600">비공개</span>
+                                    <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${cat.isPrivate ? 'checked' : ''} onchange="toggleCategoryPrivate(${catIndex})">
+                                </label>
+                                <span class="text-xs font-bold ${(cat.status || 'Y') === 'Y' ? 'text-emerald-500' : 'text-rose-500'}">${(cat.status || 'Y') === 'Y' ? '사용중' : '숨김'}</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" class="sr-only peer" ${catChecked} onchange="toggleCategoryStatus(${catIndex})">
+                                    <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                                </label>
+                                <button onclick="openEditCategoryModal(${catIndex})" class="px-2.5 py-1 text-xs font-bold bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-600 border border-slate-200 hover:border-blue-200 rounded transition-colors ml-1">변경</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col ${isCollapsed ? 'hidden' : ''}" id="sub-list-${catIndex}">
+                            ${subItemsHtml || '<div class="p-4 text-sm text-slate-400 italic">등록된 메뉴가 없습니다.</div>'}
+                        </div>
+                    </div>
+                `;
+            });
+
+            lucide.createIcons();
+
+            if (sortableInstance) sortableInstance.destroy();
+            sortableInstance = new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function (evt) {
+                    // Reorder globalMenuData based on new order
+                    const item = globalMenuData.splice(evt.oldIndex, 1)[0];
+                    globalMenuData.splice(evt.newIndex, 0, item);
+                }
+            });
+
+            if (window.subSortableInstances) {
+                window.subSortableInstances.forEach(s => s.destroy());
+            }
+            window.subSortableInstances = [];
+
+            globalMenuData.forEach((cat, catIndex) => {
+                const subContainer = document.getElementById(`sub-list-${catIndex}`);
+                if (subContainer && cat.subItems.length > 0) {
+                    const subSortable = new Sortable(subContainer, {
+                        handle: '.sub-drag-handle',
+                        animation: 150,
+                        onEnd: function (evt) {
+                            const subArray = globalMenuData[catIndex].subItems;
+                            const item = subArray.splice(evt.oldIndex, 1)[0];
+                            subArray.splice(evt.newIndex, 0, item);
+                        }
+                    });
+                    window.subSortableInstances.push(subSortable);
+                }
+            });
+        }
+
+        async function applyChanges() {
+            await saveData();
+
+            alert("변경사항이 정상적으로 저장되었습니다. 화면을 새로고침합니다.");
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
+                }
+                window.location.reload();
+            } catch (e) {
+                window.location.reload();
+            }
+        }
+
+        function toggleCategoryCollapse(catIndex) {
+            if (collapsedCategories.has(catIndex)) {
+                collapsedCategories.delete(catIndex);
+            } else {
+                collapsedCategories.add(catIndex);
+            }
+            renderMenuManager();
+        }
+
+        function toggleMenuStatus(catIndex, subIndex) {
+            const sub = globalMenuData[catIndex].subItems[subIndex];
+            if (typeof sub === 'string') {
+                globalMenuData[catIndex].subItems[subIndex] = { title: sub, status: 'N' };
+            } else {
+                sub.status = sub.status === 'Y' ? 'N' : 'Y';
+            }
+            renderMenuManager();
+        }
+
+        function toggleCategoryStatus(catIndex) {
+            const cat = globalMenuData[catIndex];
+            cat.status = (cat.status || 'Y') === 'Y' ? 'N' : 'Y';
+            renderMenuManager();
+        }
+
+        function toggleCategoryNew(catIndex) {
+            const cat = globalMenuData[catIndex];
+            cat.isNew = !cat.isNew;
+        }
+
+        function toggleCategoryPrivate(catIndex) {
+            const cat = globalMenuData[catIndex];
+            cat.isPrivate = !cat.isPrivate;
+        }
+
+        function toggleMenuNew(catIndex, subIndex) {
+            const sub = globalMenuData[catIndex].subItems[subIndex];
+            if (typeof sub === 'object') {
+                sub.isNew = !sub.isNew;
+            }
+        }
+
+        function toggleMenuPrivate(catIndex, subIndex) {
+            const sub = globalMenuData[catIndex].subItems[subIndex];
+            if (typeof sub === 'object') {
+                sub.isPrivate = !sub.isPrivate;
+            }
+        }
+
+        async function deleteMenu(catIndex, subIndex) {
+            const cat = globalMenuData[catIndex];
+            const sub = cat.subItems[subIndex];
+            const title = typeof sub === 'string' ? sub : sub.title;
+
+            if (!confirm(`'${title}' 메뉴를 삭제하시겠습니까? 관련된 물리적 경로 및 파일이 모두 영구 삭제됩니다.`)) return;
+
+            try {
+                try {
+                    const res = await fetch('http://localhost:3000/api/delete-menu', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ category: cat.title, menuName: title })
+                    });
+
+                    if (!res.ok) {
+                        console.error("Failed to delete physical folder");
+                    }
+                } catch (localErr) {
+                    console.warn("로컬 서버가 구동 중이지 않습니다. 삭제 작업은 DB에서만 진행됩니다.", localErr);
+                }
+
+                // MenualPage (말풍선/매뉴얼) 테이블의 연관 데이터도 함께 삭제
+                const menuId = (typeof sub === 'object' && sub.menuId) ? sub.menuId : title;
+                try {
+                    await fetch(`${SUPABASE_URL}/rest/v1/MenualPage?MenuId=eq.${encodeURIComponent(menuId)}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    });
+                } catch (e) {
+                    console.error("Failed to delete MenualPage data", e);
+                }
+
+                cat.subItems.splice(subIndex, 1);
+                await saveData();
+                renderMenuManager();
+                renderDashboard();
+
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
+                }
+            } catch (e) {
+                alert("삭제 중 오류가 발생했습니다: " + e.message);
+            }
+        }
+
+        // --- EDIT CATEGORY MODAL ---
+        function openEditCategoryModal(catIndex) {
+            const cat = globalMenuData[catIndex];
+            document.getElementById('edit-cat-index-input').value = catIndex;
+            document.getElementById('edit-cat-name-input').value = cat.title || '';
+            document.getElementById('edit-cat-display-phrase-input').value = cat.displayPhrase || '';
+            document.getElementById('edit-cat-bg-color-input').value = cat.bgColor || '#050505';
+            document.getElementById('edit-cat-text-color-input').value = cat.textColor || '#ffffff';
+            document.getElementById('edit-category-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeEditCategoryModal() {
+            document.getElementById('edit-category-modal').classList.add('hidden');
+        }
+
+        async function submitEditCategory() {
+            const index = parseInt(document.getElementById('edit-cat-index-input').value);
+            const cat = globalMenuData[index];
+            const oldName = cat.title;
+
+            const newName = document.getElementById('edit-cat-name-input').value.trim();
+            const displayPhrase = document.getElementById('edit-cat-display-phrase-input').value.trim();
+            const bgColor = document.getElementById('edit-cat-bg-color-input').value;
+            const textColor = document.getElementById('edit-cat-text-color-input').value;
+
+            if (!newName) return alert("카테고리명을 입력하세요.");
+
+            // Check if name changed and new name already exists
+            if (oldName !== newName && globalMenuData.find(c => c.title === newName)) {
+                return alert("이미 존재하는 카테고리명입니다.");
+            }
+
+            try {
+                if (oldName !== newName) {
+                    try {
+                        const res = await fetch('http://localhost:3000/api/rename-cat', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ oldName, newName })
+                        });
+
+                        const result = await res.json();
+                        if (!res.ok) {
+                            if (result.error === 'ALREADY_EXISTS') {
+                                return alert('해당 이름의 폴더가 이미 존재합니다.');
+                            }
+                            if (result.error === 'OLD_DIR_NOT_FOUND') {
+                                console.warn('기존 폴더가 존재하지 않지만 메타데이터는 변경합니다.');
+                            } else {
+                                console.error('Failed to rename folder on local server:', result.error);
+                            }
+                        }
+                    } catch (localErr) {
+                        console.warn("로컬 서버가 구동 중이지 않습니다. 메타데이터만 변경됩니다.", localErr);
+                    }
+                }
+
+                // Update data
+                cat.title = newName;
+                cat.slug = newName.toLowerCase().replace(/\s+/g, '-');
+                cat.displayPhrase = displayPhrase;
+                cat.bgColor = bgColor;
+                cat.textColor = textColor;
+
+                await applyChanges();
+                closeEditCategoryModal();
+                renderMenuManager();
+                renderDashboard();
+            } catch (e) {
+                alert("변경 저장에 실패했습니다. 서버 상태를 확인해주세요.");
+                console.error(e);
+            }
+        }
+
+        // --- ADD CATEGORY MODAL ---
+        function openCategoryModal() {
+            document.getElementById('cat-name-input').value = '';
+            document.getElementById('cat-display-phrase-input').value = '';
+            document.getElementById('cat-bg-color-input').value = '#050505';
+            document.getElementById('cat-text-color-input').value = '#ffffff';
+            document.getElementById('category-modal').classList.remove('hidden');
+        }
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.add('hidden');
+        }
+        async function submitCategory() {
+            const name = document.getElementById('cat-name-input').value.trim();
+            const displayPhrase = document.getElementById('cat-display-phrase-input').value.trim();
+            const bgColor = document.getElementById('cat-bg-color-input').value;
+            const textColor = document.getElementById('cat-text-color-input').value;
+            if (!name) return alert("카테고리명을 입력하세요.");
+
+            // Check if exists
+            if (globalMenuData.find(c => c.title === name)) return alert("이미 존재하는 카테고리입니다.");
+
+            // Add to data
+            globalMenuData.push({
+                menuId: name,
+                title: name,
+                displayPhrase: displayPhrase,
+                bgColor: bgColor,
+                textColor: textColor,
+                slug: name.toLowerCase().replace(/\s+/g, '-'),
+                imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200", // default
+                icon: "folder",
+                status: "Y",
+                isPrivate: true,
+                subItems: []
+            });
+
+            // Call API to create directory
+            const formData = new FormData();
+            formData.append('category', name);
+            formData.append('isNewCategory', 'true');
+
+            try {
+                await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+            } catch (e) {
+                console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", e);
+            }
+
+            try {
+                await saveData();
+                closeCategoryModal();
+                renderMenuManager();
+            } catch (e) {
+                alert("카테고리 저장에 실패했습니다.");
+                console.error(e);
+            }
+        }
+
+        // --- MENU MODAL ---
+        function toggleUrlMode() {
+            const isUrlMode = document.getElementById('menu-url-checkbox').checked;
+            const urlInput = document.getElementById('menu-url-input');
+            const dropZone = document.getElementById('drop-zone');
+            const fileInput = document.getElementById('file-input');
+            const dropZoneText = document.getElementById('drop-zone-text');
+            const uploadLabel = document.getElementById('file-upload-label');
+
+            if (isUrlMode) {
+                urlInput.disabled = false;
+
+                selectedFile = null;
+                dropZoneText.innerText = "URL 입력 모드입니다. (파일 첨부 비활성화)";
+                dropZone.style.pointerEvents = 'none';
+                dropZone.style.opacity = '0.5';
+                fileInput.disabled = true;
+                uploadLabel.classList.add('opacity-50');
+            } else {
+                urlInput.disabled = true;
+                urlInput.value = '';
+
+                selectedFile = null;
+                dropZoneText.innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
+                dropZone.style.pointerEvents = 'auto';
+                dropZone.style.opacity = '1';
+                fileInput.disabled = false;
+                uploadLabel.classList.remove('opacity-50');
+            }
+        }
+
+        function openMenuModal() {
+            const select = document.getElementById('menu-cat-select');
+            select.innerHTML = globalMenuData.map((c, i) => `<option value="${i}">${c.title}</option>`).join('');
+
+            document.getElementById('menu-name-input').value = '';
+            document.getElementById('menu-desc-input').value = '';
+            document.getElementById('menu-url-checkbox').checked = false;
+            toggleUrlMode();
+
+            document.getElementById('menu-modal').classList.remove('hidden');
+        }
+        function closeMenuModal() {
+            document.getElementById('menu-modal').classList.add('hidden');
+        }
+
+        // Drag and drop for files
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.add('dragover');
+        }
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.remove('dragover');
+        }
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('drop-zone').classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                setFile(e.dataTransfer.files[0]);
+            }
+        }
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                setFile(e.target.files[0]);
+            }
+        }
+        function setFile(file) {
+            selectedFile = file;
+            document.getElementById('drop-zone-text').innerText = `선택된 파일: ${file.name}`;
+
+            // Auto-fill menu name if empty
+            const nameInput = document.getElementById('menu-name-input');
+            if (!nameInput.value) {
+                nameInput.value = file.name.split('.').slice(0, -1).join('.');
+            }
+        }
+
+        async function submitMenu() {
+            const catIndex = document.getElementById('menu-cat-select').value;
+            const menuName = document.getElementById('menu-name-input').value.trim();
+            const desc = document.getElementById('menu-desc-input').value.trim();
+            const isUrlMode = document.getElementById('menu-url-checkbox').checked;
+            let urlValue = document.getElementById('menu-url-input').value.trim();
+
+            if (!menuName) return alert("메뉴명을 입력하세요.");
+            if (!desc) return alert("메뉴 설명을 입력하세요.");
+
+            let finalFile = selectedFile;
+
+            if (isUrlMode) {
+                if (!urlValue) return alert("실행할 URL 주소를 입력하세요.");
+                if (!urlValue.startsWith('http://') && !urlValue.startsWith('https://')) {
+                    urlValue = 'https://' + urlValue;
+                }
+                const fileContent = `${urlValue}\n\n설명 : ${desc}`;
+                finalFile = new File([fileContent], `${menuName}.txt`, { type: "text/plain" });
+            } else {
+                if (!finalFile) return alert("파일을 첨부해주세요.");
+            }
+
+            const cat = globalMenuData[catIndex];
+            const btn = document.getElementById('submit-menu-btn');
+            btn.innerText = "저장 중...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('category', cat.title);
+            formData.append('menuName', menuName);
+            formData.append('file', finalFile);
+
+            try {
+                // 1. 항상 Supabase Storage로 직접 업로드 (가장 확실한 방법)
+                const folderName = menuName;
+                const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                const encodedFilePath = encodeURIComponent(supabasePath);
+                const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                const { data, error } = await supabaseClient.storage
+                    .from('hansoll-files')
+                    .upload(storageKey, finalFile, {
+                        cacheControl: '3600',
+                        upsert: true
+                    });
+
+                if (error) {
+                    alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                    throw error;
+                }
+
+                // 2. 로컬 서버(Antigravity 환경)용 백업 업로드 시도
+                try {
+                    let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                    if (!res.ok) {
+                        if (res.status === 409) {
+                            if (confirm("로컬에 동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                                formData.append('overwrite', 'true');
+                                res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                                if (!res.ok) console.warn("Local upload failed after overwrite request");
+                            }
+                        } else {
+                            console.warn("Local upload failed");
+                        }
+                    }
+                } catch (uploadErr) {
+                    console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
+                }
+
+                // Update data
+                cat.subItems.push({
+                    menuId: menuName,
+                    title: menuName,
+                    description: desc,
+                    showHelpIcon: !!desc,
+                    status: "Y",
+                    isPrivate: true,
+                    fileName: finalFile.name,
+                    urlAddress: isUrlMode ? urlValue : ""
+                });
+
+                await saveData();
+                alert("정상적으로 저장되었습니다. 화면을 새로고침합니다.");
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
+                    }
+                    window.location.reload();
+                } catch (e) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert("파일 업로드 또는 저장에 실패했습니다.");
+                console.error(e);
+            } finally {
+                btn.innerHTML = `저장`;
+                btn.disabled = false;
+            }
+        }
+
+        let currentEditCatIndex = -1;
+        let currentEditSubIndex = -1;
+        let editSelectedFile = null;
+
+        function openEditMenuModal(catIndex, subIndex) {
+            currentEditCatIndex = catIndex;
+            currentEditSubIndex = subIndex;
+
+            const cat = globalMenuData[catIndex];
+            const sub = cat.subItems[subIndex];
+
+            const title = typeof sub === 'string' ? sub : sub.title;
+            const fileName = sub.fileName || "정보 없음";
+
+            let typeText = "알 수 없음";
+            let isUrl = fileName.endsWith('.txt');
+            if (isUrl) typeText = "URL 링크";
+            else if (fileName.endsWith('.html')) typeText = "HTML 웹페이지";
+            else if (fileName.endsWith('.py')) typeText = "파이썬 스크립트";
+            else if (fileName !== "정보 없음") typeText = "실행 파일 (" + fileName.split('.').pop() + ")";
+
+            const currentInfoHtml = `
+                <div class="flex flex-col gap-1">
+                    <span class="font-bold text-slate-800">대상 메뉴:</span>
+                    <span class="text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block w-fit">${cat.title} > ${title}</span>
+                </div>
+                <div class="flex flex-col gap-1 mt-3">
+                    <span class="font-bold text-slate-800">현재 유형:</span>
+                    <span>${typeText}</span>
+                </div>
+                <div class="flex flex-col gap-1 mt-3">
+                    <span class="font-bold text-slate-800">현재 저장 경로/파일명:</span>
+                    <span class="break-all font-mono text-xs bg-slate-200 px-2 py-1.5 rounded">Project files/${cat.title}/${title}/${fileName}</span>
+                </div>
+            `;
+
+            document.getElementById('edit-current-info').innerHTML = currentInfoHtml;
+
+            document.getElementById('edit-menu-name-input').value = title;
+            document.getElementById('edit-name-only-checkbox').checked = false;
+            toggleEditNameOnlyMode();
+
+            document.getElementById('edit-url-checkbox').checked = false;
+            document.getElementById('edit-url-input').value = '';
+            editSelectedFile = null;
+            document.getElementById('edit-drop-zone-text').innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
+            toggleEditUrlMode();
+
+            const isLocalFile = window.location.protocol === 'file:';
+            const apiUrl = isLocalFile ? 'http://localhost:3000/api' : '/api';
+
+            if (isUrl && fileName !== "정보 없음") {
+                let url = sub.urlAddress || "";
+                if (url) {
+                    document.getElementById('edit-url-checkbox').checked = true;
+                    toggleEditUrlMode();
+                    document.getElementById('edit-url-input').value = url;
+                } else {
+                    const filePath = `Project files/${cat.title}/${title}/${fileName}`;
+                    fetch(apiUrl + '/read-file?filePath=' + encodeURIComponent(filePath) + '&t=' + Date.now())
+                        .then(res => res.ok ? res.text() : "")
+                        .then(text => {
+                            if (text) {
+                                let url = text.split('\n')[0].trim();
+                                document.getElementById('edit-url-checkbox').checked = true;
+                                toggleEditUrlMode();
+                                document.getElementById('edit-url-input').value = url;
+                            }
+                        })
+                        .catch(e => console.error("Failed to load URL info", e));
+                }
+            }
+
+            document.getElementById('edit-menu-modal').classList.remove('hidden');
+            lucide.createIcons();
+
+            // Load Attachments
+            loadMenuAttachments(sub.menuId || title);
+        }
+
+        async function loadMenuAttachments(menuId) {
+            const listDiv = document.getElementById('attachments-list');
+            listDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">조회 중...</p>';
+
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?MenuId=eq.${encodeURIComponent(menuId)}`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                });
+                if (res.ok) {
+                    const attachments = await res.json();
+                    if (attachments.length === 0) {
+                        listDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">등록된 첨부파일이 없습니다.</p>';
+                    } else {
+                        listDiv.innerHTML = attachments.map(att => {
+                            const safePath = att.storage_path.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            const safeMenuId = menuId.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                            return `
+                                <div class="flex items-center justify-between p-2 bg-white border border-slate-200 rounded text-sm">
+                                    <div class="flex items-center gap-2 overflow-hidden">
+                                        <i data-lucide="file" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                                        <span class="truncate text-slate-700 font-medium" title="${att.file_name}">${att.file_name}</span>
+                                        <span class="text-xs text-slate-400 shrink-0">(${(att.file_size / 1024).toFixed(1)} KB)</span>
+                                    </div>
+                                    <button onclick="deleteAttachment(${att.id}, '${safePath}', '${safeMenuId}')" class="text-rose-500 hover:text-rose-700 p-1 shrink-0">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }).join('');
+                        lucide.createIcons();
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load attachments", e);
+                listDiv.innerHTML = '<p class="text-xs text-rose-500 text-center py-2">조회 실패</p>';
+            }
+        }
+
+        function closeEditMenuModal() {
+            document.getElementById('edit-menu-modal').classList.add('hidden');
+        }
+
+        // Attachments Handlers
+        function handleAttachmentDragOver(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.add('bg-slate-100', 'border-blue-400');
+        }
+        function handleAttachmentDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.remove('bg-slate-100', 'border-blue-400');
+        }
+        function handleAttachmentDrop(e) {
+            e.preventDefault();
+            document.getElementById('attachments-drop-zone').classList.remove('bg-slate-100', 'border-blue-400');
+            if (e.dataTransfer.files.length > 0) {
+                uploadAttachments(e.dataTransfer.files);
+            }
+        }
+        function handleAttachmentFileSelect(e) {
+            if (e.target.files.length > 0) {
+                uploadAttachments(e.target.files);
+            }
+            e.target.value = '';
+        }
+
+        async function uploadAttachments(files) {
+            const cat = globalMenuData[currentEditCatIndex];
+            const sub = cat.subItems[currentEditSubIndex];
+            const menuId = sub.menuId || (typeof sub === 'string' ? sub : sub.title);
+
+            document.getElementById('attachments-drop-zone-text').innerText = "업로드 중... 잠시만 기다려주세요.";
+
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
+                    const storagePath = `attachments/${menuId}/${uuid}_${file.name}`;
+                    const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, file, { cacheControl: '3600', upsert: true });
+
+                    if (error) throw error;
+
+                    // Insert to DB
+                    await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments`, {
+                        method: 'POST',
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            MenuId: menuId,
+                            file_name: file.name,
+                            storage_path: storagePath,
+                            file_size: file.size
+                        })
+                    });
+                }
+                alert("첨부파일이 성공적으로 업로드되었습니다.");
+                loadMenuAttachments(menuId);
+            } catch (e) {
+                alert("파일 업로드 중 오류가 발생했습니다: " + e.message);
+                console.error(e);
+            } finally {
+                document.getElementById('attachments-drop-zone-text').innerText = "첨부할 파일을 드래그하거나 클릭하여 선택하세요.";
+            }
+        }
+
+        async function deleteAttachment(id, storagePath, menuId) {
+            if (!confirm("이 첨부파일을 정말 삭제하시겠습니까?")) return;
+            try {
+                // Delete from DB
+                await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?id=eq.${id}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+                });
+
+                // Try delete from Storage (optional, since DB is main record, but good to clean up)
+                const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                await supabaseClient.storage.from('hansoll-files').remove([storageKey]);
+
+                loadMenuAttachments(menuId);
+            } catch (e) {
+                alert("삭제 중 오류가 발생했습니다.");
+                console.error(e);
+            }
+        }
+
+        function toggleEditNameOnlyMode() {
+            const isNameOnly = document.getElementById('edit-name-only-checkbox').checked;
+            const rightCol = document.getElementById('edit-right-col');
+
+            if (isNameOnly) {
+                rightCol.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                rightCol.classList.remove('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        function toggleEditUrlMode() {
+            const isChecked = document.getElementById('edit-url-checkbox').checked;
+            const urlInput = document.getElementById('edit-url-input');
+            const dropZone = document.getElementById('edit-drop-zone');
+            const fileLabel = document.getElementById('edit-file-upload-label');
+            const fileInput = document.getElementById('edit-file-input');
+
+            if (isChecked) {
+                urlInput.disabled = false;
+                urlInput.focus();
+
+                dropZone.classList.add('opacity-50', 'pointer-events-none');
+                fileLabel.classList.add('opacity-50');
+                editSelectedFile = null;
+                document.getElementById('edit-drop-zone-text').innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
+                fileInput.value = '';
+            } else {
+                urlInput.disabled = true;
+                urlInput.value = '';
+
+                dropZone.classList.remove('opacity-50', 'pointer-events-none');
+                fileLabel.classList.remove('opacity-50');
+            }
+        }
+
+        function handleEditDragOver(e) {
+            e.preventDefault();
+            if (!document.getElementById('edit-url-checkbox').checked) {
+                document.getElementById('edit-drop-zone').classList.add('dragover');
+            }
+        }
+        function handleEditDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('edit-drop-zone').classList.remove('dragover');
+        }
+        function handleEditDrop(e) {
+            e.preventDefault();
+            document.getElementById('edit-drop-zone').classList.remove('dragover');
+            if (!document.getElementById('edit-url-checkbox').checked && e.dataTransfer.files.length > 0) {
+                setEditFile(e.dataTransfer.files[0]);
+            }
+        }
+        function handleEditFileSelect(e) {
+            if (!document.getElementById('edit-url-checkbox').checked && e.target.files.length > 0) {
+                setEditFile(e.target.files[0]);
+            }
+        }
+        function setEditFile(file) {
+            editSelectedFile = file;
+            document.getElementById('edit-drop-zone-text').innerText = `선택된 파일: ${file.name}`;
+        }
+
+        async function submitEditMenu() {
+            const isUrlMode = document.getElementById('edit-url-checkbox').checked;
+            let urlValue = document.getElementById('edit-url-input').value.trim();
+            const newMenuName = document.getElementById('edit-menu-name-input').value.trim();
+            const isNameOnly = document.getElementById('edit-name-only-checkbox').checked;
+
+            if (!newMenuName) return alert("메뉴명을 입력하세요.");
+
+            const cat = globalMenuData[currentEditCatIndex];
+            const sub = cat.subItems[currentEditSubIndex];
+            const oldMenuName = typeof sub === 'string' ? sub : sub.title;
+            const desc = sub.description || "";
+
+            let finalFile = editSelectedFile;
+
+            if (!isNameOnly) {
+                if (isUrlMode) {
+                    if (!urlValue) return alert("새로 변경할 URL 주소를 입력하세요.");
+                    if (!urlValue.startsWith('http://') && !urlValue.startsWith('https://')) {
+                        urlValue = 'https://' + urlValue;
+                    }
+                    const fileContent = `${urlValue}\n\n설명 : ${desc}`;
+                    finalFile = new File([fileContent], `${newMenuName}.txt`, { type: "text/plain" });
+                } else {
+                    if (!finalFile) return alert("새로 변경할 파일을 첨부해주세요.");
+                }
+            }
+
+            const btn = document.getElementById('submit-edit-menu-btn');
+            btn.innerText = "저장 중...";
+            btn.disabled = true;
+
+            try {
+                // Rename folder if name changed and it's NOT a name-only edit
+                if (oldMenuName !== newMenuName && !isNameOnly) {
+                    try {
+                        let renameRes = await fetch('http://localhost:3000/api/rename', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ category: cat.title, oldName: typeof sub === 'object' && sub.folderName ? sub.folderName : oldMenuName, newName: newMenuName })
+                        });
+                        if (!renameRes.ok) {
+                            if (renameRes.status === 409) {
+                                if (confirm("이미 해당 이름의 메뉴 폴더가 존재합니다. 기존 폴더에 덮어쓰기(병합)하시겠습니까?")) {
+                                    renameRes = await fetch('http://localhost:3000/api/rename', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ category: cat.title, oldName: typeof sub === 'object' && sub.folderName ? sub.folderName : oldMenuName, newName: newMenuName, overwrite: true })
+                                    });
+                                }
+                            }
+                        }
+                    } catch (renameErr) {
+                        console.warn("로컬 서버 폴더 이름 변경 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", renameErr);
+                    }
+                }
+
+                let finalFileName = typeof sub === 'string' ? "" : (sub.fileName || "");
+
+                // Upload file if not name-only
+                if (!isNameOnly) {
+                    const formData = new FormData();
+                    formData.append('category', cat.title);
+                    formData.append('menuName', newMenuName);
+                    formData.append('file', finalFile);
+
+                    // 1. 항상 Supabase Storage로 직접 업로드
+                    const folderName = isNameOnly ? oldMenuName : newMenuName;
+                    const supabasePath = `${cat.title}/${folderName}/${finalFile.name}`;
+                    const encodedFilePath = encodeURIComponent(supabasePath);
+                    const storageKey = btoa(encodedFilePath).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+                    const { data, error } = await supabaseClient.storage
+                        .from('hansoll-files')
+                        .upload(storageKey, finalFile, {
+                            cacheControl: '3600',
+                            upsert: true
+                        });
+
+                    if (error) {
+                        alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
+                        throw error;
+                    }
+
+                    // 2. 로컬 서버 백업용 업로드
+                    try {
+                        let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                        if (!res.ok) {
+                            if (res.status === 409) {
+                                if (confirm("로컬 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
+                                    formData.append('overwrite', 'true');
+                                    res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
+                                }
+                            }
+                        }
+                    } catch (uploadErr) {
+                        console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
+                    }
+                    finalFileName = finalFile.name;
+                }
+
+                if (typeof cat.subItems[currentEditSubIndex] === 'string') {
+                    cat.subItems[currentEditSubIndex] = {
+                        title: newMenuName,
+                        status: 'Y',
+                        fileName: finalFileName,
+                        folderName: isNameOnly ? oldMenuName : newMenuName,
+                        urlAddress: isUrlMode ? urlValue : ""
+                    };
+                } else {
+                    cat.subItems[currentEditSubIndex].title = newMenuName;
+                    if (isUrlMode) {
+                        cat.subItems[currentEditSubIndex].urlAddress = urlValue;
+                    }
+                    if (!isNameOnly) {
+                        cat.subItems[currentEditSubIndex].fileName = finalFileName;
+                        cat.subItems[currentEditSubIndex].folderName = newMenuName;
+                    } else {
+                        // Preserve original folder name
+                        if (!cat.subItems[currentEditSubIndex].folderName) {
+                            cat.subItems[currentEditSubIndex].folderName = oldMenuName;
+                        }
+                    }
+                }
+
+                await saveData();
+                alert("정상적으로 저장되었습니다. 화면을 새로고침합니다.");
+                try {
+                    if (window.parent && window.parent !== window) {
+                        window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
+                    }
+                    window.location.reload();
+                } catch (e) {
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert("파일 업로드 또는 저장에 실패했습니다.");
+                console.error(e);
+            } finally {
+                btn.innerHTML = `변경 내용 저장`;
+                btn.disabled = false;
+            }
+        }
+
+        function changeAdminPw() {
+            const newPw = document.getElementById('new-admin-pw').value;
+            if (newPw.length < 4 || newPw.length > 8) {
+                alert("비밀번호는 4~8자리 사이여야 합니다.");
+                return;
+            }
+            localStorage.setItem("hansoll_admin_pw", newPw);
+            alert("관리자 비밀번호가 성공적으로 변경되었습니다.");
+            document.getElementById('new-admin-pw').value = "";
+        }
+
+        // --- 사용자 정보 엑셀 업로드 로직 ---
+        let selectedUserExcelFile = null;
+        let currentFetchedUsers = [];
+
+        function handleUserExcelSelect(event) {
+            const file = event.target.files[0];
+            processUserSelectedFile(file);
+        }
+
+        function handleUserDragOver(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.add('bg-blue-50', 'border-blue-300');
+        }
+
+        function handleUserDragLeave(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.remove('bg-blue-50', 'border-blue-300');
+        }
+
+        function handleUserDrop(event) {
+            event.preventDefault();
+            document.getElementById('user-upload-zone').classList.remove('bg-blue-50', 'border-blue-300');
+
+            if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+                const file = event.dataTransfer.files[0];
+                processUserSelectedFile(file);
+            }
+        }
+
+        function processUserSelectedFile(file) {
+            if (file) {
+                selectedUserExcelFile = file;
+                document.getElementById('user-file-name').innerText = file.name + " 파일이 선택되었습니다.";
+            }
+        }
+
+        async function uploadUserExcel() {
+            if (!selectedUserExcelFile) {
+                alert("업로드할 엑셀 파일을 먼저 선택해주세요.");
+                return;
+            }
+
+            const confirmUpload = confirm("기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?");
+            if (!confirmUpload) return;
+
+            const statusEl = document.getElementById('user-upload-status');
+            statusEl.classList.remove('hidden');
+            statusEl.innerText = "엑셀 파일을 읽는 중...";
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (json.length === 0) {
+                        alert("엑셀 파일에 데이터가 없습니다.");
+                        statusEl.classList.add('hidden');
+                        return;
+                    }
+
+                    statusEl.innerText = "데이터 변환 중...";
+                    const userNameId = sessionStorage.getItem('userNameId') || 'admin';
+
+                    const parsedData = json.map(row => {
+                        return {
+                            emp_no: row['EMP_NO'] ? String(row['EMP_NO']) : '',
+                            emp_nm: row['EMP_NM'] || '',
+                            cd_dept: row['CD_DEPT'] || '',
+                            nm_dept: row['NM_DEPT'] || '',
+                            occp_grd_cd: row['OCCP_GRD_CD'] || '',
+                            occp_grd_nm: row['OCCP_GRD_NM'] || '',
+                            nm_email: row['NM_EMAIL'] || '',
+                            nm_email_full: row['NM_EMAIL_FULL'] || '',
+                            lvduty_cd: row['LVDUTY_CD'] || '',
+                            lvduty_nm: row['LVDUTY_NM'] || '',
+                            yn_open: (row['YN_OPEN'] === 'Y' || row['YN_OPEN'] === true || row['YN_OPEN'] === 'true') ? 'Y' : 'N',
+                            created_by: userNameId,
+                            updated_by: userNameId
+                        };
+                    });
+
+                    statusEl.innerText = "기존 데이터 삭제 중...";
+                    // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
+                    const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
+                    if (deleteError) throw deleteError;
+
+                    statusEl.innerText = "새 데이터 저장 중... (" + parsedData.length + "건)";
+
+                    // 대용량일 경우 나눠서 인서트해야 할 수 있지만 일반적으로 한 번에 처리 가능 (Supabase limit 고려)
+                    const chunkSize = 1000;
+                    for (let i = 0; i < parsedData.length; i += chunkSize) {
+                        const chunk = parsedData.slice(i, i + chunkSize);
+                        const { error: insertError } = await supabaseClient.from('user_info').insert(chunk);
+                        if (insertError) throw insertError;
+                    }
+
+                    statusEl.innerText = "업데이트가 완료되었습니다!";
+                    alert("사용자 정보가 성공적으로 업데이트 되었습니다.");
+
+                    // 초기화
+                    selectedUserExcelFile = null;
+                    document.getElementById('user-excel-upload').value = '';
+                    document.getElementById('user-file-name').innerHTML = '파일 선택';
+                    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+
+                    // 테이블 재로드
+                    fetchUserInfoList();
+
+                } catch (error) {
+                    console.error("Upload Error:", error);
+                    statusEl.innerText = "오류 발생: " + error.message;
+                    alert("업로드 중 오류가 발생했습니다. 콘솔을 확인해주세요.");
+                }
+            };
+            reader.readAsArrayBuffer(selectedUserExcelFile);
+        }
+
+        function downloadUserExcel() {
+            if (!currentFetchedUsers || currentFetchedUsers.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            const exportData = currentFetchedUsers.map(user => ({
+                "사번": String(user.emp_no || ""),
+                "이름": user.emp_nm || "",
+                "부서": user.nm_dept || "",
+                "직급": user.occp_grd_nm || "",
+                "직책": user.lvduty_nm || "",
+                "이메일": user.nm_email || "",
+                "공개여부": user.yn_open || ""
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+            // 모든 셀을 명시적으로 문자열(text) 타입으로 지정하여 '00001'과 같은 사번이 1로 변경되지 않도록 함
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!worksheet[cellAddress]) continue;
+                    worksheet[cellAddress].z = '@'; // 텍스트 형식
+                }
+            }
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "사용자정보");
+
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            XLSX.writeFile(workbook, `사용자정보_${dateStr}.xlsx`);
+        }
+
+        // --- 사용자 목록 조회 ---
+        async function fetchUserInfoList() {
+            const tbody = document.getElementById('user-info-tbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
+            
+            // 검색 조건 가져오기
+            const empNo = document.getElementById('search-emp-no')?.value.trim() || '';
+            const empNm = document.getElementById('search-emp-nm')?.value.trim() || '';
+            const deptNm = document.getElementById('search-dept-nm')?.value.trim() || '';
+            const lvdutyNm = document.getElementById('search-lvduty-nm')?.value.trim() || '';
+            const email = document.getElementById('search-email')?.value.trim() || '';
+            const ynOpen = document.getElementById('search-yn-open')?.value || 'all';
+
+            let query = supabaseClient.from('user_info').select('*');
+            
+            if (empNo) query = query.like('emp_no', `%${empNo}%`);
+            if (empNm) query = query.like('emp_nm', `%${empNm}%`);
+            if (deptNm) query = query.like('nm_dept', `%${deptNm}%`);
+            if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
+            if (email) query = query.like('nm_email', `%${email}%`);
+            if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
+            
+            query = query.order('emp_no', { ascending: true });
+
+            const { data, error } = await query;
+            
+            currentFetchedUsers = data || [];
+                
+            if (error) {
+                console.error("fetchUserInfoList Error:", error);
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+                return;
+            }
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            data.forEach(user => {
+                const tr = document.createElement('tr');
+                tr.classList.add('hover:bg-slate-50', 'transition-colors');
+                
+                // YN_OPEN dropdown
+                const selectHtml = `
+            <select onchange = "updateUserOpenStatus('${user.emp_no}', this.value)" class= "border border-slate-300 rounded px-2 py-1 text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none" >
+                        <option value="Y" ${user.yn_open === 'Y' ? 'selected' : ''}>Y</option>
+                        <option value="N" ${user.yn_open !== 'Y' ? 'selected' : ''}>N</option>
+                    </select>
+                `;
+                
+                tr.innerHTML = `
+                <td class= "p-4 font-medium text-slate-900" > ${ user.emp_no }</td>
+                    <td class="p-4 font-bold text-slate-800">${user.emp_nm || ''}</td>
+                    <td class="p-4">${user.nm_dept || ''}</td>
+                    <td class="p-4">${user.occp_grd_nm || ''}</td>
+                    <td class="p-4">${user.lvduty_nm || ''}</td>
+                    <td class="p-4 text-slate-500">${user.nm_email || ''}</td>
+                    <td class="p-4 text-center">${selectHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // --- 사용자 공개여부(YN_OPEN) 수정 ---
+        async function updateUserOpenStatus(empNo, newStatus) {
+            const userNameId = sessionStorage.getItem('userNameId') || 'admin';
+            const nowIso = new Date().toISOString();
+            
+            const { error } = await supabaseClient
+                .from('user_info')
+                .update({ 
+                    yn_open: newStatus,
+                    updated_at: nowIso,
+                    updated_by: userNameId
+                })
+                .eq('emp_no', empNo);
+                
+            if (error) {
+                console.error("updateUserOpenStatus Error:", error);
+                alert("상태 변경 중 오류가 발생했습니다.");
+                // 롤백 처리를 위해 목록 다시 불러오기
+                fetchUserInfoList();
+            }
+        }
+        // ==========================================
+        // 로그인 기록 관리 (Login History)
+        // ==========================================
+        let currentLogData = { period: [], date: [], raw: [] };
+        let currentLogSort = { period: { column: '', asc: true }, date: { column: '', asc: true }, raw: { column: '', asc: true } };
+        let currentLogPage = { period: 1, date: 1, raw: 1 };
+        let currentLogPerPage = { period: 20, date: 20, raw: 20 };
+
+        function switchLogSubTab(type) {
+            document.getElementById('subtab-btn-log-period').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            document.getElementById('subtab-btn-log-date').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            document.getElementById('subtab-btn-log-raw').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            
+            ['period', 'date', 'raw'].forEach(t => {
+                const container = document.getElementById('log-container-' + t);
+                if (container) {
+                    container.classList.add('hidden');
+                    container.classList.remove('block');
+                }
+            });
+
+            const targetBtn = document.getElementById('subtab-btn-log-' + type);
+            if(targetBtn) targetBtn.className = 'px-4 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors';
+            
+            const targetContainer = document.getElementById('log-container-' + type);
+            if(targetContainer) {
+                targetContainer.classList.remove('hidden');
+                targetContainer.classList.add('block');
+            }
+            
+            // 데이터 새로고침
+            fetchLoginHistory(type);
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || isNaN(seconds)) return '00:00:00';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${ h.toString().padStart(2, '0') }: ${ m.toString().padStart(2, '0') }: ${ s.toString().padStart(2, '0') }`;
+        }
+
+        async function fetchLoginHistory(type) {
+            currentLogPage[type] = 1;
+            const tbodyId = `log-tbody-${type}`;
+            const tbody = document.getElementById(tbodyId);
+            const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
+            tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr> `;
+
+            const fromDateStr = document.getElementById(`log-${type}-from`).value;
+            const toDateStr = document.getElementById(`log-${type}-to`).value;
+
+            if (!fromDateStr || !toDateStr) {
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">조회 조건을 모두 입력해주세요.</td></tr> `;
+                return;
+            }
+
+            try {
+                let query = supabaseClient.from('login_history').select('*')
+                    .gte('login_time', fromDateStr)
+                    .lte('login_time', toDateStr + ' 23:59:59')
+                    .not('logout_time', 'is', null);
+
+                if (type === 'date') {
+                    const deptVal = document.getElementById('log-date-dept').value.trim();
+                    const nameVal = document.getElementById('log-date-name').value.trim();
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
+                } else if (type === 'raw') {
+                    const deptVal = document.getElementById('log-raw-dept').value.trim();
+                    const nameVal = document.getElementById('log-raw-name').value.trim();
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                if (type === 'raw') {
+                    currentLogData['raw'] = data.map(row => {
+                        return {
+                            ...row,
+                            date_str: row.login_time ? row.login_time.substring(0, 10) : '-',
+                            login_time_disp: row.login_time ? row.login_time.substring(11, 19) : '-',
+                            logout_time_disp: row.logout_time ? row.logout_time.substring(11, 19) : '-',
+                            auto_logout: row.auto_logout === 'Y' ? 'Y' : '',
+                            duration_seconds: parseInt(row.duration_seconds || 0, 10),
+                            emp_nm: row.emp_nm || '-',
+                            nm_dept: row.nm_dept || '-',
+                            occp_grd_nm: row.occp_grd_nm || '-'
+                        };
+                    });
+                } else {
+                    // 집계 (Aggregation)
+                    const aggMap = new Map();
+                    data.forEach(row => {
+                        const emp_nm = row.emp_nm || '-';
+                        const nm_dept = row.nm_dept || '-';
+                        const occp_grd_nm = row.occp_grd_nm || '-';
+                        const duration = parseInt(row.duration_seconds || 0, 10);
+                        
+                        let key = "";
+                        let date_str = "";
+                        if (type === 'period') {
+                            key = `${emp_nm}|${nm_dept}|${occp_grd_nm}`;
+                        } else {
+                            date_str = row.login_time ? row.login_time.substring(0, 10) : '-';
+                            key = `${ date_str } | ${emp_nm}|${nm_dept}|${occp_grd_nm}`;
+                        }
+
+                        if (!aggMap.has(key)) {
+                            aggMap.set(key, {
+                                date_str, emp_nm, nm_dept, occp_grd_nm,
+                                login_count: 0,
+                                total_duration: 0
+                            });
+                        }
+                        const item = aggMap.get(key);
+                        item.login_count += 1;
+                        item.total_duration += duration;
+                    });
+                    currentLogData[type] = Array.from(aggMap.values());
+                }
+                
+                // 정렬
+                const sortConf = currentLogSort[type];
+                if (sortConf.column) {
+                    doSortLogData(type, sortConf.column, sortConf.asc);
+                } else {
+                    if (type === 'period') doSortLogData(type, 'login_count', false); // 기본 많이 로그인한 순
+                    else doSortLogData(type, 'date_str', false); // 기본 최신 날짜 순
+                }
+
+                renderLogTable(type);
+
+            } catch (err) {
+                console.error(err);
+                const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 7);
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-rose-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr> `;
+            }
+        }
+
+        function sortLogTable(type, column) {
+            let asc = true;
+            if (currentLogSort[type].column === column) {
+                asc = !currentLogSort[type].asc;
+            }
+            currentLogSort[type] = { column, asc };
+            
+            // UI 화살표 업데이트
+            document.querySelectorAll(`th span[id^= "sort-${type}-"]`).forEach(el => el.innerHTML = '');
+            const iconEl = document.getElementById(`sort-${type}-${column}`);
+            if (iconEl) {
+                iconEl.innerHTML = asc ? '↑' : '↓';
+                iconEl.className = 'ml-1 text-blue-500 font-bold';
+            }
+
+            doSortLogData(type, column, asc);
+            renderLogTable(type);
+        }
+
+        function doSortLogData(type, column, asc) {
+            currentLogData[type].sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                if (column === 'login_count' || column === 'total_duration' || column === 'duration_seconds') {
+                    return asc ? valA - valB : valB - valA;
+                } else {
+                    valA = valA ? valA.toString() : '';
+                    valB = valB ? valB.toString() : '';
+                    if (valA === valB) return 0;
+                    if (asc) return valA < valB ? -1 : 1;
+                    return valA < valB ? 1 : -1;
+                }
+            });
+        }
+
+        function renderLogTable(type) {
+            const tbody = document.getElementById(`log-tbody-${type}`);
+            const data = currentLogData[type];
+            const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
+
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
+            if (paginationDiv) paginationDiv.classList.add('hidden');
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">조회된 데이터가 없습니다.</td></tr> `;
+                return;
+            }
+
+            const perPage = currentLogPerPage[type];
+            const page = currentLogPage[type];
+            const startIndex = (page - 1) * perPage;
+            const endIndex = startIndex + perPage;
+            const paginatedData = data.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+            paginatedData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0';
+
+                if (type === 'period') {
+                    const timeStr = formatDuration(item.total_duration);
+                    tr.innerHTML = `
+            <td class= "p-4" > ${ item.emp_nm }</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4 text-right font-semibold">${item.login_count}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                } else if (type === 'date') {
+                    const timeStr = formatDuration(item.total_duration);
+                    tr.innerHTML = `
+                <td class= "p-4" > ${ item.date_str }</td>
+                        <td class="p-4">${item.emp_nm}</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4 text-right font-semibold">${item.login_count}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                } else if (type === 'raw') {
+                    const timeStr = formatDuration(item.duration_seconds);
+                    tr.innerHTML = `
+                <td class= "p-4" > ${ item.date_str }</td>
+                        <td class="p-4">${item.emp_nm}</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4">${item.login_time_disp}</td>
+                        <td class="p-4">${item.logout_time_disp}</td>
+                        <td class="p-4 text-center font-bold text-rose-500">${item.auto_logout}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            renderLogPagination(type, data.length);
+        }
+
+        function changeLogPerPage(type, perPage) {
+            currentLogPerPage[type] = parseInt(perPage, 10);
+            currentLogPage[type] = 1;
+            renderLogTable(type);
+        }
+
+        function changeLogPage(type, page) {
+            const data = currentLogData[type];
+            const perPage = currentLogPerPage[type];
+            const totalPages = Math.ceil(data.length / perPage) || 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            
+            currentLogPage[type] = page;
+            renderLogTable(type);
+        }
+
+        function renderLogPagination(type, totalRows) {
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
+            if (!paginationDiv) return;
+
+            if (totalRows === 0) {
+                paginationDiv.classList.add('hidden');
+                return;
+            }
+            
+            paginationDiv.classList.remove('hidden');
+
+            const perPage = currentLogPerPage[type];
+            const currentPage = currentLogPage[type];
+            const totalPages = Math.ceil(totalRows / perPage);
+
+            const options = [20, 30, 50, 100, 300, 500, 1000, 5000];
+            const selectHtml = `
+            <select onchange = "changeLogPerPage('${type}', this.value)" class= "border border-slate-300 rounded px-2 py-1 outline-none text-slate-700 ml-1 mr-2 text-sm bg-white cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" >
+            ${ options.map(opt => `<option value="${opt}" ${opt === perPage ? 'selected' : ''}>${opt}</option>`).join('') }
+                </select>
+                `;
+
+            const leftHtml = `
+                <div class= "flex items-center text-slate-600" >
+                Show ${ selectHtml } <span class= "text-rose-500 font-bold ml-1 mr-1" > ${ totalRows }</span> Row(s) <span class= "mx-3 text-slate-300" >|</span> <span class="text-blue-600 font-bold mr-1">${currentPage}</span> / ${ totalPages } Page(s)
+                </div>
+                `;
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                } else if (endPage === totalPages) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+            }
+            
+            let btnHtml = '';
+            
+            btnHtml += `<button onclick = "changeLogPage('${type}', 1)" class= "px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === 1 ? 'disabled' : ''}>& laquo;</button> `;
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${currentPage - 1})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 ml-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === 1 ? 'disabled' : '' }>& lsaquo;</button> `;
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    btnHtml += `<button class="px-3 py-1 border border-blue-500 bg-blue-50 text-blue-600 font-bold rounded mx-1" > ${ i }</button> `;
+                } else {
+                    btnHtml += `<button onclick = "changeLogPage('${type}', ${i})" class="px-3 py-1 border border-slate-200 bg-white text-slate-600 rounded hover:bg-slate-50 mx-1 transition-colors" > ${ i }</button> `;
+                }
+            }
+
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${currentPage + 1})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 mr-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === totalPages ? 'disabled' : '' }>& rsaquo;</button> `;
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${totalPages})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === totalPages ? 'disabled' : '' }>& raquo;</button> `;
+
+            const rightHtml = `<div class="flex items-center gap-1" > ${ btnHtml }</div> `;
+
+            paginationDiv.innerHTML = `${ leftHtml }${ rightHtml } `;
+        }
+
+
+        function exportLogToExcel(type) {
+            const data = currentLogData[type];
+            if (!data || data.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            let excelData = [];
+
+            if (type === 'period') {
+                excelData = data.map(item => ({
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 횟수': item.login_count,
+                    '총 로그인 시간': formatDuration(item.total_duration)
+                }));
+            } else if (type === 'date') {
+                excelData = data.map(item => ({
+                    '날짜': item.date_str,
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 횟수': item.login_count,
+                    '총 로그인 시간': formatDuration(item.total_duration)
+                }));
+            } else if (type === 'raw') {
+                excelData = data.map(item => ({
+                    '날짜': item.date_str,
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 시간': item.login_time_disp,
+                    '로그아웃 시간': item.logout_time_disp,
+                    '자동 로그아웃': item.auto_logout,
+                    '유지 시간': formatDuration(item.duration_seconds)
+                }));
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // 열 너비(Column Width) 넉넉하게 지정
+            if (type === 'period') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 15 }, // 로그인 횟수
+                    { wch: 20 }  // 총 로그인 시간
+                ];
+            } else if (type === 'date') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 날짜
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 15 }, // 로그인 횟수
+                    { wch: 20 }  // 총 로그인 시간
+                ];
+            } else if (type === 'raw') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 날짜
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 25 }, // 로그인 시간
+                    { wch: 25 }, // 로그아웃 시간
+                    { wch: 15 }, // 자동 로그아웃
+                    { wch: 20 }  // 유지 시간
+                ];
+            }
+            
+            // 스타일 적용
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = {c: C, r: R};
+                    const cellRef = XLSX.utils.encode_cell(cellAddress);
+                    if (!worksheet[cellRef]) continue;
+
+                    let cellStyle = {
+                        alignment: { horizontal: "center", vertical: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    };
+
+                    // 헤더 (첫 번째 행) 스타일
+                    if (R === 0) {
+                        cellStyle.fill = {
+                            patternType: "solid",
+                            fgColor: { rgb: "FFDCE6F1" } // 옅은 푸른/회색 테마 적용
+                        };
+                        cellStyle.font = { bold: true };
+                    }
+                    
+                    worksheet[cellRef].s = cellStyle;
+                }
+            }
+
+            const workbook = XLSX.utils.book_new();
+            
+            const sheetName = type === 'period' ? '기간별 로그' : (type === 'date' ? '날짜별 로그' : '상세 로그');
+            const fileName = `로그인_기록_${ sheetName }_${ new Date().toISOString().split('T')[0] }.xlsx`;
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            XLSX.writeFile(workbook, fileName);
+        }
+    

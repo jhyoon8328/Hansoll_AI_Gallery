@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div id="content"></div>
+<script>
+  function openSubMenu(a, b) {
+    console.log("SUCCESS:", b);
+    document.getElementById('result').innerText += "\nSUCCESS: " + b;
+  }
+  
+  const childTitle = "Chico's CPO파일 비교";
+  const htmlStr2 = `<button onclick="openSubMenu('사업 3부', '${childTitle.replace(/'/g, "\\'")}')">Click 2</button>`;
+  const htmlStr4 = `<button onclick="openSubMenu('사업 3부', '${childTitle.replace(/'/g, "\\\\'")}')">Click 4</button>`;
+  
+  document.getElementById('content').innerHTML = htmlStr2 + "<br>" + htmlStr4;
+</script>
+<pre id="result"></pre>
+</body>
+</html>
