@@ -1175,6 +1175,7 @@
                                 YN_use: subStatus === 'Y',
                                 YN_view: sub.isPrivate ? 'Y' : 'N',
                                 YN_New: (typeof sub === 'object' && sub.isNew) ? true : false,
+                                cl_company: cat.cl_company || 'HQ',
                                 menu_meta: {
                                     description: subDesc,
                                     folderName: folderName,
