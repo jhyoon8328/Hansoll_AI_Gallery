@@ -1066,6 +1066,9 @@
                                 });
                             }
                         });
+
+                        collapsedCategories = new Set(globalMenuData.map((_, i) => i));
+                        
                         renderDashboard();
                         renderMenuManager();
                         return;
