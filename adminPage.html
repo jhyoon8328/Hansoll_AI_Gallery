@@ -277,10 +277,16 @@
                         <span id="user-file-name">파일 선택</span>
                     </button>
 
-                    <button onclick="uploadUserExcel()"
+                    <button onclick="uploadUserExcel(false)"
                         class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-green-500/20 whitespace-nowrap">
                         <i data-lucide="upload-cloud" class="w-4 h-4"></i>
                         전체 인원 등록
+                    </button>
+
+                    <button onclick="uploadUserExcel(true)"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-blue-500/20 whitespace-nowrap">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        신규 인원 등록
                     </button>
 
                     <button onclick="downloadUserExcel()"
@@ -2315,13 +2321,14 @@
             }
         }
 
-        async function uploadUserExcel() {
+        async function uploadUserExcel(isAppend = false) {
             if (!selectedUserExcelFile) {
                 alert("업로드할 엑셀 파일을 먼저 선택해주세요.");
                 return;
             }
 
-            const confirmUpload = confirm("기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?");
+            const confirmMsg = isAppend ? "업로드한 데이터가 기존 데이터에 추가됩니다. 진행하시겠습니까?" : "기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?";
+            const confirmUpload = confirm(confirmMsg);
             if (!confirmUpload) return;
 
             const statusEl = document.getElementById('user-upload-status');
@@ -2365,10 +2372,12 @@
                         };
                     });
 
-                    statusEl.innerText = "기존 데이터 삭제 중...";
-                    // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
-                    const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
-                    if (deleteError) throw deleteError;
+                    if (!isAppend) {
+                        statusEl.innerText = "기존 데이터 삭제 중...";
+                        // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
+                        const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
+                        if (deleteError) throw deleteError;
+                    }
 
                     statusEl.innerText = "새 데이터 저장 중... (" + parsedData.length + "건)";
 
