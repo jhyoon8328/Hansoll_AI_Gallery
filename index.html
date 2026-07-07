@@ -327,6 +327,7 @@
                 displayPhrase: meta.displayPhrase || "",
                 bgColor: meta.bgColor || "",
                 textColor: meta.textColor || "",
+                cl_company: cat.cl_company || 'HQ',
                 subItems: subItems
               };
             });
@@ -402,6 +403,12 @@
     let openMenuSlug = null;
     let openSubMenus = {};
     let activeSubMenuTitle = null;
+    let currentClCompany = 'HQ';
+
+    window.toggleCompanyFilter = function() {
+      currentClCompany = currentClCompany === 'HQ' ? 'SF' : 'HQ';
+      initMenu();
+    };
 
     function initMenu() {
       const menuContainer = document.getElementById('menu-container');
@@ -410,7 +417,9 @@
       const newBadgeHtmlLeft = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center mr-1.5 shadow-sm leading-none animate-pulse">N</span>`;
       const newBadgeHtmlRight = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center ml-1.5 shadow-sm leading-none animate-pulse">N</span>`;
 
-      menuData.forEach((item) => {
+      const filteredMenuData = menuData.filter(item => (item.cl_company || 'HQ') === currentClCompany);
+
+      filteredMenuData.forEach((item) => {
         const isOpen = openMenuSlug === item.slug;
         const isActive = currentBrandSlug === item.slug;
 
@@ -596,7 +605,13 @@
       const totalCountDisplay = document.getElementById('menu-total-count-display');
       if (totalCountDisplay) {
         totalCountDisplay.innerHTML = `
-          <div class="text-[15px] font-semibold text-[#1d4ed8] uppercase mb-1 tracking-wider">MENU</div>
+          <div class="flex items-center justify-between mb-1">
+            <div class="text-[15px] font-semibold text-[#1d4ed8] uppercase tracking-wider">MENU</div>
+            <button onclick="toggleCompanyFilter()" class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full transition-all shadow-sm ${currentClCompany === 'HQ' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
+              <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+              ${currentClCompany === 'HQ' ? '본사' : '법인'}
+            </button>
+          </div>
           <div class="text-xs font-bold text-slate-400 opacity-70 normal-case tracking-normal">총 ${totalActiveCount}개의 메뉴가 등록되어 있습니다.</div>
         `;
       }
