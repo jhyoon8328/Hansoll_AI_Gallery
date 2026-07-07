@@ -2538,13 +2538,13 @@
 
         async function fetchLoginHistory(type) {
             currentLogPage[type] = 1;
-            const tbodyId = `log - tbody - ${ type }`;
+            const tbodyId = `log-tbody-${type}`;
             const tbody = document.getElementById(tbodyId);
             const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
             tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr> `;
 
-            const fromDateStr = document.getElementById(`log - ${ type } - from`).value;
-            const toDateStr = document.getElementById(`log - ${ type } - to`).value;
+            const fromDateStr = document.getElementById(`log-${type}-from`).value;
+            const toDateStr = document.getElementById(`log-${type}-to`).value;
 
             if (!fromDateStr || !toDateStr) {
                 tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">조회 조건을 모두 입력해주세요.</td></tr> `;
@@ -2645,7 +2645,7 @@
             
             // UI 화살표 업데이트
             document.querySelectorAll(`th span[id^= "sort-${type}-"]`).forEach(el => el.innerHTML = '');
-            const iconEl = document.getElementById(`sort - ${ type } - ${ column }`);
+            const iconEl = document.getElementById(`sort-${type}-${column}`);
             if (iconEl) {
                 iconEl.innerHTML = asc ? '↑' : '↓';
                 iconEl.className = 'ml-1 text-blue-500 font-bold';
@@ -2673,11 +2673,11 @@
         }
 
         function renderLogTable(type) {
-            const tbody = document.getElementById(`log - tbody - ${ type }`);
+            const tbody = document.getElementById(`log-tbody-${type}`);
             const data = currentLogData[type];
             const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
 
-            const paginationDiv = document.getElementById(`log - pagination - ${ type }`);
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
             if (paginationDiv) paginationDiv.classList.add('hidden');
 
             if (data.length === 0) {
@@ -2752,7 +2752,7 @@
         }
 
         function renderLogPagination(type, totalRows) {
-            const paginationDiv = document.getElementById(`log - pagination - ${ type }`);
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
             if (!paginationDiv) return;
 
             if (totalRows === 0) {
