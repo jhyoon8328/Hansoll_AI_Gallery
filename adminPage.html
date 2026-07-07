@@ -193,24 +193,30 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Dept breakdown -->
-                <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-500"></i> 부서별 개발 건수
-                    </h2>
-                    <div class="space-y-4" id="dept-breakdown-list">
+                <details class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col group">
+                    <summary class="text-lg font-bold text-slate-800 p-6 cursor-pointer flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-500"></i> 부서별 개발 건수
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div class="space-y-4 px-6 pb-6" id="dept-breakdown-list">
                         <!-- Populated via JS -->
                     </div>
-                </div>
+                </details>
 
                 <!-- Hidden menus list -->
-                <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <i data-lucide="eye-off" class="w-5 h-5 text-rose-500"></i> 숨김처리 된 리스트
-                    </h2>
-                    <div class="space-y-3" id="hidden-menus-list">
+                <details class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col group">
+                    <summary class="text-lg font-bold text-slate-800 p-6 cursor-pointer flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="eye-off" class="w-5 h-5 text-rose-500"></i> 숨김처리 된 리스트
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div class="space-y-3 px-6 pb-6" id="hidden-menus-list">
                         <!-- Populated via JS -->
                     </div>
-                </div>
+                </details>
             </div>
         </div>
 
