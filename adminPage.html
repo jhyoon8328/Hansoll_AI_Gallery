@@ -2560,13 +2560,13 @@
                 if (type === 'date') {
                     const deptVal = document.getElementById('log-date-dept').value.trim();
                     const nameVal = document.getElementById('log-date-name').value.trim();
-                    if (deptVal) query = query.ilike('nm_dept', `% ${ deptVal } % `);
-                    if (nameVal) query = query.ilike('emp_nm', `% ${ nameVal } % `);
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
                 } else if (type === 'raw') {
                     const deptVal = document.getElementById('log-raw-dept').value.trim();
                     const nameVal = document.getElementById('log-raw-name').value.trim();
-                    if (deptVal) query = query.ilike('nm_dept', `% ${ deptVal } % `);
-                    if (nameVal) query = query.ilike('emp_nm', `% ${ nameVal } % `);
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
                 }
 
                 const { data, error } = await query;
