@@ -2331,6 +2331,7 @@
                             lvduty_cd: row['LVDUTY_CD'] || '',
                             lvduty_nm: row['LVDUTY_NM'] || '',
                             yn_open: (row['YN_OPEN'] === 'Y' || row['YN_OPEN'] === true || row['YN_OPEN'] === 'true') ? 'Y' : 'N',
+                            cl_company: row['CL_COMPANY'] || '',
                             created_by: userNameId,
                             updated_by: userNameId
                         };
