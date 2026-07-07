@@ -410,11 +410,16 @@
                                 <option value="게스트">게스트</option>
                             </select>
                         </div>
-                        <div class="ml-auto">
+                        <div class="ml-auto flex items-center gap-2">
                             <button onclick="fetchUserInfoList()"
                                 class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
                                 <i data-lucide="search" class="w-4 h-4"></i>
                                 조회
+                            </button>
+                            <button onclick="deleteSelectedUsers()"
+                                class="px-5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                삭제
                             </button>
                         </div>
                     </div>
@@ -428,6 +433,9 @@
                         <thead
                             class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
                             <tr>
+                                <th class="p-4 w-12 text-center">
+                                    <input type="checkbox" id="user-check-all" onclick="toggleAllUserCheckboxes()" class="w-4 h-4 cursor-pointer text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                </th>
                                 <th class="p-4 w-20">사번</th>
                                 <th class="p-4">이름</th>
                                 <th class="p-4">부서명</th>
@@ -2567,7 +2575,7 @@
             }
             
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
                 return;
             }
             
@@ -2585,7 +2593,10 @@
                 `;
                 
                 tr.innerHTML = `
-                <td class= "p-4 font-medium text-slate-900" > ${ user.emp_no }</td>
+                    <td class="p-4 text-center">
+                        <input type="checkbox" value="${user.emp_no}" class="user-row-checkbox w-4 h-4 cursor-pointer text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="updateHeaderCheckboxState()">
+                    </td>
+                    <td class="p-4 font-medium text-slate-900">${user.emp_no}</td>
                     <td class="p-4 font-bold text-slate-800">${user.emp_nm || ''}</td>
                     <td class="p-4">${user.nm_dept || ''}</td>
                     <td class="p-4">${user.occp_grd_nm || ''}</td>
@@ -2597,6 +2608,64 @@
                 tbody.appendChild(tr);
             });
             lucide.createIcons();
+            updateHeaderCheckboxState(); // Reset header checkbox
+        }
+
+        // --- 체크박스 동작 ---
+        function toggleAllUserCheckboxes() {
+            const checkAll = document.getElementById('user-check-all');
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+            rowCheckboxes.forEach(cb => {
+                cb.checked = checkAll.checked;
+            });
+        }
+
+        function updateHeaderCheckboxState() {
+            const checkAll = document.getElementById('user-check-all');
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+            if (rowCheckboxes.length === 0) {
+                if(checkAll) checkAll.checked = false;
+                return;
+            }
+            const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+            if(checkAll) {
+                checkAll.checked = allChecked;
+                checkAll.indeterminate = !allChecked && someChecked;
+            }
+        }
+
+        // --- 사용자 선택 삭제 ---
+        async function deleteSelectedUsers() {
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox:checked');
+            if (rowCheckboxes.length === 0) {
+                alert("삭제할 사용자를 선택해주세요.");
+                return;
+            }
+
+            const confirmMsg = \`선택한 \${rowCheckboxes.length}명의 사용자를 정말로 삭제하시겠습니까?\\n(이 작업은 취소할 수 없습니다.)\`;
+            if (!confirm(confirmMsg)) return;
+
+            const selectedEmpNos = Array.from(rowCheckboxes).map(cb => cb.value);
+
+            try {
+                const { error } = await supabaseClient
+                    .from('user_info')
+                    .delete()
+                    .in('emp_no', selectedEmpNos);
+
+                if (error) {
+                    console.error("사용자 삭제 오류:", error);
+                    alert("사용자 삭제 중 오류가 발생했습니다.");
+                } else {
+                    alert(\`성공적으로 \${rowCheckboxes.length}명의 사용자를 삭제했습니다.\`);
+                    fetchUserInfoList(); // 리스트 갱신
+                    if(typeof renderDashboard === 'function') renderDashboard(); // 대시보드 통계 갱신
+                }
+            } catch (err) {
+                console.error("삭제 요청 중 예외 발생:", err);
+                alert("사용자 삭제 요청 중 문제가 발생했습니다.");
+            }
         }
 
         // --- 사용자 공개여부(YN_OPEN) 수정 ---
