@@ -214,6 +214,50 @@
                 </details>
             </div>
             </fieldset>
+
+            <fieldset class="border-2 border-slate-200 rounded-2xl p-6 pt-4 mt-8">
+                <legend class="text-lg font-bold text-slate-700 px-3 ml-2">사용자 정보</legend>
+                
+                <div class="grid grid-cols-1 gap-6 mt-2">
+                    <!-- Row 1: Registered Users -->
+                    <div class="glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-indigo-100/50 rounded-xl text-indigo-600 shrink-0">
+                                <i data-lucide="users" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-slate-600 text-[15px] font-bold">등록된 사용자 수</h3>
+                        </div>
+                        <div class="flex items-center gap-6 text-sm">
+                            <div class="flex flex-col items-center"><span class="text-slate-400">전체</span><span class="font-bold text-slate-800 text-lg"><span id="user-total">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">본사</span><span class="font-bold text-slate-800 text-lg"><span id="user-ho">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">법인</span><span class="font-bold text-slate-800 text-lg"><span id="user-corp">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">게스트</span><span class="font-bold text-slate-800 text-lg"><span id="user-guest">0</span>명</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Active Users -->
+                    <div class="glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-emerald-100/50 rounded-xl text-emerald-600 shrink-0">
+                                <i data-lucide="user-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-slate-600 text-[15px] font-bold">사용 권한 보유 인원</h3>
+                        </div>
+                        <div class="flex items-center gap-6 text-sm">
+                            <div class="flex flex-col items-center"><span class="text-slate-400">전체</span><span class="font-bold text-slate-800 text-lg"><span id="active-total">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">본사</span><span class="font-bold text-slate-800 text-lg"><span id="active-ho">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">법인</span><span class="font-bold text-slate-800 text-lg"><span id="active-corp">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">게스트</span><span class="font-bold text-slate-800 text-lg"><span id="active-guest">0</span>명</span></div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
         </div>
 
         <!-- TAB: MENU MANAGEMENT -->
@@ -1220,7 +1264,7 @@
         }
 
         // --- DASHBOARD ---
-        function renderDashboard() {
+        async function renderDashboard() {
             let totalDev = 0;
             let hiddenMenuCount = 0;
             let hiddenCatCount = 0;
@@ -1243,8 +1287,6 @@
                     const subStatus = sub.status || 'Y';
                     const isHidden = subStatus === 'N' || cat.status === 'N';
 
-                    // 만약 부서 전체가 숨겨졌다면, 하위 메뉴를 개별적으로 또 리스트에 넣지 않거나 넣거나 선택.
-                    // 기존 로직을 존중하여 숨김 처리된 하위 메뉴도 카운트 및 리스트화
                     if (isHidden) {
                         hiddenMenuCount++;
                         hiddenList.push({ cat: cat.title, name: typeof sub === 'string' ? sub : sub.title });
@@ -1253,7 +1295,6 @@
                     activeSubs++;
                 });
 
-                // 개발 건수가 1건 이상인 부서만 그래프(리스트)에 표시
                 if (activeSubs > 0) {
                     deptCounts[cat.title] = activeSubs;
                 }
@@ -1290,6 +1331,44 @@
                         </div>
                     `;
                 });
+            }
+
+            // --- Fetch User Info Stats ---
+            try {
+                const { data: users, error } = await supabaseClient.from('user_info').select('yn_open, cl_company');
+                if (!error && users) {
+                    let uTotal = 0, uHo = 0, uCorp = 0, uGuest = 0;
+                    let aTotal = 0, aHo = 0, aCorp = 0, aGuest = 0;
+
+                    users.forEach(u => {
+                        uTotal++;
+                        const comp = u.cl_company || '';
+                        const isOpen = u.yn_open === 'Y' || u.yn_open === true || String(u.yn_open).toLowerCase() === 'true';
+
+                        if (comp === '본사') uHo++;
+                        else if (comp === '법인') uCorp++;
+                        else if (comp === '게스트') uGuest++;
+
+                        if (isOpen) {
+                            aTotal++;
+                            if (comp === '본사') aHo++;
+                            else if (comp === '법인') aCorp++;
+                            else if (comp === '게스트') aGuest++;
+                        }
+                    });
+
+                    document.getElementById('user-total').innerText = uTotal;
+                    document.getElementById('user-ho').innerText = uHo;
+                    document.getElementById('user-corp').innerText = uCorp;
+                    document.getElementById('user-guest').innerText = uGuest;
+
+                    document.getElementById('active-total').innerText = aTotal;
+                    document.getElementById('active-ho').innerText = aHo;
+                    document.getElementById('active-corp').innerText = aCorp;
+                    document.getElementById('active-guest').innerText = aGuest;
+                }
+            } catch (err) {
+                console.error("사용자 통계 조회 오류:", err);
             }
         }
 
