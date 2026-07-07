@@ -2422,11 +2422,11 @@
 
             let query = supabaseClient.from('user_info').select('*');
             
-            if (empNo) query = query.like('emp_no', `%${empNo}% `);
-            if (empNm) query = query.like('emp_nm', `%${empNm}% `);
-            if (deptNm) query = query.like('nm_dept', `%${deptNm}% `);
-            if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}% `);
-            if (email) query = query.like('nm_email', `%${email}% `);
+            if (empNo) query = query.like('emp_no', `%${empNo}%`);
+            if (empNm) query = query.like('emp_nm', `%${empNm}%`);
+            if (deptNm) query = query.like('nm_dept', `%${deptNm}%`);
+            if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
+            if (email) query = query.like('nm_email', `%${email}%`);
             if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
             
             query = query.order('emp_no', { ascending: true });
