@@ -714,7 +714,7 @@
     <!-- Modals -->
     <!-- Category Modal -->
     <div id="category-modal"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 class="text-xl font-bold text-slate-800 mb-4">새 카테고리 추가</h3>
             <div class="mb-4">
@@ -749,7 +749,8 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-1">소속 구분 <span class="text-rose-500">*</span></label>
                 <select id="cat-cl-company-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     <option value="HQ">본사</option>
-                    <option value="SF">법인</option>
+                    <option value="SF">해외</option>
+                    <option value="ALL">전체</option>
                 </select>
             </div>
             <div class="flex justify-end gap-3">
@@ -763,7 +764,7 @@
 
     <!-- Edit Category Modal -->
     <div id="edit-category-modal"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <i data-lucide="edit" class="w-5 h-5 text-blue-600"></i> 상위 카테고리 변경
@@ -800,7 +801,8 @@
                 <label class="block text-sm font-semibold text-slate-700 mb-1">소속 구분 <span class="text-rose-500">*</span></label>
                 <select id="edit-cat-cl-company-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
                     <option value="HQ">본사</option>
-                    <option value="SF">법인</option>
+                    <option value="SF">해외</option>
+                    <option value="ALL">전체</option>
                 </select>
             </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
@@ -814,7 +816,7 @@
 
     <!-- Menu Modal -->
     <div id="menu-modal"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <h3 class="text-xl font-bold text-slate-800 mb-4">새 메뉴 추가</h3>
 
@@ -882,7 +884,7 @@
 
     <!-- Edit Menu Modal -->
     <div id="edit-menu-modal"
-        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <i data-lucide="edit" class="w-5 h-5 text-blue-600"></i> 메뉴 실행 파일/URL 변경
@@ -1116,6 +1118,26 @@
             if (detailsHidden && detailsHidden !== sourceElement) detailsHidden.open = isOpen;
             isSyncingAccordions = false;
         }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modals = [
+                    { id: 'edit-menu-modal', closeFn: typeof closeEditMenuModal !== 'undefined' ? closeEditMenuModal : null },
+                    { id: 'menu-modal', closeFn: typeof closeMenuModal !== 'undefined' ? closeMenuModal : null },
+                    { id: 'edit-category-modal', closeFn: typeof closeEditCategoryModal !== 'undefined' ? closeEditCategoryModal : null },
+                    { id: 'category-modal', closeFn: typeof closeCategoryModal !== 'undefined' ? closeCategoryModal : null }
+                ];
+                for (const modal of modals) {
+                    const el = document.getElementById(modal.id);
+                    if (el && !el.classList.contains('hidden')) {
+                        if (modal.closeFn) {
+                            modal.closeFn();
+                            return; // Stop after closing the top-most/found modal
+                        }
+                    }
+                }
+            }
+        });
 
         window.onload = async () => {
             await loadMenuData();

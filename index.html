@@ -376,6 +376,27 @@
       initMenu();
     }
 
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        const modals = [
+          { id: 'tooltip-auth-modal', closeFn: typeof closeTooltipAuth !== 'undefined' ? closeTooltipAuth : null },
+          { id: 'page-admin-auth-modal', closeFn: typeof closePageAdminAuth !== 'undefined' ? closePageAdminAuth : null },
+          { id: 'tooltip-edit-modal', closeFn: typeof closeTooltipEditForm !== 'undefined' ? closeTooltipEditForm : null },
+          { id: 'tooltip-detail-modal', closeFn: typeof closeTooltipDetail !== 'undefined' ? closeTooltipDetail : null },
+          { id: 'sidebar-backdrop', closeFn: typeof toggleSidebar !== 'undefined' ? toggleSidebar : null }
+        ];
+        for (const modal of modals) {
+          const el = document.getElementById(modal.id);
+          if (el && !el.classList.contains('hidden')) {
+            if (modal.closeFn) {
+              modal.closeFn();
+              return;
+            }
+          }
+        }
+      }
+    });
+
     document.addEventListener("DOMContentLoaded", async () => {
       const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
       if (!isLoggedIn) {
@@ -417,7 +438,10 @@
       const newBadgeHtmlLeft = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center mr-1.5 shadow-sm leading-none animate-pulse">N</span>`;
       const newBadgeHtmlRight = `<span class="shrink-0 bg-red-500 text-white text-[9px] font-black w-[15px] h-[15px] rounded-full inline-flex items-center justify-center ml-1.5 shadow-sm leading-none animate-pulse">N</span>`;
 
-      const filteredMenuData = menuData.filter(item => (item.cl_company || 'HQ') === currentClCompany);
+      const filteredMenuData = menuData.filter(item => {
+        const comp = item.cl_company || 'HQ';
+        return comp === 'ALL' || comp === currentClCompany;
+      });
 
       filteredMenuData.forEach((item) => {
         const isOpen = openMenuSlug === item.slug;
@@ -611,10 +635,11 @@
           <div class="flex items-center justify-between mb-1">
             <div class="text-[15px] font-semibold text-[#1d4ed8] uppercase tracking-wider">MENU</div>
             ${canToggleCompany ? `
-            <button onclick="toggleCompanyFilter()" class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-full transition-all shadow-sm ${currentClCompany === 'HQ' ? 'bg-blue-100 text-blue-700 hover:bg-blue-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}">
-              <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
-              ${currentClCompany === 'HQ' ? '본사' : '법인'}
-            </button>
+            <div onclick="toggleCompanyFilter()" class="relative flex items-center bg-slate-200/80 rounded-full p-[3px] cursor-pointer w-[90px] h-[28px] select-none shadow-inner">
+              <div class="absolute left-[3px] top-[3px] w-[42px] h-[22px] bg-white rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-in-out ${currentClCompany === 'HQ' ? 'translate-x-0' : 'translate-x-[42px]'}"></div>
+              <span class="relative z-10 flex-1 text-center text-xs font-bold transition-colors duration-300 ${currentClCompany === 'HQ' ? 'text-blue-700' : 'text-slate-400'}">본사</span>
+              <span class="relative z-10 flex-1 text-center text-xs font-bold transition-colors duration-300 ${currentClCompany === 'HQ' ? 'text-slate-400' : 'text-emerald-700'}">해외</span>
+            </div>
             ` : ''}
           </div>
           <div class="text-xs font-bold text-slate-400 opacity-70 normal-case tracking-normal">총 ${totalActiveCount}개의 메뉴가 등록되어 있습니다.</div>
