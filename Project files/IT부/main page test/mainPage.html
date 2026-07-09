@@ -609,10 +609,33 @@
                     if (!res.ok) throw new Error("Supabase Fetch failed");
                     const data = await res.json();
                     
-                    const activeCategories = data.filter(d => (d.menu_type === 'category' || d.menu_type === '카테고리') && d.YN_use !== false);
+                    let currentCompany = 'HQ';
+                    try {
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.has('comp')) {
+                            currentCompany = urlParams.get('comp');
+                        } else if (window.parent && window.parent.currentClCompany) {
+                            currentCompany = window.parent.currentClCompany;
+                        }
+                    } catch(e) {}
+
+                    const activeCategories = data.filter(d => {
+                        if (d.menu_type !== 'category' && d.menu_type !== '카테고리') return false;
+                        if (d.YN_use === false) return false;
+                        const comp = d.cl_company || 'HQ';
+                        return comp === 'ALL' || comp === currentCompany;
+                    });
                     
                     departmentData = activeCategories.map(dept => {
-                        const subItems = data.filter(sub => sub.menu_type !== '카테고리' && sub.menu_type !== 'category' && (sub.menu_meta && sub.menu_meta.parentCategory === dept.menu_name) && sub.YN_use !== false && sub.YN_view !== 'Y');
+                        const subItems = data.filter(sub => {
+                            if (sub.menu_type === '카테고리' || sub.menu_type === 'category') return false;
+                            if (!sub.menu_meta || sub.menu_meta.parentCategory !== dept.menu_name) return false;
+                            if (sub.YN_use === false || sub.YN_view === 'Y') return false;
+                            
+                            // Also optionally filter subitems by company if they have it
+                            const comp = sub.cl_company || 'HQ';
+                            return comp === 'ALL' || comp === currentCompany;
+                        });
                         return { department: dept.menu_name, count: subItems.length };
                     });
                     

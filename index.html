@@ -429,6 +429,9 @@
     window.toggleCompanyFilter = function() {
       currentClCompany = currentClCompany === 'HQ' ? 'SF' : 'HQ';
       initMenu();
+      if (typeof renderDashboard === 'function') {
+        renderDashboard();
+      }
     };
 
     function initMenu() {
@@ -917,9 +920,10 @@
       initMenu(); // Refresh menu highlighting
 
       const content = document.getElementById('main-content');
+      const compParam = (typeof currentClCompany !== 'undefined') ? currentClCompany : 'HQ';
       content.innerHTML = `
         <div class="w-full flex-1 flex flex-col bg-white overflow-hidden">
-          <iframe src="Project files/IT부/main page test/mainPage.html" class="w-full h-full flex-1 border-0 overflow-hidden"></iframe>
+          <iframe src="Project files/IT부/main page test/mainPage.html?comp=${compParam}" class="w-full h-full flex-1 border-0 overflow-hidden"></iframe>
         </div>
       `;
       lucide.createIcons();
