@@ -633,9 +633,10 @@
       const totalCountDisplay = document.getElementById('menu-total-count-display');
       if (totalCountDisplay) {
         const currentUser = sessionStorage.getItem('ms_displayName') || '';
+        const currentDept = sessionStorage.getItem('ms_department') || '';
         const userClCompany = (sessionStorage.getItem('user_cl_company') || '').trim();
         const isOverseasUser = userClCompany && !['HQ', '본사', 'Guest', '게스트'].includes(userClCompany);
-        const canToggleCompany = (isOverseasUser || currentUser === '윤정호' || currentUser === '한희택');
+        const canToggleCompany = (isOverseasUser || currentDept === 'IT부' || currentUser === '윤정호' || currentUser === '한희택');
 
         totalCountDisplay.innerHTML = `
           <div class="flex items-center justify-between mb-1">
