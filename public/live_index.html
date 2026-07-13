@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 
 <head>
@@ -424,15 +424,11 @@
     let openMenuSlug = null;
     let openSubMenus = {};
     let activeSubMenuTitle = null;
-    let currentClCompany = sessionStorage.getItem('currentClCompany') || 'HQ';
+    let currentClCompany = 'HQ';
 
     window.toggleCompanyFilter = function() {
       currentClCompany = currentClCompany === 'HQ' ? 'SF' : 'HQ';
-      sessionStorage.setItem('currentClCompany', currentClCompany);
       initMenu();
-      if (typeof renderDashboard === 'function') {
-        renderDashboard();
-      }
     };
 
     function initMenu() {
@@ -633,9 +629,7 @@
       const totalCountDisplay = document.getElementById('menu-total-count-display');
       if (totalCountDisplay) {
         const currentUser = sessionStorage.getItem('ms_displayName') || '';
-        const userClCompany = (sessionStorage.getItem('user_cl_company') || '').trim();
-        const isOverseasUser = userClCompany && !['HQ', '본사', 'Guest', '게스트'].includes(userClCompany);
-        const canToggleCompany = (isOverseasUser || currentUser === '윤정호' || currentUser === '한희택');
+        const canToggleCompany = (currentUser === '윤정호' || currentUser === '한희택');
 
         totalCountDisplay.innerHTML = `
           <div class="flex items-center justify-between mb-1">
@@ -923,10 +917,9 @@
       initMenu(); // Refresh menu highlighting
 
       const content = document.getElementById('main-content');
-      const compParam = (typeof currentClCompany !== 'undefined') ? currentClCompany : 'HQ';
       content.innerHTML = `
         <div class="w-full flex-1 flex flex-col bg-white overflow-hidden">
-          <iframe src="Project files/IT부/main page test/mainPage.html?comp=${compParam}" class="w-full h-full flex-1 border-0 overflow-hidden"></iframe>
+          <iframe src="Project files/IT부/main page test/mainPage.html" class="w-full h-full flex-1 border-0 overflow-hidden"></iframe>
         </div>
       `;
       lucide.createIcons();
@@ -1574,7 +1567,7 @@
         // id 및 시스템 자동 생성 메타데이터(created_at 등), 그리고 에러가 발생한 세부 HR 컬럼들을 제외한 핵심 정보만 추출
         const { 
           id, created_at, updated_at, created_by, updated_by, 
-          lvduty_cd, lvduty_nm, nm_email_full, cl_company,
+          lvduty_cd, lvduty_nm, nm_email_full, 
           ...historyData 
         } = userInfo;
         historyData.login_time = getKSTTime();
@@ -1826,14 +1819,13 @@
           if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
             const finalUserNameId = sessionStorage.getItem('userNameId');
             if (finalUserNameId) {
-              if (!sessionStorage.getItem('ynOpenFetched') || !sessionStorage.getItem('user_cl_company')) {
+              if (!sessionStorage.getItem('ynOpenFetched')) {
                 // 비동기 통신 전 즉시 플래그를 설정하여 Race Condition을 완벽히 차단
                 sessionStorage.setItem('ynOpenFetched', 'true');
-                sessionStorage.setItem('user_cl_company', 'FETCHING');
                 try {
                   const { data: userInfoData, error } = await window.supabaseClient
                     .from('user_info')
-                    .select('yn_open, cl_company')
+                    .select('yn_open')
                     .ilike('nm_email', `%${finalUserNameId}%`)
                     .limit(1)
                     .maybeSingle();
@@ -1853,17 +1845,6 @@
                   
                   if (userInfoData && userInfoData.yn_open !== undefined) {
                     sessionStorage.setItem('yn_open', userInfoData.yn_open);
-                    
-                    const userComp = (userInfoData.cl_company || 'HQ').trim();
-                    sessionStorage.setItem('user_cl_company', userComp);
-                    const isSF = userComp && !['HQ', '본사', 'Guest', '게스트'].includes(userComp);
-                    if (!sessionStorage.getItem('currentClCompany')) {
-                      const defaultView = isSF ? 'SF' : 'HQ';
-                      sessionStorage.setItem('currentClCompany', defaultView);
-                      currentClCompany = defaultView;
-                    }
-                    if (typeof initMenu === 'function') initMenu();
-
                     console.log(`[UserInfo] ${finalUserNameId} 사용자의 yn_open 값:`, userInfoData.yn_open);
 
                     const isOpen = userInfoData.yn_open === 'Y' || userInfoData.yn_open === true || userInfoData.yn_open === 'true';

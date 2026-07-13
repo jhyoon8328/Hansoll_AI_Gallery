@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,12 +13,17 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SheetJS (xlsx) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SheetJS (xlsx-js-style) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: transparent; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: transparent;
+        }
+
         .glass-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(16px);
@@ -25,11 +31,25 @@
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
         }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         .gradient-text {
             background: linear-gradient(135deg, #2563eb, #7c3aed);
             -webkit-background-clip: text;
@@ -44,14 +64,23 @@
             border-bottom: 2px solid transparent;
             transition: all 0.2s;
         }
-        .tab-btn:hover { color: #2563eb; }
+
+        .tab-btn:hover {
+            color: #2563eb;
+        }
+
         .tab-btn.active {
             color: #2563eb;
             border-bottom-color: #2563eb;
         }
-        
-        .drag-handle { cursor: grab; }
-        .drag-handle:active { cursor: grabbing; }
+
+        .drag-handle {
+            cursor: grab;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
 
         /* File drop zone */
         .drop-zone {
@@ -62,120 +91,193 @@
             transition: all 0.2s;
             cursor: pointer;
         }
+
         .drop-zone.dragover {
             border-color: #3b82f6;
             background-color: #eff6ff;
         }
+
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 5px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+            z-index: 20;
+        }
+        .resize-handle:hover, .resize-handle.active {
+            background-color: #cbd5e1;
+        }
+        th {
+            position: relative;
+        }
     </style>
 </head>
+
 <body class="p-8 w-full h-screen overflow-y-auto custom-scrollbar bg-slate-50/50">
-    
+
+    <!-- Fixed Background for Sticky Headers -->
+    <div id="sticky-bg"
+        class="fixed top-0 left-0 right-0 h-[170px] bg-slate-50/95 backdrop-blur-md z-[45] pointer-events-none transition-opacity duration-300 opacity-0">
+    </div>
+
     <div class="max-w-7xl mx-auto">
         <!-- Top Menu Bar -->
-        <div class="bg-white shadow-sm rounded-xl mb-8 flex px-4">
+        <div class="bg-white/90 backdrop-blur-md shadow-sm rounded-xl mb-8 flex px-4 sticky top-4 z-[60]">
             <button class="tab-btn active" onclick="switchTab('home')">Home</button>
             <button class="tab-btn" onclick="switchTab('menu')">메뉴관리</button>
             <button class="tab-btn" onclick="switchTab('user')">사용자 정보</button>
+            <button class="tab-btn" onclick="switchTab('loginHistory')">로그인 기록</button>
             <button class="tab-btn" onclick="switchTab('password')">비밀번호 변경</button>
         </div>
 
         <!-- Header -->
-        <div id="admin-header" class="flex items-center justify-between mb-10">
+        <div id="admin-header" class="flex items-center justify-between mb-10 relative z-[55]">
             <div>
-                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Admin <span class="gradient-text">Dashboard</span></h1>
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Admin <span
+                        class="gradient-text">Dashboard</span></h1>
                 <p class="text-slate-500 font-medium">포털 시스템 관리 및 운영 현황</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <select id="menu-filter-select" onchange="applyMenuFilter()" class="border border-slate-300 rounded-lg px-4 py-2 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 bg-white cursor-pointer shadow-sm">
-                    <option value="all">전체</option>
-                    <option value="active">사용중</option>
-                    <option value="hidden">사용 중지</option>
-                </select>
             </div>
         </div>
 
         <!-- TAB: HOME -->
         <div id="tab-home" class="block">
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
-                <div class="glass-card rounded-2xl p-6 transition-transform hover:-translate-y-1 duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-3 bg-blue-100/50 rounded-xl text-blue-600">
-                            <i data-lucide="layers" class="w-6 h-6"></i>
-                        </div>
+            <fieldset class="border-2 border-slate-200 rounded-2xl p-6 pt-4 mt-2">
+                <legend class="text-lg font-bold text-slate-700 px-3 ml-2">메뉴 정보</legend>
+                
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10 mt-2">
+                <div class="glass-card rounded-2xl p-5 transition-transform hover:-translate-y-1 duration-300 flex items-center gap-4">
+                    <div class="p-3 bg-blue-100/50 rounded-xl text-blue-600 shrink-0">
+                        <i data-lucide="layers" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-slate-500 text-sm font-semibold mb-1">AI 총 개발 건수</h3>
-                    <p class="text-3xl font-extrabold text-slate-800" id="stat-total">0<span class="text-base font-medium text-slate-400 ml-1">건</span></p>
+                    <h3 class="text-slate-600 text-[15px] font-bold whitespace-nowrap">AI 총 개발 건수</h3>
+                    <p class="text-2xl font-extrabold text-slate-800 ml-auto whitespace-nowrap" id="stat-total">0<span
+                            class="text-base font-medium text-slate-400 ml-1">건</span></p>
                 </div>
 
-                <div class="glass-card rounded-2xl p-6 transition-transform hover:-translate-y-1 duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-3 bg-purple-100/50 rounded-xl text-purple-600">
-                            <i data-lucide="briefcase" class="w-6 h-6"></i>
-                        </div>
+                <div class="glass-card rounded-2xl p-5 transition-transform hover:-translate-y-1 duration-300 flex items-center gap-4">
+                    <div class="p-3 bg-purple-100/50 rounded-xl text-purple-600 shrink-0">
+                        <i data-lucide="briefcase" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-slate-500 text-sm font-semibold mb-1">총 부서 카테고리 수</h3>
-                    <p class="text-3xl font-extrabold text-slate-800" id="stat-dept">0<span class="text-base font-medium text-slate-400 ml-1">개</span></p>
+                    <h3 class="text-slate-600 text-[15px] font-bold whitespace-nowrap">총 부서 카테고리 수</h3>
+                    <p class="text-2xl font-extrabold text-slate-800 ml-auto whitespace-nowrap" id="stat-dept">0<span
+                            class="text-base font-medium text-slate-400 ml-1">개</span></p>
                 </div>
 
-                <div class="glass-card rounded-2xl p-6 transition-transform hover:-translate-y-1 duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-3 bg-amber-100/50 rounded-xl text-amber-600">
-                            <i data-lucide="folder-x" class="w-6 h-6"></i>
-                        </div>
+                <div class="glass-card rounded-2xl p-5 transition-transform hover:-translate-y-1 duration-300 flex items-center gap-4">
+                    <div class="p-3 bg-amber-100/50 rounded-xl text-amber-600 shrink-0">
+                        <i data-lucide="folder-x" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-slate-500 text-sm font-semibold mb-1">카테고리 숨김 건수</h3>
-                    <p class="text-3xl font-extrabold text-slate-800" id="stat-hidden-cat">0<span class="text-base font-medium text-slate-400 ml-1">개</span></p>
+                    <h3 class="text-slate-600 text-[15px] font-bold whitespace-nowrap">카테고리 숨김 건수</h3>
+                    <p class="text-2xl font-extrabold text-slate-800 ml-auto whitespace-nowrap" id="stat-hidden-cat">0<span
+                            class="text-base font-medium text-slate-400 ml-1">개</span></p>
                 </div>
 
-                <div class="glass-card rounded-2xl p-6 transition-transform hover:-translate-y-1 duration-300">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-3 bg-rose-100/50 rounded-xl text-rose-600">
-                            <i data-lucide="eye-off" class="w-6 h-6"></i>
-                        </div>
+                <div class="glass-card rounded-2xl p-5 transition-transform hover:-translate-y-1 duration-300 flex items-center gap-4">
+                    <div class="p-3 bg-rose-100/50 rounded-xl text-rose-600 shrink-0">
+                        <i data-lucide="eye-off" class="w-6 h-6"></i>
                     </div>
-                    <h3 class="text-slate-500 text-sm font-semibold mb-1">메뉴 숨김 건수</h3>
-                    <p class="text-3xl font-extrabold text-slate-800" id="stat-hidden">0<span class="text-base font-medium text-slate-400 ml-1">건</span></p>
+                    <h3 class="text-slate-600 text-[15px] font-bold whitespace-nowrap">메뉴 숨김 건수</h3>
+                    <p class="text-2xl font-extrabold text-slate-800 ml-auto whitespace-nowrap" id="stat-hidden">0<span
+                            class="text-base font-medium text-slate-400 ml-1">건</span></p>
                 </div>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Dept breakdown -->
-                <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-500"></i> 부서별 개발 건수
-                    </h2>
-                    <div class="space-y-4" id="dept-breakdown-list">
+                <details id="details-dept" ontoggle="syncAccordions(this)" class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col group">
+                    <summary class="text-lg font-bold text-slate-800 p-6 cursor-pointer flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-500"></i> 부서별 개발 건수
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div class="space-y-4 px-6 pb-6" id="dept-breakdown-list">
                         <!-- Populated via JS -->
                     </div>
-                </div>
+                </details>
 
                 <!-- Hidden menus list -->
-                <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <i data-lucide="eye-off" class="w-5 h-5 text-rose-500"></i> 숨김처리 된 리스트
-                    </h2>
-                    <div class="space-y-3" id="hidden-menus-list">
+                <details id="details-hidden" ontoggle="syncAccordions(this)" class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col group">
+                    <summary class="text-lg font-bold text-slate-800 p-6 cursor-pointer flex items-center justify-between list-none [&::-webkit-details-marker]:hidden">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="eye-off" class="w-5 h-5 text-rose-500"></i> 숨김처리 된 리스트
+                        </div>
+                        <i data-lucide="chevron-down" class="w-5 h-5 text-slate-400 transition-transform duration-300 group-open:rotate-180"></i>
+                    </summary>
+                    <div class="space-y-3 px-6 pb-6" id="hidden-menus-list">
                         <!-- Populated via JS -->
                     </div>
-                </div>
+                </details>
             </div>
+            </fieldset>
+
+            <fieldset class="border-2 border-slate-200 rounded-2xl p-6 pt-4 mt-8">
+                <legend class="text-lg font-bold text-slate-700 px-3 ml-2">사용자 정보</legend>
+                
+                <div class="grid grid-cols-1 gap-6 mt-2">
+                    <!-- Row 1: Registered Users -->
+                    <div class="glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-indigo-100/50 rounded-xl text-indigo-600 shrink-0">
+                                <i data-lucide="users" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-slate-600 text-[15px] font-bold">등록된 사용자 수</h3>
+                        </div>
+                        <div class="flex items-center gap-6 text-sm">
+                            <div class="flex flex-col items-center"><span class="text-slate-400">전체</span><span class="font-bold text-slate-800 text-lg"><span id="user-total">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">본사</span><span class="font-bold text-slate-800 text-lg"><span id="user-ho">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">법인</span><span class="font-bold text-slate-800 text-lg"><span id="user-corp">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">게스트</span><span class="font-bold text-slate-800 text-lg"><span id="user-guest">0</span>명</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Active Users -->
+                    <div class="glass-card rounded-2xl p-5 flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="p-3 bg-emerald-100/50 rounded-xl text-emerald-600 shrink-0">
+                                <i data-lucide="user-check" class="w-6 h-6"></i>
+                            </div>
+                            <h3 class="text-slate-600 text-[15px] font-bold">사용 권한 보유 인원</h3>
+                        </div>
+                        <div class="flex items-center gap-6 text-sm">
+                            <div class="flex flex-col items-center"><span class="text-slate-400">전체</span><span class="font-bold text-slate-800 text-lg"><span id="active-total">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">본사</span><span class="font-bold text-slate-800 text-lg"><span id="active-ho">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">법인</span><span class="font-bold text-slate-800 text-lg"><span id="active-corp">0</span>명</span></div>
+                            <div class="w-px h-8 bg-slate-200"></div>
+                            <div class="flex flex-col items-center"><span class="text-slate-400">게스트</span><span class="font-bold text-slate-800 text-lg"><span id="active-guest">0</span>명</span></div>
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
         </div>
 
         <!-- TAB: MENU MANAGEMENT -->
         <div id="tab-menu" class="hidden">
-            <div class="flex justify-between items-center mb-6">
+            <div
+                class="flex justify-between items-center mb-6 sticky top-[84px] z-50 bg-white/90 backdrop-blur-md p-4 rounded-xl shadow-sm border border-slate-200/50 transition-all">
                 <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
                     <i data-lucide="folder-tree" class="w-5 h-5 text-blue-600"></i> 포털 메뉴 관리
                 </h2>
                 <div class="flex gap-3">
-                    <button onclick="applyChanges()" class="px-4 py-2 bg-emerald-500 rounded-lg text-sm font-bold text-white hover:bg-emerald-600 shadow-md transition-all flex items-center gap-2">
+                    <button onclick="applyChanges()"
+                        class="px-4 py-2 bg-emerald-500 rounded-lg text-sm font-bold text-white hover:bg-emerald-600 shadow-md transition-all flex items-center gap-2">
                         <i data-lucide="save" class="w-4 h-4"></i> 변경사항 저장
                     </button>
-                    <button onclick="openCategoryModal()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2">
+                    <button onclick="openCategoryModal()"
+                        class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-50 shadow-sm transition-all flex items-center gap-2">
                         <i data-lucide="folder-plus" class="w-4 h-4"></i> 카테고리 추가
                     </button>
-                    <button onclick="openMenuModal()" class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold text-white hover:bg-blue-700 shadow-md transition-all flex items-center gap-2">
+                    <button onclick="openMenuModal()"
+                        class="px-4 py-2 bg-blue-600 rounded-lg text-sm font-bold text-white hover:bg-blue-700 shadow-md transition-all flex items-center gap-2">
                         <i data-lucide="plus-circle" class="w-4 h-4"></i> 메뉴 추가
                     </button>
                 </div>
@@ -190,9 +292,12 @@
         <!-- TAB: USER INFO -->
         <div id="tab-user" class="hidden">
             <!-- 1. 업로드 영역 (가로 1줄 바 형태) -->
-            <div id="user-upload-zone" ondragover="handleUserDragOver(event)" ondragleave="handleUserDragLeave(event)" ondrop="handleUserDrop(event)" class="glass-card rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors">
+            <div id="user-upload-zone" ondragover="handleUserDragOver(event)" ondragleave="handleUserDragLeave(event)"
+                ondrop="handleUserDrop(event)"
+                class="glass-card rounded-xl border border-slate-200 p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4 transition-colors">
                 <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center shrink-0">
+                    <div
+                        class="w-10 h-10 bg-green-100 text-green-600 rounded-lg flex items-center justify-center shrink-0">
                         <i data-lucide="users" class="w-5 h-5"></i>
                     </div>
                     <div>
@@ -200,23 +305,39 @@
                         <p class="text-xs text-slate-500">userInfo.xlsx 파일로 데이터를 갱신합니다. (기존 데이터 덮어쓰기)</p>
                     </div>
                 </div>
-                
+
                 <div class="flex items-center gap-3 w-full md:w-auto">
-                    <input type="file" id="user-excel-upload" accept=".xlsx, .xls" class="hidden" onchange="handleUserExcelSelect(event)">
-                    <button onclick="document.getElementById('user-excel-upload').click()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-300 flex items-center gap-2 whitespace-nowrap">
+                    <input type="file" id="user-excel-upload" accept=".xlsx, .xls" class="hidden"
+                        onchange="handleUserExcelSelect(event)">
+                    <button onclick="document.getElementById('user-excel-upload').click()"
+                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-lg transition-colors border border-slate-300 flex items-center gap-2 whitespace-nowrap">
                         <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                         <span id="user-file-name">파일 선택</span>
                     </button>
-                    
-                    <button onclick="uploadUserExcel()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-green-500/20 whitespace-nowrap">
+
+                    <button onclick="uploadUserExcel(false)"
+                        class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-green-500/20 whitespace-nowrap">
                         <i data-lucide="upload-cloud" class="w-4 h-4"></i>
-                        저장(업데이트)
+                        전체 인원 등록
+                    </button>
+
+                    <button onclick="uploadUserExcel(true)"
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-blue-500/20 whitespace-nowrap">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                        신규 인원 등록
+                    </button>
+
+                    <button onclick="downloadUserExcel()"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold rounded-lg transition-colors flex items-center gap-2 shadow-md shadow-emerald-500/20 whitespace-nowrap">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                        Excel down
                     </button>
                 </div>
             </div>
 
             <!-- 업로드 상태 표시 -->
-            <div id="user-upload-status" class="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm font-semibold mb-6 hidden text-center border border-blue-200">
+            <div id="user-upload-status"
+                class="bg-blue-50 text-blue-600 p-3 rounded-lg text-sm font-semibold mb-6 hidden text-center border border-blue-200">
                 진행 상태 표시...
             </div>
 
@@ -226,40 +347,79 @@
                     <!-- 첫번째 줄 -->
                     <div class="flex flex-wrap items-center gap-6">
                         <div class="flex items-center gap-2">
-                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">사&nbsp;&nbsp;&nbsp;번 :</label>
-                            <input type="text" id="search-emp-no" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="사번 입력">
+                            <label
+                                class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">사&nbsp;&nbsp;&nbsp;번
+                                :</label>
+                            <input type="text" id="search-emp-no"
+                                onkeydown="if(event.key === 'Enter') fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="사번 입력">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이&nbsp;&nbsp;&nbsp;름 :</label>
-                            <input type="text" id="search-emp-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="이름 입력">
+                            <label
+                                class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이&nbsp;&nbsp;&nbsp;름
+                                :</label>
+                            <input type="text" id="search-emp-nm"
+                                onkeydown="if(event.key === 'Enter') fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="이름 입력">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이 메 일 :</label>
-                            <input type="text" id="search-email" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-48 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="이메일 입력">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">이 메 일
+                                :</label>
+                            <input type="text" id="search-email"
+                                onkeydown="if(event.key === 'Enter') fetchUserInfoList()"
+                                class="w-48 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="이메일 입력">
                         </div>
                     </div>
                     <!-- 두번째 줄 -->
                     <div class="flex flex-wrap items-center gap-6">
                         <div class="flex items-center gap-2">
-                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">부 서 명 :</label>
-                            <input type="text" id="search-dept-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="부서명 입력">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">부 서 명
+                                :</label>
+                            <input type="text" id="search-dept-nm"
+                                onkeydown="if(event.key === 'Enter') fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="부서명 입력">
                         </div>
                         <div class="flex items-center gap-2">
-                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">직 책 명 :</label>
-                            <input type="text" id="search-lvduty-nm" onkeydown="if(event.key === 'Enter') fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="직책명 입력">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">직 책 명
+                                :</label>
+                            <input type="text" id="search-lvduty-nm"
+                                onkeydown="if(event.key === 'Enter') fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="직책명 입력">
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">공개여부 :</label>
-                            <select id="search-yn-open" onchange="fetchUserInfoList()" class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
+                            <select id="search-yn-open" onchange="fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
                                 <option value="all" selected>전체</option>
                                 <option value="Y">Y</option>
                                 <option value="N">N</option>
                             </select>
                         </div>
-                        <div class="ml-auto">
-                            <button onclick="fetchUserInfoList()" class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
+                        <div class="flex items-center gap-2">
+                            <label class="font-bold text-slate-600 whitespace-nowrap w-[70px] text-right">소속:</label>
+                            <select id="search-cl-company" onchange="fetchUserInfoList()"
+                                class="w-32 border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
+                                <option value="all" selected>전체</option>
+                                <option value="본사">본사</option>
+                                <option value="법인">법인</option>
+                                <option value="게스트">게스트</option>
+                            </select>
+                        </div>
+                        <div class="ml-auto flex items-center gap-2">
+                            <button onclick="fetchUserInfoList()"
+                                class="px-5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
                                 <i data-lucide="search" class="w-4 h-4"></i>
                                 조회
+                            </button>
+                            <button onclick="deleteSelectedUsers()"
+                                class="px-5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded transition-colors flex items-center gap-2 shadow-sm">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                삭제
                             </button>
                         </div>
                     </div>
@@ -270,147 +430,439 @@
             <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
                     <table class="w-full text-left border-collapse whitespace-nowrap">
-                        <thead class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                        <thead
+                            class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
                             <tr>
-                                <th class="p-4">사번</th>
+                                <th class="p-4 w-12 text-center">
+                                    <input type="checkbox" id="user-check-all" onclick="toggleAllUserCheckboxes()" class="w-4 h-4 cursor-pointer text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                </th>
+                                <th class="p-4 w-20">사번</th>
                                 <th class="p-4">이름</th>
                                 <th class="p-4">부서명</th>
                                 <th class="p-4">직급</th>
                                 <th class="p-4">직책명</th>
                                 <th class="p-4">이메일</th>
                                 <th class="p-4 text-center">공개여부(Y/N)</th>
+                                <th class="p-4 text-center">소속</th>
                             </tr>
                         </thead>
                         <tbody id="user-info-tbody" class="divide-y divide-slate-100 text-sm text-slate-700">
-                            <tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>
+                            <tr>
+                                <td colspan="8" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- TAB: PASSWORD -->
-        <div id="tab-password" class="hidden">
-            <div class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-8 max-w-lg mx-auto mt-10">
-                <div class="text-center mb-8">
-                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i data-lucide="shield-check" class="w-8 h-8"></i>
+        <!-- TAB: LOGIN HISTORY -->
+        <div id="tab-loginHistory" class="hidden">
+            <div class="flex items-center gap-4 mb-6 border-b border-slate-200">
+                <button class="px-4 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors"
+                    id="subtab-btn-log-period" onclick="switchLogSubTab('period')">기간별 로그</button>
+                <button
+                    class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors"
+                    id="subtab-btn-log-date" onclick="switchLogSubTab('date')">날짜별 로그</button>
+                <button
+                    class="px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors"
+                    id="subtab-btn-log-raw" onclick="switchLogSubTab('raw')">상세 로그</button>
+            </div>
+
+            <!-- 기간별 로그 컨테이너 -->
+            <div id="log-container-period" class="block">
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 text-sm flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">시작일:</label>
+                        <input type="date" id="log-period-from"
+                            class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
                     </div>
-                    <h2 class="text-2xl font-bold text-slate-800">관리자 비밀번호 변경</h2>
-                    <p class="text-sm text-slate-500 mt-2">새로운 관리자 비밀번호를 설정합니다.</p>
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">종료일:</label>
+                        <input type="date" id="log-period-to"
+                            class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <button onclick="fetchLoginHistory('period')"
+                        class="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm">조회</button>
+                    <button onclick="exportLogToExcel('period')"
+                        class="ml-auto px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel 다운로드
+                    </button>
                 </div>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-1">새 비밀번호</label>
-                        <input type="password" id="new-admin-pw" class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="4~8자리 입력">
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead
+                                class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('period', 'emp_nm')">이름 <span class="sort-icon"
+                                            id="sort-period-emp_nm"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('period', 'nm_dept')">부서 <span class="sort-icon"
+                                            id="sort-period-nm_dept"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('period', 'occp_grd_nm')">직급 <span class="sort-icon"
+                                            id="sort-period-occp_grd_nm"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100 text-right"
+                                        onclick="sortLogTable('period', 'login_count')">로그인 횟수 <span class="sort-icon"
+                                            id="sort-period-login_count"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100 text-right"
+                                        onclick="sortLogTable('period', 'total_duration')">총 로그인 시간 <span
+                                            class="sort-icon" id="sort-period-total_duration"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="log-tbody-period" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <tr>
+                                    <td colspan="5" class="p-8 text-center text-slate-500">조회 조건을 입력하고 조회 버튼을 눌러주세요.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
-                    <button onclick="changeAdminPw()" class="w-full py-3 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-900 transition-colors shadow-sm">비밀번호 변경 적용</button>
+                    <div id="log-pagination-period"
+                        class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-sm hidden">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 날짜별 로그 컨테이너 -->
+            <div id="log-container-date" class="hidden">
+                <div
+                    class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 text-sm flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">시작일:</label>
+                        <input type="date" id="log-date-from"
+                            class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">종료일:</label>
+                        <input type="date" id="log-date-to"
+                            class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">부서명:</label>
+                        <input type="text" id="log-date-dept"
+                            class="w-32 border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="입력" onkeydown="if(event.key === 'Enter') fetchLoginHistory('date')">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="font-bold text-slate-600">사원명:</label>
+                        <input type="text" id="log-date-name"
+                            class="w-32 border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="입력" onkeydown="if(event.key === 'Enter') fetchLoginHistory('date')">
+                    </div>
+                    <button onclick="fetchLoginHistory('date')"
+                        class="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm">조회</button>
+                    <button onclick="exportLogToExcel('date')"
+                        class="ml-auto px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm flex items-center gap-2">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel 다운로드
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left border-collapse whitespace-nowrap">
+                            <thead
+                                class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                                <tr>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('date', 'date_str')">날짜 <span class="sort-icon"
+                                            id="sort-date-date_str"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('date', 'emp_nm')">이름 <span class="sort-icon"
+                                            id="sort-date-emp_nm"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('date', 'nm_dept')">부서 <span class="sort-icon"
+                                            id="sort-date-nm_dept"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                        onclick="sortLogTable('date', 'occp_grd_nm')">직급 <span class="sort-icon"
+                                            id="sort-date-occp_grd_nm"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100 text-right"
+                                        onclick="sortLogTable('date', 'login_count')">로그인 횟수 <span class="sort-icon"
+                                            id="sort-date-login_count"></span></th>
+                                    <th class="p-4 cursor-pointer hover:bg-slate-100 text-right"
+                                        onclick="sortLogTable('date', 'total_duration')">총 로그인 시간 <span
+                                            class="sort-icon" id="sort-date-total_duration"></span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="log-tbody-date" class="divide-y divide-slate-100 text-sm text-slate-700">
+                                <tr>
+                                    <td colspan="6" class="p-8 text-center text-slate-500">조회 조건을 입력하고 조회 버튼을 눌러주세요.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="log-pagination-date"
+                        class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-sm hidden">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 상세 로그 컨테이너 -->
+        <div id="log-container-raw" class="hidden">
+            <div
+                class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 text-sm flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="font-bold text-slate-600">시작일:</label>
+                    <input type="date" id="log-raw-from"
+                        class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="font-bold text-slate-600">종료일:</label>
+                    <input type="date" id="log-raw-to"
+                        class="border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="font-bold text-slate-600">부서명:</label>
+                    <input type="text" id="log-raw-dept"
+                        class="w-32 border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="입력" onkeydown="if(event.key === 'Enter') fetchLoginHistory('raw')">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="font-bold text-slate-600">사원명:</label>
+                    <input type="text" id="log-raw-name"
+                        class="w-32 border border-slate-300 rounded px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="입력" onkeydown="if(event.key === 'Enter') fetchLoginHistory('raw')">
+                </div>
+                <button onclick="fetchLoginHistory('raw')"
+                    class="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm">조회</button>
+                <button onclick="exportLogToExcel('raw')"
+                    class="ml-auto px-4 py-1.5 bg-emerald-600 text-white font-bold rounded-lg hover:bg-emerald-700 transition-colors shadow-sm text-sm flex items-center gap-2">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Excel 다운로드
+                </button>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead
+                            class="sticky top-0 z-10 bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+                            <tr>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'date_str')">날짜 <span class="sort-icon"
+                                        id="sort-raw-date_str"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'emp_nm')">이름 <span class="sort-icon"
+                                        id="sort-raw-emp_nm"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'nm_dept')">부서 <span class="sort-icon"
+                                        id="sort-raw-nm_dept"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'occp_grd_nm')">직급 <span class="sort-icon"
+                                        id="sort-raw-occp_grd_nm"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'login_time_disp')">로그인 시간 <span class="sort-icon"
+                                        id="sort-raw-login_time_disp"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100"
+                                    onclick="sortLogTable('raw', 'logout_time_disp')">로그아웃 시간 <span class="sort-icon"
+                                        id="sort-raw-logout_time_disp"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100 text-center"
+                                    onclick="sortLogTable('raw', 'auto_logout')">자동 로그아웃 <span class="sort-icon"
+                                        id="sort-raw-auto_logout"></span></th>
+                                <th class="p-4 cursor-pointer hover:bg-slate-100 text-right"
+                                    onclick="sortLogTable('raw', 'duration_seconds')">유지 시간 <span class="sort-icon"
+                                        id="sort-raw-duration_seconds"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-tbody-raw" class="divide-y divide-slate-100 text-sm text-slate-700">
+                            <tr>
+                                <td colspan="8" class="p-8 text-center text-slate-500">조회 조건을 입력하고 조회 버튼을 눌러주세요.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="log-pagination-raw"
+                    class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-sm hidden">
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- TAB: PASSWORD -->
+    <div id="tab-password" class="hidden">
+        <div
+            class="glass-card rounded-2xl border border-slate-200 overflow-hidden flex flex-col p-8 max-w-lg mx-auto mt-10">
+            <div class="text-center mb-8">
+                <div
+                    class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="shield-check" class="w-8 h-8"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800">관리자 비밀번호 변경</h2>
+                <p class="text-sm text-slate-500 mt-2">새로운 관리자 비밀번호를 설정합니다.</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">새 비밀번호</label>
+                    <input type="password" id="new-admin-pw"
+                        class="w-full border border-slate-300 rounded-lg px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="4~8자리 입력">
+                </div>
+                <button onclick="changeAdminPw()"
+                    class="w-full py-3 bg-slate-800 text-white rounded-lg text-sm font-bold hover:bg-slate-900 transition-colors shadow-sm">비밀번호
+                    변경 적용</button>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <!-- Modals -->
     <!-- Category Modal -->
-    <div id="category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div id="category-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 class="text-xl font-bold text-slate-800 mb-4">새 카테고리 추가</h3>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">카테고리명 (부서명 등)</label>
-                <input type="text" id="cat-name-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: IT부">
+                <input type="text" id="cat-name-input"
+                    class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: IT부">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">표시 문구</label>
-                <input type="text" id="cat-display-phrase-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: Information Technology">
+                <input type="text" id="cat-display-phrase-input"
+                    class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: Information Technology">
             </div>
             <div class="mb-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">배경색</label>
-                        <input type="color" id="cat-bg-color-input" class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white" value="#050505">
+                        <input type="color" id="cat-bg-color-input"
+                            class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white"
+                            value="#050505">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">글자색</label>
-                        <input type="color" id="cat-text-color-input" class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white" value="#ffffff">
+                        <input type="color" id="cat-text-color-input"
+                            class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white"
+                            value="#ffffff">
                     </div>
                 </div>
             </div>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">소속 구분 <span class="text-rose-500">*</span></label>
+                <select id="cat-cl-company-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="HQ">본사</option>
+                    <option value="SF">해외</option>
+                    <option value="ALL">전체</option>
+                </select>
+            </div>
             <div class="flex justify-end gap-3">
-                <button onclick="closeCategoryModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
-                <button onclick="submitCategory()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">추가</button>
+                <button onclick="closeCategoryModal()"
+                    class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
+                <button onclick="submitCategory()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">추가</button>
             </div>
         </div>
     </div>
 
     <!-- Edit Category Modal -->
-    <div id="edit-category-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div id="edit-category-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
                 <i data-lucide="edit" class="w-5 h-5 text-blue-600"></i> 상위 카테고리 변경
             </h3>
             <input type="hidden" id="edit-cat-index-input">
             <div class="mb-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-1">카테고리명 (부서명 등) <span class="text-rose-500">*</span></label>
-                <input type="text" id="edit-cat-name-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: IT부">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">카테고리명 (부서명 등) <span
+                        class="text-rose-500">*</span></label>
+                <input type="text" id="edit-cat-name-input"
+                    class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: IT부">
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-slate-700 mb-1">표시 문구</label>
-                <input type="text" id="edit-cat-display-phrase-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="예: Information Technology">
+                <input type="text" id="edit-cat-display-phrase-input"
+                    class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="예: Information Technology">
             </div>
             <div class="mb-6">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">배경색</label>
-                        <input type="color" id="edit-cat-bg-color-input" class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white">
+                        <input type="color" id="edit-cat-bg-color-input"
+                            class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-slate-700 mb-1">글자색</label>
-                        <input type="color" id="edit-cat-text-color-input" class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white">
+                        <input type="color" id="edit-cat-text-color-input"
+                            class="w-full h-10 p-1 border border-slate-300 rounded-lg cursor-pointer bg-white">
                     </div>
                 </div>
             </div>
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-1">소속 구분 <span class="text-rose-500">*</span></label>
+                <select id="edit-cat-cl-company-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <option value="HQ">본사</option>
+                    <option value="SF">해외</option>
+                    <option value="ALL">전체</option>
+                </select>
+            </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
-                <button onclick="closeEditCategoryModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
-                <button onclick="submitEditCategory()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">저장</button>
+                <button onclick="closeEditCategoryModal()"
+                    class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
+                <button onclick="submitEditCategory()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors">저장</button>
             </div>
         </div>
     </div>
 
     <!-- Menu Modal -->
-    <div id="menu-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div id="menu-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <h3 class="text-xl font-bold text-slate-800 mb-4">새 메뉴 추가</h3>
-            
+
             <div class="space-y-5">
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-1">상위 카테고리 선택</label>
-                    <select id="menu-cat-select" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="menu-cat-select"
+                        class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500">
                         <!-- Options via JS -->
                     </select>
                 </div>
-                
+
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">메뉴명 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="menu-name-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="메뉴 이름">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">메뉴명 <span
+                            class="text-rose-500">*</span></label>
+                    <input type="text" id="menu-name-input"
+                        class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="메뉴 이름">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1">설명 <span class="text-rose-500">*</span></label>
-                    <input type="text" id="menu-desc-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="간단한 설명">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">설명 <span
+                            class="text-rose-500">*</span></label>
+                    <input type="text" id="menu-desc-input"
+                        class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="간단한 설명">
                 </div>
 
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <input type="checkbox" id="menu-url-checkbox" onchange="toggleUrlMode()" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
-                        <label for="menu-url-checkbox" class="text-sm font-semibold text-slate-700 cursor-pointer">실행 url 주소</label>
+                        <input type="checkbox" id="menu-url-checkbox" onchange="toggleUrlMode()"
+                            class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                        <label for="menu-url-checkbox" class="text-sm font-semibold text-slate-700 cursor-pointer">실행
+                            url 주소</label>
                     </div>
-                    <input type="text" id="menu-url-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed" placeholder="예: https://example.com" disabled>
+                    <input type="text" id="menu-url-input"
+                        class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                        placeholder="예: https://example.com" disabled>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-1" id="file-upload-label">파일 첨부 (실행파일, HTML, 파이썬 등)</label>
-                    <div id="drop-zone" class="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" onclick="document.getElementById('file-input').click()">
+                    <label class="block text-sm font-semibold text-slate-700 mb-1" id="file-upload-label">파일 첨부 (실행파일,
+                        HTML, 파이썬 등)</label>
+                    <div id="drop-zone" class="drop-zone" ondragover="handleDragOver(event)"
+                        ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+                        onclick="document.getElementById('file-input').click()">
                         <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
                         <p class="text-sm text-slate-500" id="drop-zone-text">파일을 드래그하거나 클릭하여 선택하세요.</p>
                         <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
@@ -419,8 +871,11 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-8">
-                <button onclick="closeMenuModal()" class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
-                <button onclick="submitMenu()" class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2" id="submit-menu-btn">
+                <button onclick="closeMenuModal()"
+                    class="px-4 py-2 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
+                <button onclick="submitMenu()"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    id="submit-menu-btn">
                     저장
                 </button>
             </div>
@@ -428,12 +883,13 @@
     </div>
 
     <!-- Edit Menu Modal -->
-    <div id="edit-menu-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+    <div id="edit-menu-modal"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center">
         <div class="bg-white rounded-2xl p-8 max-w-4xl w-full shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar">
             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <i data-lucide="edit" class="w-5 h-5 text-blue-600"></i> 메뉴 실행 파일/URL 변경
             </h3>
-            
+
             <div class="flex flex-col md:flex-row gap-8">
                 <!-- Left Column: Current Info -->
                 <div class="w-full md:w-1/2 p-6 bg-slate-50 rounded-xl border border-slate-200 flex flex-col">
@@ -441,34 +897,47 @@
                     <div id="edit-current-info" class="text-sm text-slate-600 space-y-3 mb-6">
                         <!-- Filled by JS -->
                     </div>
-                    
+
                     <h4 class="text-sm font-bold text-slate-700 mb-3 border-b border-slate-200 pb-2">메뉴명 변경</h4>
                     <div class="space-y-3">
-                        <input type="text" id="edit-menu-name-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500" placeholder="새로운 메뉴명 입력">
-                        
+                        <input type="text" id="edit-menu-name-input"
+                            class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="새로운 메뉴명 입력">
+
                         <div class="flex items-center gap-2 mt-2">
-                            <input type="checkbox" id="edit-name-only-checkbox" onchange="toggleEditNameOnlyMode()" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
-                            <label for="edit-name-only-checkbox" class="text-sm font-semibold text-slate-700 cursor-pointer">메뉴명만 변경 (파일/URL 유지)</label>
+                            <input type="checkbox" id="edit-name-only-checkbox" onchange="toggleEditNameOnlyMode()"
+                                class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                            <label for="edit-name-only-checkbox"
+                                class="text-sm font-semibold text-slate-700 cursor-pointer">메뉴명만 변경 (파일/URL 유지)</label>
                         </div>
                     </div>
                 </div>
 
                 <!-- Right Column: New Input -->
-                <div id="edit-right-col" class="w-full md:w-1/2 space-y-5 border-l border-slate-100 pl-0 md:pl-8 transition-opacity duration-200">
+                <div id="edit-right-col"
+                    class="w-full md:w-1/2 space-y-5 border-l border-slate-100 pl-0 md:pl-8 transition-opacity duration-200">
                     <div>
                         <div class="flex items-center gap-2 mb-2">
-                            <input type="checkbox" id="edit-url-checkbox" onchange="toggleEditUrlMode()" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
-                            <label for="edit-url-checkbox" class="text-sm font-semibold text-slate-700 cursor-pointer">새 실행 url 주소로 변경</label>
+                            <input type="checkbox" id="edit-url-checkbox" onchange="toggleEditUrlMode()"
+                                class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500 cursor-pointer">
+                            <label for="edit-url-checkbox" class="text-sm font-semibold text-slate-700 cursor-pointer">새
+                                실행 url 주소로 변경</label>
                         </div>
-                        <input type="text" id="edit-url-input" class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed" placeholder="예: https://example.com" disabled>
+                        <input type="text" id="edit-url-input"
+                            class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                            placeholder="예: https://example.com" disabled>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-slate-700 mb-2" id="edit-file-upload-label">새 파일 첨부로 변경</label>
-                        <div id="edit-drop-zone" class="drop-zone" ondragover="handleEditDragOver(event)" ondragleave="handleEditDragLeave(event)" ondrop="handleEditDrop(event)" onclick="document.getElementById('edit-file-input').click()">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2" id="edit-file-upload-label">새 파일
+                            첨부로 변경</label>
+                        <div id="edit-drop-zone" class="drop-zone" ondragover="handleEditDragOver(event)"
+                            ondragleave="handleEditDragLeave(event)" ondrop="handleEditDrop(event)"
+                            onclick="document.getElementById('edit-file-input').click()">
                             <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
                             <p class="text-sm text-slate-500" id="edit-drop-zone-text">파일을 드래그하거나 클릭하여 선택하세요.</p>
-                            <input type="file" id="edit-file-input" class="hidden" onchange="handleEditFileSelect(event)">
+                            <input type="file" id="edit-file-input" class="hidden"
+                                onchange="handleEditFileSelect(event)">
                         </div>
                     </div>
                 </div>
@@ -480,12 +949,17 @@
                     <i data-lucide="paperclip" class="w-4 h-4 text-slate-500"></i> 첨부파일 관리 (다중 첨부 가능)
                 </h4>
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                    <div id="attachments-drop-zone" class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:bg-slate-100 hover:border-blue-400 transition-colors mb-4" ondragover="handleAttachmentDragOver(event)" ondragleave="handleAttachmentDragLeave(event)" ondrop="handleAttachmentDrop(event)" onclick="document.getElementById('attachments-file-input').click()">
+                    <div id="attachments-drop-zone"
+                        class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center cursor-pointer hover:bg-slate-100 hover:border-blue-400 transition-colors mb-4"
+                        ondragover="handleAttachmentDragOver(event)" ondragleave="handleAttachmentDragLeave(event)"
+                        ondrop="handleAttachmentDrop(event)"
+                        onclick="document.getElementById('attachments-file-input').click()">
                         <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 mx-auto mb-2"></i>
                         <p class="text-sm text-slate-500" id="attachments-drop-zone-text">첨부할 파일을 드래그하거나 클릭하여 선택하세요.</p>
-                        <input type="file" id="attachments-file-input" class="hidden" multiple onchange="handleAttachmentFileSelect(event)">
+                        <input type="file" id="attachments-file-input" class="hidden" multiple
+                            onchange="handleAttachmentFileSelect(event)">
                     </div>
-                    
+
                     <div id="attachments-list" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                         <!-- Filled by JS -->
                         <p class="text-xs text-slate-400 text-center py-2">등록된 첨부파일이 없습니다.</p>
@@ -494,8 +968,11 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
-                <button onclick="closeEditMenuModal()" class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
-                <button onclick="submitEditMenu()" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2" id="submit-edit-menu-btn">
+                <button onclick="closeEditMenuModal()"
+                    class="px-5 py-2.5 text-slate-500 hover:bg-slate-100 rounded-lg text-sm font-semibold transition-colors">취소</button>
+                <button onclick="submitEditMenu()"
+                    class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    id="submit-edit-menu-btn">
                     변경 내용 저장
                 </button>
             </div>
@@ -504,10 +981,26 @@
 
     <script>
         lucide.createIcons();
-        
+
         let globalMenuData = [];
         let sortableInstance = null;
         let selectedFile = null;
+
+        function updateStickyBg() {
+            const bg = document.getElementById('sticky-bg');
+            if (bg) {
+                const st = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+                if (st > 50) {
+                    bg.classList.remove('opacity-0');
+                    bg.classList.add('opacity-100');
+                } else {
+                    bg.classList.remove('opacity-100');
+                    bg.classList.add('opacity-0');
+                }
+            }
+        }
+        document.body.addEventListener('scroll', updateStickyBg);
+        window.addEventListener('scroll', updateStickyBg);
 
         const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
@@ -522,11 +1015,11 @@
                     },
                     cache: 'no-store'
                 });
-                if(res.ok) {
+                if (res.ok) {
                     const flatData = await res.json();
-                    if(flatData && flatData.length > 0) {
+                    if (flatData && flatData.length > 0) {
                         const categories = flatData.filter(d => d.menu_type === 'category' || d.menu_type === '카테고리');
-                        
+
                         categories.sort((a, b) => ((a.menu_meta && a.menu_meta.sortOrder) || 0) - ((b.menu_meta && b.menu_meta.sortOrder) || 0));
 
                         globalMenuData = categories.map(cat => {
@@ -542,10 +1035,11 @@
                                     menuId: sub.MenuId || sub.menu_name,
                                     folderName: subMeta.folderName || sub.menu_name,
                                     urlAddress: sub.url_address || "",
+                                    isNew: sub.YN_New === true,
                                     sortOrder: subMeta.sortOrder || 0
                                 };
                             });
-                            
+
                             subItems.sort((a, b) => a.sortOrder - b.sortOrder);
 
                             return {
@@ -555,14 +1049,16 @@
                                 icon: meta.icon || "",
                                 status: cat.YN_use ? 'Y' : 'N',
                                 isPrivate: cat.YN_view === 'Y',
+                                isNew: cat.YN_New === true,
                                 displayPhrase: meta.displayPhrase || "",
                                 bgColor: meta.bgColor || "#050505",
                                 textColor: meta.textColor || "#ffffff",
                                 menuId: cat.MenuId,
+                                cl_company: cat.cl_company || 'HQ',
                                 subItems: subItems
                             };
                         });
-                        
+
                         globalMenuData.forEach(cat => {
                             if (cat.subItems) {
                                 cat.subItems.forEach(sub => {
@@ -572,13 +1068,16 @@
                                 });
                             }
                         });
+
+                        collapsedCategories = new Set(globalMenuData.map((_, i) => i));
+                        
                         renderDashboard();
                         renderMenuManager();
                         return;
                     }
                 }
                 throw new Error("Invalid response or empty data");
-            } catch(e) {
+            } catch (e) {
                 if (retries > 0) {
                     console.log(`Failed to load menu data. Retrying in 1s... (${retries} retries left)`);
                     setTimeout(() => loadMenuData(retries - 1), 1000);
@@ -591,7 +1090,7 @@
                     } else {
                         throw new Error("No parent data");
                     }
-                } catch(err) {
+                } catch (err) {
                     globalMenuData = [];
                 }
                 globalMenuData.forEach(cat => {
@@ -608,11 +1107,43 @@
             }
         }
 
+        let isSyncingAccordions = false;
+        function syncAccordions(sourceElement) {
+            if (isSyncingAccordions) return;
+            isSyncingAccordions = true;
+            const isOpen = sourceElement.open;
+            const detailsDept = document.getElementById('details-dept');
+            const detailsHidden = document.getElementById('details-hidden');
+            if (detailsDept && detailsDept !== sourceElement) detailsDept.open = isOpen;
+            if (detailsHidden && detailsHidden !== sourceElement) detailsHidden.open = isOpen;
+            isSyncingAccordions = false;
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const modals = [
+                    { id: 'edit-menu-modal', closeFn: typeof closeEditMenuModal !== 'undefined' ? closeEditMenuModal : null },
+                    { id: 'menu-modal', closeFn: typeof closeMenuModal !== 'undefined' ? closeMenuModal : null },
+                    { id: 'edit-category-modal', closeFn: typeof closeEditCategoryModal !== 'undefined' ? closeEditCategoryModal : null },
+                    { id: 'category-modal', closeFn: typeof closeCategoryModal !== 'undefined' ? closeCategoryModal : null }
+                ];
+                for (const modal of modals) {
+                    const el = document.getElementById(modal.id);
+                    if (el && !el.classList.contains('hidden')) {
+                        if (modal.closeFn) {
+                            modal.closeFn();
+                            return; // Stop after closing the top-most/found modal
+                        }
+                    }
+                }
+            }
+        });
+
         window.onload = async () => {
-    await loadMenuData();
-    const activeTab = sessionStorage.getItem('admin_active_tab') || 'home';
-    switchTab(activeTab);
-};
+            await loadMenuData();
+            const activeTab = sessionStorage.getItem('admin_active_tab') || 'home';
+            switchTab(activeTab);
+        };
 
         async function saveData() {
             try {
@@ -627,6 +1158,8 @@
                         url_address: "",
                         YN_use: (cat.status || 'Y') === 'Y',
                         YN_view: cat.isPrivate ? 'Y' : 'N',
+                        YN_New: cat.isNew ? true : false,
+                        cl_company: cat.cl_company || 'HQ',
                         menu_meta: {
                             icon: cat.icon,
                             slug: cat.slug,
@@ -666,6 +1199,8 @@
                                 url_address: isUrl ? urlAddr : "",
                                 YN_use: subStatus === 'Y',
                                 YN_view: sub.isPrivate ? 'Y' : 'N',
+                                YN_New: (typeof sub === 'object' && sub.isNew) ? true : false,
+                                cl_company: cat.cl_company || 'HQ',
                                 menu_meta: {
                                     description: subDesc,
                                     folderName: folderName,
@@ -685,7 +1220,7 @@
                     const currentIds = currentRecords.map(r => r.MenuId);
                     const newIds = records.map(r => r.MenuId);
                     const idsToDelete = currentIds.filter(id => !newIds.includes(id));
-                    
+
                     if (idsToDelete.length > 0) {
                         await fetch(`${SUPABASE_URL}/rest/v1/MenuSetting?MenuId=in.(${idsToDelete.join(',')})`, {
                             method: 'DELETE',
@@ -709,7 +1244,7 @@
                     console.error("Supabase upsert failed:", errText);
                     throw new Error("Supabase upsert failed: " + postRes.statusText);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Failed to save menu data", e);
                 alert("메뉴 저장 중 오류가 발생했습니다: " + e.message);
             }
@@ -717,7 +1252,7 @@
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-content, #tab-home, #tab-menu, #tab-user, #tab-password').forEach(c => {
+            document.querySelectorAll('.tab-content, #tab-home, #tab-menu, #tab-user, #tab-password, #tab-loginHistory').forEach(c => {
                 c.classList.remove('block');
                 c.classList.add('hidden');
             });
@@ -726,20 +1261,43 @@
                 window.event.target.classList.add('active');
             } else {
                 const btn = document.querySelector(`.tab-btn[onclick*="switchTab('${tabId}')"]`);
-                if(btn) btn.classList.add('active');
+                if (btn) btn.classList.add('active');
             }
 
             const target = document.getElementById('tab-' + tabId);
-            if(target) {
+            if (target) {
                 target.classList.remove('hidden');
                 target.classList.add('block');
-                
+
                 // 만약 사용자 정보 탭을 눌렀다면 데이터 로드
                 if (tabId === 'user') {
                     fetchUserInfoList();
+                } else if (tabId === 'loginHistory') {
+                    // 기본 날짜 오늘로 설정
+                    const today = new Date();
+                    // KST (UTC+9) 기준으로 YYYY-MM-DD 추출
+                    const kstOffset = 9 * 60 * 60 * 1000;
+                    const kstDate = new Date(today.getTime() + kstOffset);
+                    const todayStr = kstDate.toISOString().split('T')[0];
+
+                    if (!document.getElementById('log-period-from').value) {
+                        document.getElementById('log-period-from').value = todayStr;
+                        document.getElementById('log-period-to').value = todayStr;
+                        document.getElementById('log-date-from').value = todayStr;
+                        document.getElementById('log-date-to').value = todayStr;
+                        document.getElementById('log-raw-from').value = todayStr;
+                        document.getElementById('log-raw-to').value = todayStr;
+                    }
+                    if (document.getElementById('log-container-period').classList.contains('block')) {
+                        fetchLoginHistory('period');
+                    } else if (document.getElementById('log-container-date').classList.contains('block')) {
+                        fetchLoginHistory('date');
+                    } else {
+                        fetchLoginHistory('raw');
+                    }
                 }
             }
-            
+
             // Header 보이기/숨기기 (Home 탭에서만 보임)
             const header = document.getElementById('admin-header');
             if (header) {
@@ -749,14 +1307,14 @@
                     header.style.display = 'none';
                 }
             }
-            
+
             sessionStorage.setItem('admin_active_tab', tabId);
-            
-            if(tabId === 'home') renderDashboard();
+
+            if (tabId === 'home') renderDashboard();
         }
 
         // --- DASHBOARD ---
-        function renderDashboard() {
+        async function renderDashboard() {
             let totalDev = 0;
             let hiddenMenuCount = 0;
             let hiddenCatCount = 0;
@@ -774,22 +1332,19 @@
                 }
 
                 let activeSubs = 0;
-                
+
                 cat.subItems.forEach(sub => {
                     const subStatus = sub.status || 'Y';
                     const isHidden = subStatus === 'N' || cat.status === 'N';
-                    
-                    // 만약 부서 전체가 숨겨졌다면, 하위 메뉴를 개별적으로 또 리스트에 넣지 않거나 넣거나 선택.
-                    // 기존 로직을 존중하여 숨김 처리된 하위 메뉴도 카운트 및 리스트화
-                    if(isHidden) {
+
+                    if (isHidden) {
                         hiddenMenuCount++;
                         hiddenList.push({ cat: cat.title, name: typeof sub === 'string' ? sub : sub.title });
                     }
                     totalDev++;
                     activeSubs++;
                 });
-                
-                // 개발 건수가 1건 이상인 부서만 그래프(리스트)에 표시
+
                 if (activeSubs > 0) {
                     deptCounts[cat.title] = activeSubs;
                 }
@@ -803,7 +1358,7 @@
             // Render dept list
             const deptContainer = document.getElementById('dept-breakdown-list');
             deptContainer.innerHTML = '';
-            for(const [dept, count] of Object.entries(deptCounts)) {
+            for (const [dept, count] of Object.entries(deptCounts)) {
                 deptContainer.innerHTML += `
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <span class="font-semibold text-slate-700">${dept}</span>
@@ -815,7 +1370,7 @@
             // Render hidden list
             const hiddenContainer = document.getElementById('hidden-menus-list');
             hiddenContainer.innerHTML = '';
-            if(hiddenList.length === 0) {
+            if (hiddenList.length === 0) {
                 hiddenContainer.innerHTML = '<p class="text-sm text-slate-400 p-2">숨김처리된 메뉴가 없습니다.</p>';
             } else {
                 hiddenList.forEach(item => {
@@ -826,6 +1381,44 @@
                         </div>
                     `;
                 });
+            }
+
+            // --- Fetch User Info Stats ---
+            try {
+                const { data: users, error } = await supabaseClient.from('user_info').select('yn_open, cl_company');
+                if (!error && users) {
+                    let uTotal = 0, uHo = 0, uCorp = 0, uGuest = 0;
+                    let aTotal = 0, aHo = 0, aCorp = 0, aGuest = 0;
+
+                    users.forEach(u => {
+                        uTotal++;
+                        const comp = u.cl_company || '';
+                        const isOpen = u.yn_open === 'Y' || u.yn_open === true || String(u.yn_open).toLowerCase() === 'true';
+
+                        if (comp === '본사') uHo++;
+                        else if (comp === '법인') uCorp++;
+                        else if (comp === '게스트') uGuest++;
+
+                        if (isOpen) {
+                            aTotal++;
+                            if (comp === '본사') aHo++;
+                            else if (comp === '법인') aCorp++;
+                            else if (comp === '게스트') aGuest++;
+                        }
+                    });
+
+                    document.getElementById('user-total').innerText = uTotal;
+                    document.getElementById('user-ho').innerText = uHo;
+                    document.getElementById('user-corp').innerText = uCorp;
+                    document.getElementById('user-guest').innerText = uGuest;
+
+                    document.getElementById('active-total').innerText = aTotal;
+                    document.getElementById('active-ho').innerText = aHo;
+                    document.getElementById('active-corp').innerText = aCorp;
+                    document.getElementById('active-guest').innerText = aGuest;
+                }
+            } catch (err) {
+                console.error("사용자 통계 조회 오류:", err);
             }
         }
 
@@ -845,7 +1438,7 @@
             globalMenuData.forEach((cat, catIndex) => {
                 const isCollapsed = collapsedCategories.has(catIndex);
                 let hasMatchingSubItems = false;
-                
+
                 const subItemsHtml = cat.subItems.map((sub, subIndex) => {
                     const title = typeof sub === 'string' ? sub : sub.title;
                     const status = sub.status || 'Y';
@@ -855,7 +1448,7 @@
 
                     hasMatchingSubItems = true;
                     const isChecked = status === 'Y' ? 'checked' : '';
-                    
+
                     let subFileNameHtml = "";
                     if (typeof sub === 'object') {
                         if (sub.fileName && sub.fileName !== "정보 없음") {
@@ -875,6 +1468,10 @@
                         </div>
                             <div class="flex items-center gap-3">
                                 <label class="flex items-center gap-1 cursor-pointer">
+                                    <span class="text-xs font-bold text-rose-500">New</span>
+                                    <input type="checkbox" class="w-4 h-4 text-rose-600 bg-slate-50 border-slate-300 rounded focus:ring-rose-500" ${(typeof sub === 'object' && sub.isNew) ? 'checked' : ''} onchange="toggleMenuNew(${catIndex}, ${subIndex})">
+                                </label>
+                                <label class="flex items-center gap-1 cursor-pointer">
                                     <span class="text-xs font-bold text-slate-600">비공개</span>
                                     <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${(typeof sub === 'object' && sub.isPrivate) ? 'checked' : ''} onchange="toggleMenuPrivate(${catIndex}, ${subIndex})">
                                 </label>
@@ -890,12 +1487,12 @@
                 }).join('');
 
                 const catStatus = cat.status || 'Y';
-                
+
                 // Category Filter Logic
                 if (currentMenuFilter === 'active' && catStatus !== 'Y') {
                     return; // Hide entirely
                 }
-                
+
                 if (currentMenuFilter === 'hidden') {
                     if (catStatus !== 'N' && !hasMatchingSubItems) {
                         return; // Hide entirely if category is active AND has no hidden subitems
@@ -915,6 +1512,10 @@
                                 <h3 class="font-bold text-slate-800">${cat.title}</h3>
                             </div>
                             <div class="flex items-center gap-3" onclick="event.stopPropagation()">
+                                <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
+                                    <span class="text-xs font-bold text-rose-500">New</span>
+                                    <input type="checkbox" class="w-4 h-4 text-rose-600 bg-slate-50 border-slate-300 rounded focus:ring-rose-500" ${cat.isNew ? 'checked' : ''} onchange="toggleCategoryNew(${catIndex})">
+                                </label>
                                 <label class="flex items-center gap-1 cursor-pointer" onclick="event.stopPropagation()">
                                     <span class="text-xs font-bold text-slate-600">비공개</span>
                                     <input type="checkbox" class="w-4 h-4 text-blue-600 bg-slate-50 border-slate-300 rounded focus:ring-blue-500" ${cat.isPrivate ? 'checked' : ''} onchange="toggleCategoryPrivate(${catIndex})">
@@ -971,14 +1572,14 @@
 
         async function applyChanges() {
             await saveData();
-            
+
             alert("변경사항이 정상적으로 저장되었습니다. 화면을 새로고침합니다.");
             try {
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                 }
                 window.location.reload();
-            } catch(e) {
+            } catch (e) {
                 window.location.reload();
             }
         }
@@ -994,7 +1595,7 @@
 
         function toggleMenuStatus(catIndex, subIndex) {
             const sub = globalMenuData[catIndex].subItems[subIndex];
-            if(typeof sub === 'string') {
+            if (typeof sub === 'string') {
                 globalMenuData[catIndex].subItems[subIndex] = { title: sub, status: 'N' };
             } else {
                 sub.status = sub.status === 'Y' ? 'N' : 'Y';
@@ -1008,14 +1609,26 @@
             renderMenuManager();
         }
 
+        function toggleCategoryNew(catIndex) {
+            const cat = globalMenuData[catIndex];
+            cat.isNew = !cat.isNew;
+        }
+
         function toggleCategoryPrivate(catIndex) {
             const cat = globalMenuData[catIndex];
             cat.isPrivate = !cat.isPrivate;
         }
 
+        function toggleMenuNew(catIndex, subIndex) {
+            const sub = globalMenuData[catIndex].subItems[subIndex];
+            if (typeof sub === 'object') {
+                sub.isNew = !sub.isNew;
+            }
+        }
+
         function toggleMenuPrivate(catIndex, subIndex) {
             const sub = globalMenuData[catIndex].subItems[subIndex];
-            if(typeof sub === 'object') {
+            if (typeof sub === 'object') {
                 sub.isPrivate = !sub.isPrivate;
             }
         }
@@ -1025,7 +1638,7 @@
             const sub = cat.subItems[subIndex];
             const title = typeof sub === 'string' ? sub : sub.title;
 
-            if(!confirm(`'${title}' 메뉴를 삭제하시겠습니까? 관련된 물리적 경로 및 파일이 모두 영구 삭제됩니다.`)) return;
+            if (!confirm(`'${title}' 메뉴를 삭제하시겠습니까? 관련된 물리적 경로 및 파일이 모두 영구 삭제됩니다.`)) return;
 
             try {
                 try {
@@ -1035,13 +1648,13 @@
                         body: JSON.stringify({ category: cat.title, menuName: title })
                     });
 
-                    if(!res.ok) {
+                    if (!res.ok) {
                         console.error("Failed to delete physical folder");
                     }
-                } catch(localErr) {
+                } catch (localErr) {
                     console.warn("로컬 서버가 구동 중이지 않습니다. 삭제 작업은 DB에서만 진행됩니다.", localErr);
                 }
-                
+
                 // MenualPage (말풍선/매뉴얼) 테이블의 연관 데이터도 함께 삭제
                 const menuId = (typeof sub === 'object' && sub.menuId) ? sub.menuId : title;
                 try {
@@ -1052,7 +1665,7 @@
                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                         }
                     });
-                } catch(e) {
+                } catch (e) {
                     console.error("Failed to delete MenualPage data", e);
                 }
 
@@ -1060,11 +1673,11 @@
                 await saveData();
                 renderMenuManager();
                 renderDashboard();
-                
+
                 if (window.parent && window.parent !== window) {
                     window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                 }
-            } catch(e) {
+            } catch (e) {
                 alert("삭제 중 오류가 발생했습니다: " + e.message);
             }
         }
@@ -1077,6 +1690,7 @@
             document.getElementById('edit-cat-display-phrase-input').value = cat.displayPhrase || '';
             document.getElementById('edit-cat-bg-color-input').value = cat.bgColor || '#050505';
             document.getElementById('edit-cat-text-color-input').value = cat.textColor || '#ffffff';
+            document.getElementById('edit-cat-cl-company-input').value = cat.cl_company || 'HQ';
             document.getElementById('edit-category-modal').classList.remove('hidden');
             lucide.createIcons();
         }
@@ -1089,14 +1703,15 @@
             const index = parseInt(document.getElementById('edit-cat-index-input').value);
             const cat = globalMenuData[index];
             const oldName = cat.title;
-            
-            const newName = document.getElementById('edit-cat-name-input').value.trim();
+
+                const newName = document.getElementById('edit-cat-name-input').value.trim();
             const displayPhrase = document.getElementById('edit-cat-display-phrase-input').value.trim();
             const bgColor = document.getElementById('edit-cat-bg-color-input').value;
             const textColor = document.getElementById('edit-cat-text-color-input').value;
-            
-            if(!newName) return alert("카테고리명을 입력하세요.");
-            
+            const clCompany = document.getElementById('edit-cat-cl-company-input').value;
+
+            if (!newName) return alert("카테고리명을 입력하세요.");
+
             // Check if name changed and new name already exists
             if (oldName !== newName && globalMenuData.find(c => c.title === newName)) {
                 return alert("이미 존재하는 카테고리명입니다.");
@@ -1110,7 +1725,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ oldName, newName })
                         });
-                        
+
                         const result = await res.json();
                         if (!res.ok) {
                             if (result.error === 'ALREADY_EXISTS') {
@@ -1122,7 +1737,7 @@
                                 console.error('Failed to rename folder on local server:', result.error);
                             }
                         }
-                    } catch(localErr) {
+                    } catch (localErr) {
                         console.warn("로컬 서버가 구동 중이지 않습니다. 메타데이터만 변경됩니다.", localErr);
                     }
                 }
@@ -1133,12 +1748,13 @@
                 cat.displayPhrase = displayPhrase;
                 cat.bgColor = bgColor;
                 cat.textColor = textColor;
+                cat.cl_company = clCompany;
 
                 await applyChanges();
                 closeEditCategoryModal();
                 renderMenuManager();
                 renderDashboard();
-            } catch(e) {
+            } catch (e) {
                 alert("변경 저장에 실패했습니다. 서버 상태를 확인해주세요.");
                 console.error(e);
             }
@@ -1150,6 +1766,7 @@
             document.getElementById('cat-display-phrase-input').value = '';
             document.getElementById('cat-bg-color-input').value = '#050505';
             document.getElementById('cat-text-color-input').value = '#ffffff';
+            document.getElementById('cat-cl-company-input').value = 'HQ';
             document.getElementById('category-modal').classList.remove('hidden');
         }
         function closeCategoryModal() {
@@ -1160,10 +1777,11 @@
             const displayPhrase = document.getElementById('cat-display-phrase-input').value.trim();
             const bgColor = document.getElementById('cat-bg-color-input').value;
             const textColor = document.getElementById('cat-text-color-input').value;
-            if(!name) return alert("카테고리명을 입력하세요.");
-            
+            const clCompany = document.getElementById('cat-cl-company-input').value;
+            if (!name) return alert("카테고리명을 입력하세요.");
+
             // Check if exists
-            if(globalMenuData.find(c => c.title === name)) return alert("이미 존재하는 카테고리입니다.");
+            if (globalMenuData.find(c => c.title === name)) return alert("이미 존재하는 카테고리입니다.");
 
             // Add to data
             globalMenuData.push({
@@ -1172,6 +1790,7 @@
                 displayPhrase: displayPhrase,
                 bgColor: bgColor,
                 textColor: textColor,
+                cl_company: clCompany,
                 slug: name.toLowerCase().replace(/\s+/g, '-'),
                 imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200", // default
                 icon: "folder",
@@ -1184,10 +1803,10 @@
             const formData = new FormData();
             formData.append('category', name);
             formData.append('isNewCategory', 'true');
-            
+
             try {
                 await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
-            } catch(e) {
+            } catch (e) {
                 console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", e);
             }
 
@@ -1195,7 +1814,7 @@
                 await saveData();
                 closeCategoryModal();
                 renderMenuManager();
-            } catch(e) {
+            } catch (e) {
                 alert("카테고리 저장에 실패했습니다.");
                 console.error(e);
             }
@@ -1212,7 +1831,7 @@
 
             if (isUrlMode) {
                 urlInput.disabled = false;
-                
+
                 selectedFile = null;
                 dropZoneText.innerText = "URL 입력 모드입니다. (파일 첨부 비활성화)";
                 dropZone.style.pointerEvents = 'none';
@@ -1222,7 +1841,7 @@
             } else {
                 urlInput.disabled = true;
                 urlInput.value = '';
-                
+
                 selectedFile = null;
                 dropZoneText.innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
                 dropZone.style.pointerEvents = 'auto';
@@ -1235,18 +1854,18 @@
         function openMenuModal() {
             const select = document.getElementById('menu-cat-select');
             select.innerHTML = globalMenuData.map((c, i) => `<option value="${i}">${c.title}</option>`).join('');
-            
+
             document.getElementById('menu-name-input').value = '';
             document.getElementById('menu-desc-input').value = '';
             document.getElementById('menu-url-checkbox').checked = false;
             toggleUrlMode();
-            
+
             document.getElementById('menu-modal').classList.remove('hidden');
         }
         function closeMenuModal() {
             document.getElementById('menu-modal').classList.add('hidden');
         }
-        
+
         // Drag and drop for files
         function handleDragOver(e) {
             e.preventDefault();
@@ -1271,10 +1890,10 @@
         function setFile(file) {
             selectedFile = file;
             document.getElementById('drop-zone-text').innerText = `선택된 파일: ${file.name}`;
-            
+
             // Auto-fill menu name if empty
             const nameInput = document.getElementById('menu-name-input');
-            if(!nameInput.value) {
+            if (!nameInput.value) {
                 nameInput.value = file.name.split('.').slice(0, -1).join('.');
             }
         }
@@ -1285,9 +1904,9 @@
             const desc = document.getElementById('menu-desc-input').value.trim();
             const isUrlMode = document.getElementById('menu-url-checkbox').checked;
             let urlValue = document.getElementById('menu-url-input').value.trim();
-            
-            if(!menuName) return alert("메뉴명을 입력하세요.");
-            if(!desc) return alert("메뉴 설명을 입력하세요.");
+
+            if (!menuName) return alert("메뉴명을 입력하세요.");
+            if (!desc) return alert("메뉴 설명을 입력하세요.");
 
             let finalFile = selectedFile;
 
@@ -1299,7 +1918,7 @@
                 const fileContent = `${urlValue}\n\n설명 : ${desc}`;
                 finalFile = new File([fileContent], `${menuName}.txt`, { type: "text/plain" });
             } else {
-                if(!finalFile) return alert("파일을 첨부해주세요.");
+                if (!finalFile) return alert("파일을 첨부해주세요.");
             }
 
             const cat = globalMenuData[catIndex];
@@ -1324,7 +1943,7 @@
                         cacheControl: '3600',
                         upsert: true
                     });
-                
+
                 if (error) {
                     alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
                     throw error;
@@ -1333,7 +1952,7 @@
                 // 2. 로컬 서버(Antigravity 환경)용 백업 업로드 시도
                 try {
                     let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
-                    if(!res.ok) {
+                    if (!res.ok) {
                         if (res.status === 409) {
                             if (confirm("로컬에 동일한 이름의 파일이 있습니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                 formData.append('overwrite', 'true');
@@ -1344,7 +1963,7 @@
                             console.warn("Local upload failed");
                         }
                     }
-                } catch(uploadErr) {
+                } catch (uploadErr) {
                     console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                 }
 
@@ -1367,10 +1986,10 @@
                         window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                     }
                     window.location.reload();
-                } catch(e) {
+                } catch (e) {
                     window.location.reload();
                 }
-            } catch(e) {
+            } catch (e) {
                 alert("파일 업로드 또는 저장에 실패했습니다.");
                 console.error(e);
             } finally {
@@ -1386,20 +2005,20 @@
         function openEditMenuModal(catIndex, subIndex) {
             currentEditCatIndex = catIndex;
             currentEditSubIndex = subIndex;
-            
+
             const cat = globalMenuData[catIndex];
             const sub = cat.subItems[subIndex];
-            
+
             const title = typeof sub === 'string' ? sub : sub.title;
             const fileName = sub.fileName || "정보 없음";
-            
+
             let typeText = "알 수 없음";
-            let isUrl = fileName.endsWith('.txt'); 
+            let isUrl = fileName.endsWith('.txt');
             if (isUrl) typeText = "URL 링크";
             else if (fileName.endsWith('.html')) typeText = "HTML 웹페이지";
             else if (fileName.endsWith('.py')) typeText = "파이썬 스크립트";
             else if (fileName !== "정보 없음") typeText = "실행 파일 (" + fileName.split('.').pop() + ")";
-            
+
             const currentInfoHtml = `
                 <div class="flex flex-col gap-1">
                     <span class="font-bold text-slate-800">대상 메뉴:</span>
@@ -1414,22 +2033,22 @@
                     <span class="break-all font-mono text-xs bg-slate-200 px-2 py-1.5 rounded">Project files/${cat.title}/${title}/${fileName}</span>
                 </div>
             `;
-            
+
             document.getElementById('edit-current-info').innerHTML = currentInfoHtml;
-            
+
             document.getElementById('edit-menu-name-input').value = title;
             document.getElementById('edit-name-only-checkbox').checked = false;
             toggleEditNameOnlyMode();
-            
+
             document.getElementById('edit-url-checkbox').checked = false;
             document.getElementById('edit-url-input').value = '';
             editSelectedFile = null;
             document.getElementById('edit-drop-zone-text').innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
             toggleEditUrlMode();
-            
+
             const isLocalFile = window.location.protocol === 'file:';
             const apiUrl = isLocalFile ? 'http://localhost:3000/api' : '/api';
-            
+
             if (isUrl && fileName !== "정보 없음") {
                 let url = sub.urlAddress || "";
                 if (url) {
@@ -1443,18 +2062,18 @@
                         .then(text => {
                             if (text) {
                                 let url = text.split('\n')[0].trim();
-                            document.getElementById('edit-url-checkbox').checked = true;
-                            toggleEditUrlMode();
-                            document.getElementById('edit-url-input').value = url;
-                        }
-                    })
-                    .catch(e => console.error("Failed to load URL info", e));
+                                document.getElementById('edit-url-checkbox').checked = true;
+                                toggleEditUrlMode();
+                                document.getElementById('edit-url-input').value = url;
+                            }
+                        })
+                        .catch(e => console.error("Failed to load URL info", e));
                 }
             }
-            
+
             document.getElementById('edit-menu-modal').classList.remove('hidden');
             lucide.createIcons();
-            
+
             // Load Attachments
             loadMenuAttachments(sub.menuId || title);
         }
@@ -1462,7 +2081,7 @@
         async function loadMenuAttachments(menuId) {
             const listDiv = document.getElementById('attachments-list');
             listDiv.innerHTML = '<p class="text-xs text-slate-400 text-center py-2">조회 중...</p>';
-            
+
             try {
                 const res = await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?MenuId=eq.${encodeURIComponent(menuId)}`, {
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
@@ -1491,7 +2110,7 @@
                         lucide.createIcons();
                     }
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Failed to load attachments", e);
                 listDiv.innerHTML = '<p class="text-xs text-rose-500 text-center py-2">조회 실패</p>';
             }
@@ -1528,22 +2147,22 @@
             const cat = globalMenuData[currentEditCatIndex];
             const sub = cat.subItems[currentEditSubIndex];
             const menuId = sub.menuId || (typeof sub === 'string' ? sub : sub.title);
-            
+
             document.getElementById('attachments-drop-zone-text').innerText = "업로드 중... 잠시만 기다려주세요.";
-            
+
             try {
-                for(let i=0; i<files.length; i++) {
+                for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     const uuid = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString();
                     const storagePath = `attachments/${menuId}/${uuid}_${file.name}`;
                     const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-                    
+
                     const { data, error } = await supabaseClient.storage
                         .from('hansoll-files')
                         .upload(storageKey, file, { cacheControl: '3600', upsert: true });
-                        
+
                     if (error) throw error;
-                    
+
                     // Insert to DB
                     await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments`, {
                         method: 'POST',
@@ -1562,7 +2181,7 @@
                 }
                 alert("첨부파일이 성공적으로 업로드되었습니다.");
                 loadMenuAttachments(menuId);
-            } catch(e) {
+            } catch (e) {
                 alert("파일 업로드 중 오류가 발생했습니다: " + e.message);
                 console.error(e);
             } finally {
@@ -1571,20 +2190,20 @@
         }
 
         async function deleteAttachment(id, storagePath, menuId) {
-            if(!confirm("이 첨부파일을 정말 삭제하시겠습니까?")) return;
+            if (!confirm("이 첨부파일을 정말 삭제하시겠습니까?")) return;
             try {
                 // Delete from DB
                 await fetch(`${SUPABASE_URL}/rest/v1/MenuAttachments?id=eq.${id}`, {
                     method: 'DELETE',
                     headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
                 });
-                
+
                 // Try delete from Storage (optional, since DB is main record, but good to clean up)
                 const storageKey = btoa(encodeURIComponent(storagePath)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
                 await supabaseClient.storage.from('hansoll-files').remove([storageKey]);
-                
+
                 loadMenuAttachments(menuId);
-            } catch(e) {
+            } catch (e) {
                 alert("삭제 중 오류가 발생했습니다.");
                 console.error(e);
             }
@@ -1593,8 +2212,8 @@
         function toggleEditNameOnlyMode() {
             const isNameOnly = document.getElementById('edit-name-only-checkbox').checked;
             const rightCol = document.getElementById('edit-right-col');
-            
-            if(isNameOnly) {
+
+            if (isNameOnly) {
                 rightCol.classList.add('opacity-40', 'pointer-events-none');
             } else {
                 rightCol.classList.remove('opacity-40', 'pointer-events-none');
@@ -1607,20 +2226,20 @@
             const dropZone = document.getElementById('edit-drop-zone');
             const fileLabel = document.getElementById('edit-file-upload-label');
             const fileInput = document.getElementById('edit-file-input');
-            
-            if(isChecked) {
+
+            if (isChecked) {
                 urlInput.disabled = false;
                 urlInput.focus();
-                
+
                 dropZone.classList.add('opacity-50', 'pointer-events-none');
                 fileLabel.classList.add('opacity-50');
                 editSelectedFile = null;
                 document.getElementById('edit-drop-zone-text').innerText = "파일을 드래그하거나 클릭하여 선택하세요.";
-                fileInput.value = ''; 
+                fileInput.value = '';
             } else {
                 urlInput.disabled = true;
                 urlInput.value = '';
-                
+
                 dropZone.classList.remove('opacity-50', 'pointer-events-none');
                 fileLabel.classList.remove('opacity-50');
             }
@@ -1628,7 +2247,7 @@
 
         function handleEditDragOver(e) {
             e.preventDefault();
-            if(!document.getElementById('edit-url-checkbox').checked) {
+            if (!document.getElementById('edit-url-checkbox').checked) {
                 document.getElementById('edit-drop-zone').classList.add('dragover');
             }
         }
@@ -1639,12 +2258,12 @@
         function handleEditDrop(e) {
             e.preventDefault();
             document.getElementById('edit-drop-zone').classList.remove('dragover');
-            if(!document.getElementById('edit-url-checkbox').checked && e.dataTransfer.files.length > 0) {
+            if (!document.getElementById('edit-url-checkbox').checked && e.dataTransfer.files.length > 0) {
                 setEditFile(e.dataTransfer.files[0]);
             }
         }
         function handleEditFileSelect(e) {
-            if(!document.getElementById('edit-url-checkbox').checked && e.target.files.length > 0) {
+            if (!document.getElementById('edit-url-checkbox').checked && e.target.files.length > 0) {
                 setEditFile(e.target.files[0]);
             }
         }
@@ -1658,7 +2277,7 @@
             let urlValue = document.getElementById('edit-url-input').value.trim();
             const newMenuName = document.getElementById('edit-menu-name-input').value.trim();
             const isNameOnly = document.getElementById('edit-name-only-checkbox').checked;
-            
+
             if (!newMenuName) return alert("메뉴명을 입력하세요.");
 
             const cat = globalMenuData[currentEditCatIndex];
@@ -1677,7 +2296,7 @@
                     const fileContent = `${urlValue}\n\n설명 : ${desc}`;
                     finalFile = new File([fileContent], `${newMenuName}.txt`, { type: "text/plain" });
                 } else {
-                    if(!finalFile) return alert("새로 변경할 파일을 첨부해주세요.");
+                    if (!finalFile) return alert("새로 변경할 파일을 첨부해주세요.");
                 }
             }
 
@@ -1705,7 +2324,7 @@
                                 }
                             }
                         }
-                    } catch(renameErr) {
+                    } catch (renameErr) {
                         console.warn("로컬 서버 폴더 이름 변경 실패(Vercel 환경 등). DB 저장을 계속 진행합니다.", renameErr);
                     }
                 }
@@ -1730,7 +2349,7 @@
                             cacheControl: '3600',
                             upsert: true
                         });
-                    
+
                     if (error) {
                         alert("클라우드 스토리지 파일 업로드에 실패했습니다: " + error.message);
                         throw error;
@@ -1739,7 +2358,7 @@
                     // 2. 로컬 서버 백업용 업로드
                     try {
                         let res = await fetch('http://localhost:3000/api/upload', { method: 'POST', body: formData });
-                        if(!res.ok) {
+                        if (!res.ok) {
                             if (res.status === 409) {
                                 if (confirm("로컬 폴더에 동일한 이름의 파일이 이미 존재합니다. 해당 파일을 덮어쓰시겠습니까?")) {
                                     formData.append('overwrite', 'true');
@@ -1747,7 +2366,7 @@
                                 }
                             }
                         }
-                    } catch(uploadErr) {
+                    } catch (uploadErr) {
                         console.warn("로컬 서버가 구동 중이지 않습니다 (Vercel 환경 정상 작동).", uploadErr);
                     }
                     finalFileName = finalFile.name;
@@ -1784,10 +2403,10 @@
                         window.parent.postMessage({ type: 'UPDATE_PORTAL_MENU' }, '*');
                     }
                     window.location.reload();
-                } catch(e) {
+                } catch (e) {
                     window.location.reload();
                 }
-            } catch(e) {
+            } catch (e) {
                 alert("파일 업로드 또는 저장에 실패했습니다.");
                 console.error(e);
             } finally {
@@ -1809,6 +2428,7 @@
 
         // --- 사용자 정보 엑셀 업로드 로직 ---
         let selectedUserExcelFile = null;
+        let currentFetchedUsers = [];
 
         function handleUserExcelSelect(event) {
             const file = event.target.files[0];
@@ -1828,7 +2448,7 @@
         function handleUserDrop(event) {
             event.preventDefault();
             document.getElementById('user-upload-zone').classList.remove('bg-blue-50', 'border-blue-300');
-            
+
             if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
                 const file = event.dataTransfer.files[0];
                 processUserSelectedFile(file);
@@ -1842,13 +2462,14 @@
             }
         }
 
-        async function uploadUserExcel() {
+        async function uploadUserExcel(isAppend = false) {
             if (!selectedUserExcelFile) {
                 alert("업로드할 엑셀 파일을 먼저 선택해주세요.");
                 return;
             }
 
-            const confirmUpload = confirm("기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?");
+            const confirmMsg = isAppend ? "업로드한 데이터가 기존 데이터에 추가됩니다. 진행하시겠습니까?" : "기존 사용자 데이터가 모두 삭제됩니다. 정말 진행하시겠습니까?";
+            const confirmUpload = confirm(confirmMsg);
             if (!confirmUpload) return;
 
             const statusEl = document.getElementById('user-upload-status');
@@ -1856,7 +2477,7 @@
             statusEl.innerText = "엑셀 파일을 읽는 중...";
 
             const reader = new FileReader();
-            reader.onload = async function(e) {
+            reader.onload = async function (e) {
                 try {
                     const data = new Uint8Array(e.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -1872,7 +2493,7 @@
 
                     statusEl.innerText = "데이터 변환 중...";
                     const userNameId = sessionStorage.getItem('userNameId') || 'admin';
-                    
+
                     const parsedData = json.map(row => {
                         return {
                             emp_no: row['EMP_NO'] ? String(row['EMP_NO']) : '',
@@ -1886,18 +2507,21 @@
                             lvduty_cd: row['LVDUTY_CD'] || '',
                             lvduty_nm: row['LVDUTY_NM'] || '',
                             yn_open: (row['YN_OPEN'] === 'Y' || row['YN_OPEN'] === true || row['YN_OPEN'] === 'true') ? 'Y' : 'N',
+                            cl_company: row['CL_COMPANY'] || '',
                             created_by: userNameId,
                             updated_by: userNameId
                         };
                     });
 
-                    statusEl.innerText = "기존 데이터 삭제 중...";
-                    // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
-                    const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
-                    if (deleteError) throw deleteError;
+                    if (!isAppend) {
+                        statusEl.innerText = "기존 데이터 삭제 중...";
+                        // 더미 필터(사번이 빈 값이 아닌 경우)를 통해 전체 데이터 삭제 유도
+                        const { error: deleteError } = await supabaseClient.from('user_info').delete().neq('emp_no', 'null_dummy');
+                        if (deleteError) throw deleteError;
+                    }
 
                     statusEl.innerText = "새 데이터 저장 중... (" + parsedData.length + "건)";
-                    
+
                     // 대용량일 경우 나눠서 인서트해야 할 수 있지만 일반적으로 한 번에 처리 가능 (Supabase limit 고려)
                     const chunkSize = 1000;
                     for (let i = 0; i < parsedData.length; i += chunkSize) {
@@ -1908,13 +2532,13 @@
 
                     statusEl.innerText = "업데이트가 완료되었습니다!";
                     alert("사용자 정보가 성공적으로 업데이트 되었습니다.");
-                    
+
                     // 초기화
                     selectedUserExcelFile = null;
                     document.getElementById('user-excel-upload').value = '';
                     document.getElementById('user-file-name').innerHTML = '파일 선택';
                     setTimeout(() => statusEl.classList.add('hidden'), 3000);
-                    
+
                     // 테이블 재로드
                     fetchUserInfoList();
 
@@ -1927,10 +2551,45 @@
             reader.readAsArrayBuffer(selectedUserExcelFile);
         }
 
+        function downloadUserExcel() {
+            if (!currentFetchedUsers || currentFetchedUsers.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            const exportData = currentFetchedUsers.map(user => ({
+                "사번": String(user.emp_no || ""),
+                "이름": user.emp_nm || "",
+                "부서": user.nm_dept || "",
+                "직급": user.occp_grd_nm || "",
+                "직책": user.lvduty_nm || "",
+                "이메일": user.nm_email || "",
+                "공개여부": user.yn_open || ""
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(exportData);
+
+            // 모든 셀을 명시적으로 문자열(text) 타입으로 지정하여 '00001'과 같은 사번이 1로 변경되지 않도록 함
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+                    if (!worksheet[cellAddress]) continue;
+                    worksheet[cellAddress].z = '@'; // 텍스트 형식
+                }
+            }
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "사용자정보");
+
+            const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            XLSX.writeFile(workbook, `사용자정보_${dateStr}.xlsx`);
+        }
+
         // --- 사용자 목록 조회 ---
         async function fetchUserInfoList() {
             const tbody = document.getElementById('user-info-tbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr>';
             
             // 검색 조건 가져오기
             const empNo = document.getElementById('search-emp-no')?.value.trim() || '';
@@ -1939,6 +2598,7 @@
             const lvdutyNm = document.getElementById('search-lvduty-nm')?.value.trim() || '';
             const email = document.getElementById('search-email')?.value.trim() || '';
             const ynOpen = document.getElementById('search-yn-open')?.value || 'all';
+            const clCompany = document.getElementById('search-cl-company')?.value || 'all';
 
             let query = supabaseClient.from('user_info').select('*');
             
@@ -1948,19 +2608,22 @@
             if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
             if (email) query = query.like('nm_email', `%${email}%`);
             if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
+            if (clCompany !== 'all') query = query.eq('cl_company', clCompany);
             
             query = query.order('emp_no', { ascending: true });
 
             const { data, error } = await query;
+            
+            currentFetchedUsers = data || [];
                 
             if (error) {
                 console.error("fetchUserInfoList Error:", error);
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">데이터를 불러오는데 실패했습니다.</td></tr>';
                 return;
             }
             
             if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="p-8 text-center text-slate-500">등록된 사용자 정보가 없습니다.</td></tr>';
                 return;
             }
             
@@ -1971,13 +2634,16 @@
                 
                 // YN_OPEN dropdown
                 const selectHtml = `
-                    <select onchange="updateUserOpenStatus('${user.emp_no}', this.value)" class="border border-slate-300 rounded px-2 py-1 text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+            <select onchange = "updateUserOpenStatus('${user.emp_no}', this.value)" class= "border border-slate-300 rounded px-2 py-1 text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none" >
                         <option value="Y" ${user.yn_open === 'Y' ? 'selected' : ''}>Y</option>
                         <option value="N" ${user.yn_open !== 'Y' ? 'selected' : ''}>N</option>
                     </select>
                 `;
                 
                 tr.innerHTML = `
+                    <td class="p-4 text-center">
+                        <input type="checkbox" value="${user.emp_no}" class="user-row-checkbox w-4 h-4 cursor-pointer text-blue-600 rounded border-slate-300 focus:ring-blue-500" onclick="updateHeaderCheckboxState()">
+                    </td>
                     <td class="p-4 font-medium text-slate-900">${user.emp_no}</td>
                     <td class="p-4 font-bold text-slate-800">${user.emp_nm || ''}</td>
                     <td class="p-4">${user.nm_dept || ''}</td>
@@ -1985,10 +2651,69 @@
                     <td class="p-4">${user.lvduty_nm || ''}</td>
                     <td class="p-4 text-slate-500">${user.nm_email || ''}</td>
                     <td class="p-4 text-center">${selectHtml}</td>
+                    <td class="p-4 text-center">${user.cl_company || "-"}</td>
                 `;
                 tbody.appendChild(tr);
             });
             lucide.createIcons();
+            updateHeaderCheckboxState(); // Reset header checkbox
+        }
+
+        // --- 체크박스 동작 ---
+        function toggleAllUserCheckboxes() {
+            const checkAll = document.getElementById('user-check-all');
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+            rowCheckboxes.forEach(cb => {
+                cb.checked = checkAll.checked;
+            });
+        }
+
+        function updateHeaderCheckboxState() {
+            const checkAll = document.getElementById('user-check-all');
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox');
+            if (rowCheckboxes.length === 0) {
+                if(checkAll) checkAll.checked = false;
+                return;
+            }
+            const allChecked = Array.from(rowCheckboxes).every(cb => cb.checked);
+            const someChecked = Array.from(rowCheckboxes).some(cb => cb.checked);
+            if(checkAll) {
+                checkAll.checked = allChecked;
+                checkAll.indeterminate = !allChecked && someChecked;
+            }
+        }
+
+        // --- 사용자 선택 삭제 ---
+        async function deleteSelectedUsers() {
+            const rowCheckboxes = document.querySelectorAll('.user-row-checkbox:checked');
+            if (rowCheckboxes.length === 0) {
+                alert("삭제할 사용자를 선택해주세요.");
+                return;
+            }
+
+            const confirmMsg = `선택한 ${rowCheckboxes.length}명의 사용자를 정말로 삭제하시겠습니까?\\n(이 작업은 취소할 수 없습니다.)`;
+            if (!confirm(confirmMsg)) return;
+
+            const selectedEmpNos = Array.from(rowCheckboxes).map(cb => cb.value);
+
+            try {
+                const { error } = await supabaseClient
+                    .from('user_info')
+                    .delete()
+                    .in('emp_no', selectedEmpNos);
+
+                if (error) {
+                    console.error("사용자 삭제 오류:", error);
+                    alert("사용자 삭제 중 오류가 발생했습니다.");
+                } else {
+                    alert(`성공적으로 ${rowCheckboxes.length}명의 사용자를 삭제했습니다.`);
+                    fetchUserInfoList(); // 리스트 갱신
+                    if(typeof renderDashboard === 'function') renderDashboard(); // 대시보드 통계 갱신
+                }
+            } catch (err) {
+                console.error("삭제 요청 중 예외 발생:", err);
+                alert("사용자 삭제 요청 중 문제가 발생했습니다.");
+            }
         }
 
         // --- 사용자 공개여부(YN_OPEN) 수정 ---
@@ -2012,6 +2737,478 @@
                 fetchUserInfoList();
             }
         }
-    </script>
+        // ==========================================
+        // 로그인 기록 관리 (Login History)
+        // ==========================================
+        let currentLogData = { period: [], date: [], raw: [] };
+        let currentLogSort = { period: { column: '', asc: true }, date: { column: '', asc: true }, raw: { column: '', asc: true } };
+        let currentLogPage = { period: 1, date: 1, raw: 1 };
+        let currentLogPerPage = { period: 20, date: 20, raw: 20 };
+
+        function switchLogSubTab(type) {
+            document.getElementById('subtab-btn-log-period').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            document.getElementById('subtab-btn-log-date').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            document.getElementById('subtab-btn-log-raw').className = 'px-4 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700 transition-colors';
+            
+            ['period', 'date', 'raw'].forEach(t => {
+                const container = document.getElementById('log-container-' + t);
+                if (container) {
+                    container.classList.add('hidden');
+                    container.classList.remove('block');
+                }
+            });
+
+            const targetBtn = document.getElementById('subtab-btn-log-' + type);
+            if(targetBtn) targetBtn.className = 'px-4 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition-colors';
+            
+            const targetContainer = document.getElementById('log-container-' + type);
+            if(targetContainer) {
+                targetContainer.classList.remove('hidden');
+                targetContainer.classList.add('block');
+            }
+            
+            // 데이터 새로고침
+            fetchLoginHistory(type);
+        }
+
+        function formatDuration(seconds) {
+            if (!seconds || isNaN(seconds)) return '00:00:00';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            return `${ h.toString().padStart(2, '0') }: ${ m.toString().padStart(2, '0') }: ${ s.toString().padStart(2, '0') }`;
+        }
+
+        async function fetchLoginHistory(type) {
+            currentLogPage[type] = 1;
+            const tbodyId = `log-tbody-${type}`;
+            const tbody = document.getElementById(tbodyId);
+            const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
+            tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td></tr> `;
+
+            const fromDateStr = document.getElementById(`log-${type}-from`).value;
+            const toDateStr = document.getElementById(`log-${type}-to`).value;
+
+            if (!fromDateStr || !toDateStr) {
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">조회 조건을 모두 입력해주세요.</td></tr> `;
+                return;
+            }
+
+            try {
+                let query = supabaseClient.from('login_history').select('*')
+                    .gte('login_time', fromDateStr)
+                    .lte('login_time', toDateStr + ' 23:59:59')
+                    .not('logout_time', 'is', null);
+
+                if (type === 'date') {
+                    const deptVal = document.getElementById('log-date-dept').value.trim();
+                    const nameVal = document.getElementById('log-date-name').value.trim();
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
+                } else if (type === 'raw') {
+                    const deptVal = document.getElementById('log-raw-dept').value.trim();
+                    const nameVal = document.getElementById('log-raw-name').value.trim();
+                    if (deptVal) query = query.ilike('nm_dept', `%${deptVal}%`);
+                    if (nameVal) query = query.ilike('emp_nm', `%${nameVal}%`);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                if (type === 'raw') {
+                    currentLogData['raw'] = data.map(row => {
+                        return {
+                            ...row,
+                            date_str: row.login_time ? row.login_time.substring(0, 10) : '-',
+                            login_time_disp: row.login_time ? row.login_time.substring(11, 19) : '-',
+                            logout_time_disp: row.logout_time ? row.logout_time.substring(11, 19) : '-',
+                            auto_logout: row.auto_logout === 'Y' ? 'Y' : '',
+                            duration_seconds: parseInt(row.duration_seconds || 0, 10),
+                            emp_nm: row.emp_nm || '-',
+                            nm_dept: row.nm_dept || '-',
+                            occp_grd_nm: row.occp_grd_nm || '-'
+                        };
+                    });
+                } else {
+                    // 집계 (Aggregation)
+                    const aggMap = new Map();
+                    data.forEach(row => {
+                        const emp_nm = row.emp_nm || '-';
+                        const nm_dept = row.nm_dept || '-';
+                        const occp_grd_nm = row.occp_grd_nm || '-';
+                        const duration = parseInt(row.duration_seconds || 0, 10);
+                        
+                        let key = "";
+                        let date_str = "";
+                        if (type === 'period') {
+                            key = `${emp_nm}|${nm_dept}|${occp_grd_nm}`;
+                        } else {
+                            date_str = row.login_time ? row.login_time.substring(0, 10) : '-';
+                            key = `${ date_str } | ${emp_nm}|${nm_dept}|${occp_grd_nm}`;
+                        }
+
+                        if (!aggMap.has(key)) {
+                            aggMap.set(key, {
+                                date_str, emp_nm, nm_dept, occp_grd_nm,
+                                login_count: 0,
+                                total_duration: 0
+                            });
+                        }
+                        const item = aggMap.get(key);
+                        item.login_count += 1;
+                        item.total_duration += duration;
+                    });
+                    currentLogData[type] = Array.from(aggMap.values());
+                }
+                
+                // 정렬
+                const sortConf = currentLogSort[type];
+                if (sortConf.column) {
+                    doSortLogData(type, sortConf.column, sortConf.asc);
+                } else {
+                    if (type === 'period') doSortLogData(type, 'login_count', false); // 기본 많이 로그인한 순
+                    else doSortLogData(type, 'date_str', false); // 기본 최신 날짜 순
+                }
+
+                renderLogTable(type);
+
+            } catch (err) {
+                console.error(err);
+                const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 7);
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-rose-500">데이터를 불러오는 중 오류가 발생했습니다.</td></tr> `;
+            }
+        }
+
+        function sortLogTable(type, column) {
+            let asc = true;
+            if (currentLogSort[type].column === column) {
+                asc = !currentLogSort[type].asc;
+            }
+            currentLogSort[type] = { column, asc };
+            
+            // UI 화살표 업데이트
+            document.querySelectorAll(`th span[id^= "sort-${type}-"]`).forEach(el => el.innerHTML = '');
+            const iconEl = document.getElementById(`sort-${type}-${column}`);
+            if (iconEl) {
+                iconEl.innerHTML = asc ? '↑' : '↓';
+                iconEl.className = 'ml-1 text-blue-500 font-bold';
+            }
+
+            doSortLogData(type, column, asc);
+            renderLogTable(type);
+        }
+
+        function doSortLogData(type, column, asc) {
+            currentLogData[type].sort((a, b) => {
+                let valA = a[column];
+                let valB = b[column];
+                
+                if (column === 'login_count' || column === 'total_duration' || column === 'duration_seconds') {
+                    return asc ? valA - valB : valB - valA;
+                } else {
+                    valA = valA ? valA.toString() : '';
+                    valB = valB ? valB.toString() : '';
+                    if (valA === valB) return 0;
+                    if (asc) return valA < valB ? -1 : 1;
+                    return valA < valB ? 1 : -1;
+                }
+            });
+        }
+
+        function renderLogTable(type) {
+            const tbody = document.getElementById(`log-tbody-${type}`);
+            const data = currentLogData[type];
+            const colspan = type === 'period' ? 5 : (type === 'date' ? 6 : 8);
+
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
+            if (paginationDiv) paginationDiv.classList.add('hidden');
+
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr> <td colspan="${colspan}" class="p-8 text-center text-slate-500">조회된 데이터가 없습니다.</td></tr> `;
+                return;
+            }
+
+            const perPage = currentLogPerPage[type];
+            const page = currentLogPage[type];
+            const startIndex = (page - 1) * perPage;
+            const endIndex = startIndex + perPage;
+            const paginatedData = data.slice(startIndex, endIndex);
+
+            tbody.innerHTML = '';
+            paginatedData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0';
+
+                if (type === 'period') {
+                    const timeStr = formatDuration(item.total_duration);
+                    tr.innerHTML = `
+            <td class= "p-4" > ${ item.emp_nm }</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4 text-right font-semibold">${item.login_count}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                } else if (type === 'date') {
+                    const timeStr = formatDuration(item.total_duration);
+                    tr.innerHTML = `
+                <td class= "p-4" > ${ item.date_str }</td>
+                        <td class="p-4">${item.emp_nm}</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4 text-right font-semibold">${item.login_count}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                } else if (type === 'raw') {
+                    const timeStr = formatDuration(item.duration_seconds);
+                    tr.innerHTML = `
+                <td class= "p-4" > ${ item.date_str }</td>
+                        <td class="p-4">${item.emp_nm}</td>
+                        <td class="p-4">${item.nm_dept}</td>
+                        <td class="p-4">${item.occp_grd_nm}</td>
+                        <td class="p-4">${item.login_time_disp}</td>
+                        <td class="p-4">${item.logout_time_disp}</td>
+                        <td class="p-4 text-center font-bold text-rose-500">${item.auto_logout}</td>
+                        <td class="p-4 text-right">${timeStr}</td>
+                    `;
+                }
+                tbody.appendChild(tr);
+            });
+
+            renderLogPagination(type, data.length);
+        }
+
+        function changeLogPerPage(type, perPage) {
+            currentLogPerPage[type] = parseInt(perPage, 10);
+            currentLogPage[type] = 1;
+            renderLogTable(type);
+        }
+
+        function changeLogPage(type, page) {
+            const data = currentLogData[type];
+            const perPage = currentLogPerPage[type];
+            const totalPages = Math.ceil(data.length / perPage) || 1;
+            if (page < 1) page = 1;
+            if (page > totalPages) page = totalPages;
+            
+            currentLogPage[type] = page;
+            renderLogTable(type);
+        }
+
+        function renderLogPagination(type, totalRows) {
+            const paginationDiv = document.getElementById(`log-pagination-${type}`);
+            if (!paginationDiv) return;
+
+            if (totalRows === 0) {
+                paginationDiv.classList.add('hidden');
+                return;
+            }
+            
+            paginationDiv.classList.remove('hidden');
+
+            const perPage = currentLogPerPage[type];
+            const currentPage = currentLogPage[type];
+            const totalPages = Math.ceil(totalRows / perPage);
+
+            const options = [20, 30, 50, 100, 300, 500, 1000, 5000];
+            const selectHtml = `
+            <select onchange = "changeLogPerPage('${type}', this.value)" class= "border border-slate-300 rounded px-2 py-1 outline-none text-slate-700 ml-1 mr-2 text-sm bg-white cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500" >
+            ${ options.map(opt => `<option value="${opt}" ${opt === perPage ? 'selected' : ''}>${opt}</option>`).join('') }
+                </select>
+                `;
+
+            const leftHtml = `
+                <div class= "flex items-center text-slate-600" >
+                Show ${ selectHtml } <span class= "text-rose-500 font-bold ml-1 mr-1" > ${ totalRows }</span> Row(s) <span class= "mx-3 text-slate-300" >|</span> <span class="text-blue-600 font-bold mr-1">${currentPage}</span> / ${ totalPages } Page(s)
+                </div>
+                `;
+
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+            
+            if (endPage - startPage < 4) {
+                if (startPage === 1) {
+                    endPage = Math.min(totalPages, startPage + 4);
+                } else if (endPage === totalPages) {
+                    startPage = Math.max(1, endPage - 4);
+                }
+            }
+            
+            let btnHtml = '';
+            
+            btnHtml += `<button onclick = "changeLogPage('${type}', 1)" class= "px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === 1 ? 'disabled' : ''}>& laquo;</button> `;
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${currentPage - 1})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 ml-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === 1 ? 'disabled' : '' }>& lsaquo;</button> `;
+
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    btnHtml += `<button class="px-3 py-1 border border-blue-500 bg-blue-50 text-blue-600 font-bold rounded mx-1" > ${ i }</button> `;
+                } else {
+                    btnHtml += `<button onclick = "changeLogPage('${type}', ${i})" class="px-3 py-1 border border-slate-200 bg-white text-slate-600 rounded hover:bg-slate-50 mx-1 transition-colors" > ${ i }</button> `;
+                }
+            }
+
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${currentPage + 1})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 mr-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === totalPages ? 'disabled' : '' }>& rsaquo;</button> `;
+            btnHtml += `<button onclick = "changeLogPage('${type}', ${totalPages})" class="px-2 py-1 border border-slate-200 bg-white rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" ${ currentPage === totalPages ? 'disabled' : '' }>& raquo;</button> `;
+
+            const rightHtml = `<div class="flex items-center gap-1" > ${ btnHtml }</div> `;
+
+            paginationDiv.innerHTML = `${ leftHtml }${ rightHtml } `;
+        }
+
+
+        function exportLogToExcel(type) {
+            const data = currentLogData[type];
+            if (!data || data.length === 0) {
+                alert("다운로드할 데이터가 없습니다.");
+                return;
+            }
+
+            let excelData = [];
+
+            if (type === 'period') {
+                excelData = data.map(item => ({
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 횟수': item.login_count,
+                    '총 로그인 시간': formatDuration(item.total_duration)
+                }));
+            } else if (type === 'date') {
+                excelData = data.map(item => ({
+                    '날짜': item.date_str,
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 횟수': item.login_count,
+                    '총 로그인 시간': formatDuration(item.total_duration)
+                }));
+            } else if (type === 'raw') {
+                excelData = data.map(item => ({
+                    '날짜': item.date_str,
+                    '이름': item.emp_nm,
+                    '부서': item.nm_dept,
+                    '직급': item.occp_grd_nm,
+                    '로그인 시간': item.login_time_disp,
+                    '로그아웃 시간': item.logout_time_disp,
+                    '자동 로그아웃': item.auto_logout,
+                    '유지 시간': formatDuration(item.duration_seconds)
+                }));
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(excelData);
+            
+            // 열 너비(Column Width) 넉넉하게 지정
+            if (type === 'period') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 15 }, // 로그인 횟수
+                    { wch: 20 }  // 총 로그인 시간
+                ];
+            } else if (type === 'date') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 날짜
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 15 }, // 로그인 횟수
+                    { wch: 20 }  // 총 로그인 시간
+                ];
+            } else if (type === 'raw') {
+                worksheet['!cols'] = [
+                    { wch: 15 }, // 날짜
+                    { wch: 15 }, // 이름
+                    { wch: 20 }, // 부서
+                    { wch: 15 }, // 직급
+                    { wch: 25 }, // 로그인 시간
+                    { wch: 25 }, // 로그아웃 시간
+                    { wch: 15 }, // 자동 로그아웃
+                    { wch: 20 }  // 유지 시간
+                ];
+            }
+            
+            // 스타일 적용
+            const range = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let R = range.s.r; R <= range.e.r; ++R) {
+                for (let C = range.s.c; C <= range.e.c; ++C) {
+                    const cellAddress = {c: C, r: R};
+                    const cellRef = XLSX.utils.encode_cell(cellAddress);
+                    if (!worksheet[cellRef]) continue;
+
+                    let cellStyle = {
+                        alignment: { horizontal: "center", vertical: "center" },
+                        border: {
+                            top: { style: "thin", color: { rgb: "000000" } },
+                            bottom: { style: "thin", color: { rgb: "000000" } },
+                            left: { style: "thin", color: { rgb: "000000" } },
+                            right: { style: "thin", color: { rgb: "000000" } }
+                        }
+                    };
+
+                    // 헤더 (첫 번째 행) 스타일
+                    if (R === 0) {
+                        cellStyle.fill = {
+                            patternType: "solid",
+                            fgColor: { rgb: "FFDCE6F1" } // 옅은 푸른/회색 테마 적용
+                        };
+                        cellStyle.font = { bold: true };
+                    }
+                    
+                    worksheet[cellRef].s = cellStyle;
+                }
+            }
+
+            const workbook = XLSX.utils.book_new();
+            
+            const sheetName = type === 'period' ? '기간별 로그' : (type === 'date' ? '날짜별 로그' : '상세 로그');
+            const fileName = `로그인_기록_${ sheetName }_${ new Date().toISOString().split('T')[0] }.xlsx`;
+
+            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+            XLSX.writeFile(workbook, fileName);
+        }
+    
+        // Make tables resizable
+        function makeTablesResizable() {
+            const tables = document.querySelectorAll('table');
+            tables.forEach(table => {
+                const cols = table.querySelectorAll('thead th');
+                cols.forEach(col => {
+                    const resizer = document.createElement('div');
+                    resizer.classList.add('resize-handle');
+                    
+                    // Force width if not set
+                    if (!col.style.width) {
+                        col.style.width = col.offsetWidth + 'px';
+                    }
+
+                    let startX, startWidth;
+
+                    function onMouseMove(e) {
+                        const newWidth = startWidth + (e.pageX - startX);
+                        col.style.width = newWidth + 'px';
+                        table.style.width = 'auto'; // allow columns to expand freely
+                    }
+
+                    function onMouseUp() {
+                        resizer.classList.remove('active');
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+
+                    resizer.addEventListener('mousedown', function(e) {
+                        startX = e.pageX;
+                        startWidth = col.offsetWidth;
+                        resizer.classList.add('active');
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+
+                    col.appendChild(resizer);
+                });
+            });
+        }
+        document.addEventListener('DOMContentLoaded', makeTablesResizable);
+</script>
 </body>
+
 </html>
