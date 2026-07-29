@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="version" content="2026-07-29-v2">
+  <title>System Info - Hansoll Gallery Archive</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Google Fonts & Pretendard -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    body {
+      font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+
+    /* Custom Scrollbar */
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes modalPop {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .animate-modal {
+      animation: modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-[#f8fafc] text-slate-800 min-h-screen flex flex-col custom-scrollbar">
+
+  <!-- ==================== TOP HEADER ==================== -->
+  <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      <!-- Title Area -->
+      <div class="flex items-center gap-3.5 min-w-0">
+        <div
+          class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white shadow-md shadow-brand-500/20">
+          <i data-lucide="folder-kanban" class="h-6 w-6"></i>
+        </div>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight truncate">
+            Hansoll Gallery Archive
+          </h1>
+        </div>
+      </div>
+
+      <!-- Header Actions -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- View Mode Toggle Buttons -->
+        <div class="hidden sm:flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+          <button id="view-mode-grid" onclick="setViewMode('grid')" title="카드 보기"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm">
+            <i data-lucide="layout-grid" class="h-3.5 w-3.5"></i>
+            <span>카드형</span>
+          </button>
+          <button id="view-mode-table" onclick="setViewMode('table')" title="리스트 보기"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900">
+            <i data-lucide="list" class="h-3.5 w-3.5"></i>
+            <span>리스트형</span>
+          </button>
+        </div>
+
+        <!-- Create New Material Button -->
+        <button onclick="openFormModal()"
+          class="flex items-center gap-2 px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold rounded-xl shadow-md shadow-brand-600/25 hover:shadow-lg hover:shadow-brand-600/30 active:scale-[0.98] transition-all">
+          <i data-lucide="plus" class="h-4 w-4"></i>
+          <span>신규 자료 등록</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN SECTION ==================== -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+
+    <!-- SEARCH & CATEGORY FILTER BAR -->
+    <div
+      class="bg-white border border-slate-200/80 rounded-2xl p-4 sm:p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <!-- Category Tabs -->
+      <div id="category-tabs" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-1 md:pb-0">
+        <!-- Rendered dynamically by JS -->
+      </div>
+
+      <!-- Search Input -->
+      <div class="flex items-center gap-2 shrink-0">
+        <!-- Search Box -->
+        <div class="relative w-full sm:w-64">
+          <i data-lucide="search" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+          <input type="text" id="search-input" oninput="handleSearchInput(event)" placeholder="제목, 내용, 작성자, 부서 검색..."
+            class="w-full h-10 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all">
+          <button id="btn-clear-search" onclick="clearSearch()"
+            class="absolute right-2.5 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 hidden items-center justify-center transition-colors">
+            <i data-lucide="x" class="h-3 w-3"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATERIALS LIST / GRID CONTAINER -->
+    <div id="materials-container" class="min-h-[640px] flex-1">
+      <!-- Content rendered dynamically -->
+    </div>
+  </main>
+
+  <!-- ==================== DETAIL VIEW MODAL ==================== -->
+  <div id="detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeDetailModal()"></div>
+
+    <!-- Modal Content -->
+    <div
+      class="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden z-10 animate-modal my-8">
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-start justify-between gap-4">
+        <div class="flex items-center flex-wrap gap-2.5 min-w-0">
+          <span id="detail-category-badge" class="px-2.5 py-0.5 rounded-full text-xs font-bold shrink-0"></span>
+          <h2 id="detail-title"
+            class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight leading-snug break-keep"></h2>
+        </div>
+        <button onclick="closeDetailModal()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors shrink-0">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 sm:p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        <!-- Author Profile Bar -->
+        <div class="flex items-center justify-between p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/60">
+          <div class="flex items-center gap-3">
+            <div id="detail-author-avatar"
+              class="w-10 h-10 rounded-full bg-brand-100 text-brand-600 font-extrabold flex items-center justify-center text-sm shadow-sm">
+            </div>
+            <div>
+              <div id="detail-author-name" class="text-sm font-bold text-slate-800"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 text-xs whitespace-nowrap">
+            <span class="font-medium text-slate-400">등록일자 :</span>
+            <span id="detail-date-display" class="font-mono font-bold text-slate-600"></span>
+          </div>
+        </div>
+
+        <!-- Text Content -->
+        <div>
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">상세 내용</h3>
+          <div id="detail-content"
+            class="text-sm sm:text-base text-slate-700 leading-relaxed whitespace-pre-wrap break-words bg-white p-4 rounded-2xl border border-slate-100">
+          </div>
+        </div>
+
+        <!-- Attached Files Section -->
+        <div id="detail-files-section">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="paperclip" class="h-4 w-4 text-brand-600"></i>
+            <span>첨부 파일</span>
+            <span id="detail-files-count"
+              class="ml-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[11px] font-extrabold">0</span>
+          </h3>
+          <div id="detail-files-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Reference URLs Section -->
+        <div id="detail-urls-section">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5 flex items-center gap-1.5">
+            <i data-lucide="link-2" class="h-4 w-4 text-brand-600"></i>
+            <span>참고 및 바로가기 URL</span>
+            <span id="detail-urls-count"
+              class="ml-1 px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-[11px] font-extrabold">0</span>
+          </h3>
+          <div id="detail-urls-list" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer / Actions -->
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button id="btn-detail-edit" onclick="editFromDetail()"
+            class="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm">
+            <i data-lucide="edit-3" class="h-4 w-4 text-brand-600"></i>
+            <span>수정</span>
+          </button>
+          <button id="btn-detail-delete" onclick="deleteFromDetail()"
+            class="flex items-center gap-1.5 px-4 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 font-bold text-xs sm:text-sm rounded-xl transition-all shadow-sm">
+            <i data-lucide="trash-2" class="h-4 w-4"></i>
+            <span>삭제</span>
+          </button>
+        </div>
+        <button onclick="closeDetailModal()"
+          class="px-6 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md">
+          닫기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== CREATE / EDIT FORM MODAL ==================== -->
+  <div id="form-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeFormModal()"></div>
+
+    <!-- Modal Content -->
+    <div
+      class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden z-10 animate-modal my-8">
+      <!-- Modal Header -->
+      <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div id="form-header-icon"
+            class="w-9 h-9 rounded-xl bg-brand-100 text-brand-600 flex items-center justify-center">
+            <i data-lucide="plus-circle" class="h-5 w-5"></i>
+          </div>
+          <div>
+            <h2 id="form-modal-title" class="text-lg font-extrabold text-slate-900">신규 자료 등록</h2>
+            <p id="form-modal-desc" class="text-xs text-slate-500">필요한 정보를 입력하고 파일이나 참고 URL을 추가해주세요.</p>
+          </div>
+        </div>
+        <button onclick="closeFormModal()"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+          <i data-lucide="x" class="h-5 w-5"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Form) -->
+      <form id="material-form" onsubmit="handleFormSubmit(event)"
+        class="p-6 sm:p-8 space-y-5 max-h-[72vh] overflow-y-auto custom-scrollbar">
+        <!-- Hidden fields for DB persistence (부서코드, 사번, 직급코드, 직급명) -->
+        <input type="hidden" id="form-item-id" value="">
+        <input type="hidden" id="form-cd-dept" value="">
+        <input type="hidden" id="form-emp-no" value="">
+        <input type="hidden" id="form-occp-cd" value="">
+        <input type="hidden" id="form-occp-nm" value="">
+
+        <!-- Row 1: 부서명 / 이름 (화면에는 필요한 항목만 표시, 코드는 DB 저장용으로 유지) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Department Name (nm_dept) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>부서명 <span class="text-rose-500">*</span></span>
+              <span class="text-[10px] bg-slate-200/80 text-slate-600 px-1.5 py-0.5 rounded font-semibold">로그인</span>
+            </label>
+            <div class="relative">
+              <i data-lucide="building-2" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+              <input type="text" id="form-department" readonly required
+                class="w-full h-11 pl-10 pr-3 bg-slate-100 border border-slate-200/80 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-not-allowed select-none">
+            </div>
+          </div>
+
+          <!-- Employee Name (emp_nm) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+              <span>이름 <span class="text-rose-500">*</span></span>
+              <span class="text-[10px] bg-slate-200/80 text-slate-600 px-1.5 py-0.5 rounded font-semibold">로그인</span>
+            </label>
+            <div class="relative">
+              <i data-lucide="user" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+              <input type="text" id="form-author" readonly required
+                class="w-full h-11 pl-10 pr-3 bg-slate-100 border border-slate-200/80 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none cursor-not-allowed select-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Row 2: 카테고리 (선택) & 제목 (입력) -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <!-- Category (1 col - 1/4 width) -->
+          <div class="sm:col-span-1">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              카테고리 <span class="text-rose-500">*</span>
+            </label>
+            <select id="form-category" required
+              class="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all">
+              <option value="참고 자료">참고 자료</option>
+              <option value="교육 관련">교육 관련</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+
+          <!-- Title (3 cols - 3/4 width) -->
+          <div class="sm:col-span-3">
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              제목 <span class="text-rose-500">*</span>
+            </label>
+            <input type="text" id="form-title" required placeholder="자료의 직관적인 제목을 입력해주세요"
+              class="w-full h-11 px-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all">
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5">
+            자료 설명 / 내용 <span class="text-rose-500">*</span>
+          </label>
+          <textarea id="form-content" required rows="4" placeholder="자료에 대한 간략한 설명이나 참고할 사항을 입력해주세요."
+            class="w-full p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all custom-scrollbar"></textarea>
+        </div>
+
+        <!-- File Attachment Section -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700">
+              파일 첨부 (선택)
+            </label>
+            <span class="text-[11px] text-slate-400">다중 파일 선택 가능</span>
+          </div>
+
+          <!-- Drag and drop box -->
+          <div id="file-drop-zone" onclick="document.getElementById('file-input').click()"
+            ondragenter="handleDragEnter(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)"
+            class="border-2 border-dashed border-slate-200 hover:border-brand-500 rounded-2xl p-5 text-center cursor-pointer bg-slate-50/50 hover:bg-brand-50/30 transition-all group">
+            <input type="file" id="file-input" multiple class="hidden" onchange="handleFileSelect(event)">
+            <div class="flex flex-col items-center gap-1.5 pointer-events-none">
+              <div
+                class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-brand-100 text-slate-500 group-hover:text-brand-600 flex items-center justify-center transition-colors">
+                <i data-lucide="upload-cloud" class="w-5 h-5"></i>
+              </div>
+              <p class="text-xs font-bold text-slate-700 group-hover:text-brand-600 transition-colors">
+                여기를 클릭하여 파일 선택 또는 드래그 앤 드롭
+              </p>
+              <p class="text-[11px] text-slate-400">PDF, Excel, Word, 이미지, PPT 등 (최대 50MB)</p>
+            </div>
+          </div>
+
+          <!-- Selected Files List -->
+          <div id="form-files-preview" class="mt-2.5 space-y-1.5">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- URL Attachment Section -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="block text-xs font-bold text-slate-700">
+              참고 URL 링크 (선택)
+            </label>
+            <button type="button" onclick="addUrlInputRow()"
+              class="text-xs font-bold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+              <i data-lucide="plus" class="h-3.5 w-3.5"></i>
+              <span>URL 추가</span>
+            </button>
+          </div>
+
+          <div id="url-inputs-container" class="space-y-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Row 6: Password Input Section -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+            <span>비밀번호 (수정 · 삭제 시 필요) <span class="text-rose-500">*</span></span>
+            <span class="text-[11px] font-normal text-slate-400">자료 보호를 위한 4자리 이상 비밀번호</span>
+          </label>
+          <div class="relative">
+            <i data-lucide="lock" class="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"></i>
+            <input type="password" id="form-password" required placeholder="수정 및 삭제 시 사용할 비밀번호를 입력해주세요"
+              class="w-full h-11 pl-10 pr-10 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-brand-500 focus:bg-white transition-all">
+            <button type="button" onclick="togglePasswordVisibility()"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+              <i data-lucide="eye" id="pw-eye-icon" class="h-4 w-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Form Modal Footer -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button type="button" onclick="closeFormModal()"
+            class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all">
+            취소
+          </button>
+          <button type="submit"
+            class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm rounded-xl shadow-md shadow-brand-600/20 transition-all">
+            저장하기
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION ==================== -->
+  <div id="toast"
+    class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div
+      class="bg-slate-900 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700">
+      <div id="toast-icon"
+        class="w-6 h-6 rounded-full bg-brand-500 text-white flex items-center justify-center shrink-0">
+        <i data-lucide="check" class="h-3.5 w-3.5"></i>
+      </div>
+      <p id="toast-message" class="text-sm font-bold"></p>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT LOGIC ==================== -->
+  <script>
+    /*************************************************************************
+     * 1. DATA LAYER (Supabase 'archive' DB 연동 + LocalStorage 폴백 지원)
+     *************************************************************************/
+    const STORAGE_KEY = 'hansoll_system_info_materials_v1';
+    const SUPABASE_URL = 'https://yuklsrhmcbdanswxysrw.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1a2xzcmhtY2JkYW5zd3h5c3J3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTgwODQsImV4cCI6MjA5NjYzNDA4NH0.PEgzBsLD6Or7P32ao6LaKgSmf-SE1ay829eFQpkzhgE';
+    let supabaseClient = null;
+    try {
+      if (window.supabase) {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    } catch (e) {
+      console.warn('Supabase JS Client 초기화 실패 (LocalStorage 사용):', e);
+    }
+
+    function normalizeItem(item) {
+      const today = new Date().toISOString().slice(0, 10);
+      return {
+        ...item,
+        id: item.id || 'mat-' + (Date.now() % 100000),
+        cd_dept: item.cd_dept || 'IT',
+        nm_dept: item.nm_dept || item.department || 'IT부',
+        emp_no: item.emp_no || '202401',
+        emp_nm: item.emp_nm || item.author || '윤지훈',
+        occp_grd_cd: item.occp_grd_cd || 'M2',
+        occp_grd_nm: item.occp_grd_nm || '책임',
+        category: (item.category === '기술 가이드' ? '교육 관련' : (item.category === '참고 문서' ? '참고 자료' : (item.category || '참고 자료'))),
+        title: item.title || '',
+        contents: item.contents || item.content || '',
+        files: item.files || [],
+        links: item.links || item.urls || [],
+        password: item.password || '1234',
+        views: item.views || 0,
+        created_at: item.created_at || today,
+        updated_at: item.updated_at || today,
+        // UI 호환성 getter 매핑
+        get department() { return this.nm_dept; },
+        get author() { return this.emp_nm; },
+        get content() { return this.contents; },
+        get urls() { return this.links; }
+      };
+    }
+
+    function toDbRow(item) {
+      return {
+        cd_dept: item.cd_dept || 'IT',
+        nm_dept: item.nm_dept || item.department || 'IT부',
+        emp_no: item.emp_no || '202401',
+        emp_nm: item.emp_nm || item.author || '윤지훈',
+        occp_grd_cd: item.occp_grd_cd || 'M2',
+        occp_grd_nm: item.occp_grd_nm || '책임',
+        category: (item.category === '기술 가이드' ? '교육 관련' : (item.category === '참고 문서' ? '참고 자료' : (item.category || '참고 자료'))),
+        title: item.title || '',
+        contents: item.contents || item.content || '',
+        files: item.files || [],
+        links: item.links || item.urls || [],
+        password: item.password || '1234',
+        views: item.views || 0,
+        created_at: item.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+    }
+
+    function formatAuthorDisplay(item) {
+      const name = item.emp_nm || item.author || '익명';
+      const rank = item.occp_grd_nm || '';
+      if (!rank || name.includes(rank)) return name;
+      return `${name} ${rank}`;
+    }
+
+    function formatDateYYYYMMDD(dateStr) {
+      if (!dateStr) return '';
+      const part = String(dateStr).split('T')[0].split(' ')[0];
+      if (/^\d{4}-\d{2}-\d{2}$/.test(part)) {
+        return part;
+      }
+      const d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+      }
+      return String(dateStr).slice(0, 10);
+    }
+
+    const CATEGORIES = [
+      { id: 'ALL', label: '전체 보기' },
+      { id: '참고 자료', label: '참고 자료', color: 'emerald' },
+      { id: '교육 관련', label: '교육 관련', color: 'blue' },
+      { id: '기타', label: '기타', color: 'slate' }
+    ];
+
+    // 초기 샘플 데이터 (초기 로드 시에만 사용)
+    const INITIAL_SAMPLE_DATA = [
+      {
+        id: 'mat-101',
+        category: '교육 관련',
+        department: 'IT부',
+        title: 'AI Gallery 메뉴 권한(RLS) 및 사용자 권한 설정 가이드',
+        author: '윤지훈 책임',
+        password: '1234',
+        content: `AI Gallery의 각 메뉴별 YN_view 필드 및 Row Level Security (RLS) 정책을 설정하는 표준 문서입니다.\n\n1. 본사/해외 사업장별 노출 권한 관리\n2. IT부 전용 비공개 메뉴(YN_view = 'Y') 구성 방식\n3. Supabase MenuSetting 테이블 쿼리 표준화`,
+        created_at: '2026-07-28',
+        files: [
+          { name: 'AI_Gallery_RLS_Policy_v2.pdf', size: '2.4 MB', type: 'pdf' },
+          { name: 'menu_permission_flow.png', size: '850 KB', type: 'img' }
+        ],
+        urls: [
+          { title: 'Supabase RLS Documentation', url: 'https://supabase.com/docs/guides/auth/row-level-security' },
+          { title: 'AI Gallery Staging Server', url: 'http://localhost:3000' }
+        ]
+      },
+      {
+        id: 'mat-102',
+        category: '참고 자료',
+        department: '사업 3부',
+        title: "Chico's 부자재 시트 교차 검증 툴 기획서 및 변경내역 분석기",
+        author: '박민수 선임',
+        password: '1234',
+        content: `바이어 PO Sheet와 시스템 입고 부자재 간의 오차를 자동 분석하는 검증 툴 기획서입니다.\n\n[주요 기능]\n- PO Diff Analyzer 연계 기능\n- 엑셀 업로드 시 Color, Size, Qty 불일치 자동 하이라이트\n- 회람 메일 템플릿 자동 생성`,
+        created_at: '2026-07-25',
+        files: [
+          { name: 'Chicos_Trim_Verification_Spec.xlsx', size: '1.8 MB', type: 'excel' }
+        ],
+        urls: [
+          { title: 'Chicos Trim Verify Web App', url: 'https://example.com/chicos-trim' }
+        ]
+      },
+      {
+        id: 'mat-103',
+        category: '교육 관련',
+        department: 'IT부',
+        title: 'CMPH Recap 자동화 파이썬 실행 스크립트 (.bat) 연동 구조',
+        author: '정재훈 사원',
+        password: '1234',
+        content: `CMPH Recap 데이터 자동 추출 스크립트를 클라우드 스토리지에서 다운로드하고 로컬 파이썬 환경에서 실행하는 아키텍처 안내서입니다. 브라우저 보안 경고 조치 사항도 함께 포함되어 있습니다.`,
+        created_at: '2026-07-20',
+        files: [
+          { name: 'CMPH_Recap_Architecture.pptx', size: '5.1 MB', type: 'ppt' },
+          { name: 'CMPH_실행_orig.bat', size: '1.2 KB', type: 'file' }
+        ],
+        urls: []
+      },
+      {
+        id: 'mat-104',
+        category: '참고 자료',
+        department: '디자인부',
+        title: '한솔섬유 2026 패션 용어북 (Fashion Term Book) UI 디자인 킷',
+        author: '김디자인 수석',
+        password: '1234',
+        content: `패션 용어 표준화를 위한 Fashion Term Book 웹페이지의 디자인 킷 및 컬러 팔레트/폰트 가이드라인입니다. Pretendard 및 Cafe24 폰트 규격 사항을 필독 바랍니다.`,
+        created_at: '2026-07-15',
+        files: [
+          { name: 'Hansoll_Design_System_Tokens.pdf', size: '14.2 MB', type: 'pdf' }
+        ],
+        urls: [
+          { title: 'Figma Design Guide', url: 'https://figma.com' }
+        ]
+      }
+    ];
+
+    // State Variables
+    let materialsData = [];
+    let currentCategory = 'ALL';
+    let currentDepartment = 'ALL';
+    let currentSearchKeyword = '';
+    let currentViewMode = 'grid'; // 'grid' | 'table'
+    let currentFormFiles = [];    // Temporary file objects for form
+    let currentFormUrls = [];     // Temporary url rows for form
+    let currentDetailItem = null; // Currently opened item in Detail Modal
+
+    // 1-1. IndexedDB 헬퍼 함수 (5MB 용량 제한이 있는 LocalStorage 대체 및 대용량 첨부파일 영구 저장)
+    function openIDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open('HansollMaterialDB_v1', 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('materials')) {
+            db.createObjectStore('materials');
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function idbSave(key, val) {
+      try {
+        const db = await openIDB();
+        const tx = db.transaction('materials', 'readwrite');
+        tx.objectStore('materials').put(val, key);
+      } catch (e) {
+        console.warn('IndexedDB save failed:', e);
+      }
+    }
+
+    async function idbLoad(key) {
+      try {
+        const db = await openIDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction('materials', 'readonly');
+          const req = tx.objectStore('materials').get(key);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        });
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // 1-2. Initialize Data (SWR: Local-First 0초 즉시 로딩 후 Supabase 백그라운드 자동 동기화)
+    async function initData() {
+      // 1단계: PC 로컬(IndexedDB -> LocalStorage -> 초기 샘플 데이터)에서 0.05초 만에 읽어와 0초 즉시 렌더링!
+      let loadedLocal = false;
+      try {
+        const idbData = await idbLoad(STORAGE_KEY);
+        if (idbData && Array.isArray(idbData) && idbData.length > 0) {
+          materialsData = idbData.map(normalizeItem);
+          loadedLocal = true;
+        }
+      } catch (e) {
+        console.warn('IDB load fail:', e);
+      }
+
+      if (!loadedLocal) {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            materialsData = JSON.parse(saved).map(normalizeItem);
+            loadedLocal = true;
+          } catch (e) {
+            console.warn('LocalStorage load fail:', e);
+          }
+        }
+      }
+
+      if (!loadedLocal) {
+        materialsData = INITIAL_SAMPLE_DATA.map(normalizeItem);
+        saveData();
+      }
+
+      // 0초 만에 기존 데이터를 즉시 화면에 출력 ("검색된 자료가 없습니다" 10초 대기 현상 완벽 해결!)
+      renderAll();
+
+      // 2단계: 백그라운드에서 조용히 클라우드(Supabase) 서버의 최신 데이터를 조회하여 자동 동기화
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('archive')
+            .select('*')
+            .order('id', { ascending: false });
+          if (!error && Array.isArray(data)) {
+            materialsData = data.map(normalizeItem);
+            saveData(); // 로컬 캐시도 최신 클라우드 데이터로 갱신 (0건일 경우에도 빈 배열로 반영)
+            renderAll(); // 신규 등록/수정/삭제된 최신 내역으로 화면 조용히 자동 갱신
+          }
+        } catch (err) {
+          console.warn('Supabase archive 테이블 조회 실패 (로컬 데이터 유지):', err);
+        }
+      }
+    }
+
+    // 1-3. Save Data to IndexedDB & LocalStorage (QuotaExceededError 에러 완벽 예방)
+    function saveData() {
+      // 1. 5MB 용량 제한이 없는 IndexedDB에 모든 대용량 첨부파일과 함께 우선 저장
+      idbSave(STORAGE_KEY, materialsData);
+      // 2. LocalStorage는 5MB 초과 시 QuotaExceededError 발생을 방지하기 위해 try-catch 처리
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(materialsData));
+      } catch (e) {
+        console.warn('LocalStorage 5MB 용량 초과: 대용량 첨부파일 데이터는 IndexedDB에 정상적으로 저장되었습니다.');
+      }
+    }
+
+    // 1-3. Reset Sample Data
+    function resetSampleData() {
+      if (confirm('초기 4개의 샘플 데이터로 복원하시겠습니까? (작성하신 임시 자료는 초기화됩니다)')) {
+        materialsData = INITIAL_SAMPLE_DATA.map(normalizeItem);
+        saveData();
+        renderAll();
+        showToast('초기 샘플 데이터가 복원되었습니다.');
+      }
+    }
+
+    /*************************************************************************
+     * 2. RENDER ENGINE (필터, 카테고리 탭, 그리드/테이블 뷰)
+     *************************************************************************/
+    function renderAll() {
+      renderCategoryTabs();
+      renderMaterials();
+      updateViewModeButtons();
+      lucide.createIcons();
+    }
+
+    // 2-1. Category Tabs Render
+    function renderCategoryTabs() {
+      const tabsContainer = document.getElementById('category-tabs');
+      tabsContainer.innerHTML = '';
+
+      CATEGORIES.forEach(cat => {
+        // Count matching items
+        const count = cat.id === 'ALL'
+          ? materialsData.length
+          : materialsData.filter(m => m.category === cat.id).length;
+
+        const isActive = currentCategory === cat.id;
+
+        const btn = document.createElement('button');
+        btn.onclick = () => {
+          currentCategory = cat.id;
+          renderAll();
+        };
+
+        btn.className = `flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all shrink-0 ${isActive
+            ? 'bg-slate-900 text-white shadow-md'
+            : 'bg-slate-100/80 hover:bg-slate-200/80 text-slate-600'
+          }`;
+
+        btn.innerHTML = `
+          <span>${cat.label}</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[11px] font-extrabold ${isActive ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+          }">${count}</span>
+        `;
+        tabsContainer.appendChild(btn);
+      });
+    }
+
+    // 2-2. Filter Items by Category, Department, Keyword
+    function getFilteredMaterials() {
+      return materialsData.filter(item => {
+        // Category filter
+        if (currentCategory !== 'ALL' && item.category !== currentCategory) return false;
+        // Department filter
+        if (currentDepartment !== 'ALL' && item.department !== currentDepartment) return false;
+        // Search Keyword filter
+        if (currentSearchKeyword) {
+          const kw = currentSearchKeyword.toLowerCase();
+          const matchTitle = (item.title || '').toLowerCase().includes(kw);
+          const matchContent = (item.content || '').toLowerCase().includes(kw);
+          const matchAuthor = (item.author || '').toLowerCase().includes(kw);
+          const matchDept = (item.department || '').toLowerCase().includes(kw);
+          if (!matchTitle && !matchContent && !matchAuthor && !matchDept) return false;
+        }
+        return true;
+      });
+    }
+
+    // 2-3. Render Materials List
+    function renderMaterials() {
+      const container = document.getElementById('materials-container');
+      const filtered = getFilteredMaterials();
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-white border border-slate-200/80 rounded-2xl p-12 text-center flex flex-col items-center justify-center my-4">
+            <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mb-4">
+              <i data-lucide="file-search" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-700 mb-1">검색된 자료가 없습니다</h3>
+            <p class="text-xs text-slate-400 max-w-sm mb-6">
+              선택하신 카테고리 또는 검색 조건에 일치하는 자료가 없습니다. 조건을 변경하거나 신규 자료를 등록해보세요.
+            </p>
+            <button onclick="clearSearchAndFilters()"
+              class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all">
+              검색 필터 초기화
+            </button>
+          </div>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      if (currentViewMode === 'grid') {
+        renderGridView(container, filtered);
+      } else {
+        renderTableView(container, filtered);
+      }
+      lucide.createIcons();
+    }
+
+    // Category badge styling helper
+    function getCategoryBadgeClass(category) {
+      switch (category) {
+        case '참고 자료':
+        case '참고 문서': return 'bg-emerald-100 text-emerald-700';
+        case '교육 관련':
+        case '기술 가이드': return 'bg-blue-100 text-blue-700';
+        case '기타': return 'bg-slate-100 text-slate-700';
+        default: return 'bg-slate-100 text-slate-700';
+      }
+    }
+
+    // 2-4. Grid (Card) View
+    function renderGridView(container, items) {
+      const grid = document.createElement('div');
+      grid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5';
+
+      items.forEach(item => {
+        const fileCount = (item.files || []).length;
+        const urlCount = (item.urls || []).length;
+        const badgeClass = getCategoryBadgeClass(item.category);
+
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-brand-500/40 transition-all flex flex-col justify-between group cursor-pointer';
+        card.onclick = () => openDetailModal(item.id);
+
+        card.innerHTML = `
+          <div>
+            <!-- Header Badge & Date -->
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold ${badgeClass}">${item.category}</span>
+                <span class="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-bold">${item.department}</span>
+              </div>
+              <span class="text-xs text-slate-400 font-medium">${formatDateYYYYMMDD(item.created_at || '')}</span>
+            </div>
+
+            <!-- Title -->
+            <h3 class="text-base font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-2 leading-snug mb-2.5">
+              ${item.title}
+            </h3>
+
+            <!-- Content Snippet -->
+            <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-5">
+              ${item.content || ''}
+            </p>
+          </div>
+
+          <!-- Card Footer -->
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <!-- Author -->
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-[11px] font-bold flex items-center justify-center">
+                ${(item.author || '?')[0]}
+              </div>
+              <span class="text-xs font-bold text-slate-700">${formatAuthorDisplay(item)}</span>
+            </div>
+
+            <!-- Attachment Indicators -->
+            <div class="flex items-center gap-2 text-slate-400">
+              ${fileCount > 0 ? `
+              <span class="flex items-center gap-1 text-xs bg-slate-50 px-2 py-1 rounded-md border border-slate-200/60 text-slate-600 font-semibold" title="첨부파일 ${fileCount}개">
+                <i data-lucide="paperclip" class="w-3.5 h-3.5 text-brand-600"></i>
+                <span>${fileCount}</span>
+              </span>` : ''}
+              ${urlCount > 0 ? `
+              <span class="flex items-center gap-1 text-xs bg-slate-50 px-2 py-1 rounded-md border border-slate-200/60 text-slate-600 font-semibold" title="참고 URL ${urlCount}개">
+                <i data-lucide="link-2" class="w-3.5 h-3.5 text-indigo-600"></i>
+                <span>${urlCount}</span>
+              </span>` : ''}
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+
+      container.innerHTML = '';
+      container.appendChild(grid);
+    }
+
+    // 2-5. Table (List) View
+    function renderTableView(container, items) {
+      const wrap = document.createElement('div');
+      wrap.className = 'bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-sm';
+
+      let rowsHtml = '';
+      items.forEach((item, index) => {
+        const fileCount = (item.files || []).length;
+        const urlCount = (item.urls || []).length;
+        const badgeClass = getCategoryBadgeClass(item.category);
+
+        rowsHtml += `
+          <tr onclick="openDetailModal('${item.id}')"
+            class="border-b border-slate-100 hover:bg-brand-50/40 transition-colors cursor-pointer group">
+            <td class="py-4 px-4 sm:px-6 text-center text-xs font-mono text-slate-400 w-16 whitespace-nowrap">
+              ${items.length - index}
+            </td>
+            <td class="py-4 px-3 w-28 whitespace-nowrap">
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold block text-center ${badgeClass}">
+                ${item.category}
+              </span>
+            </td>
+            <td class="py-4 px-4 font-extrabold text-sm text-slate-900 group-hover:text-brand-600 transition-colors">
+              <div class="flex items-center gap-2">
+                <span>${item.title}</span>
+                ${fileCount > 0 ? `<span class="inline-flex items-center gap-0.5 text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-bold"><i data-lucide="paperclip" class="w-3 h-3 text-brand-600"></i>${fileCount}</span>` : ''}
+                ${urlCount > 0 ? `<span class="inline-flex items-center gap-0.5 text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-bold"><i data-lucide="link-2" class="w-3 h-3 text-indigo-600"></i>${urlCount}</span>` : ''}
+              </div>
+            </td>
+            <td class="py-4 px-3 w-28 text-xs font-bold text-slate-600 text-center whitespace-nowrap">
+              <span class="px-2.5 py-0.5 bg-slate-100 rounded-full">${item.department}</span>
+            </td>
+            <td class="py-4 px-4 text-xs font-bold text-slate-700 text-center w-36 whitespace-nowrap">
+              ${formatAuthorDisplay(item)}
+            </td>
+            <td class="py-4 px-4 sm:px-6 text-xs text-slate-400 text-right w-32 font-medium whitespace-nowrap">
+              ${formatDateYYYYMMDD(item.created_at || '')}
+            </td>
+          </tr>
+        `;
+      });
+
+      wrap.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50/80 border-b border-slate-200/80 text-xs font-bold text-slate-500 uppercase">
+                <th class="py-3 px-4 sm:px-6 text-center whitespace-nowrap">번호</th>
+                <th class="py-3 px-3 text-center whitespace-nowrap">카테고리</th>
+                <th class="py-3 px-4">제목</th>
+                <th class="py-3 px-3 text-center whitespace-nowrap">부서</th>
+                <th class="py-3 px-4 text-center whitespace-nowrap">작성자</th>
+                <th class="py-3 px-4 sm:px-6 text-right w-32 whitespace-nowrap">등록일</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      container.innerHTML = '';
+      container.appendChild(wrap);
+    }
+
+    // 2-6. View Mode Button State
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      renderMaterials();
+      updateViewModeButtons();
+    }
+
+    function updateViewModeButtons() {
+      const btnGrid = document.getElementById('view-mode-grid');
+      const btnTable = document.getElementById('view-mode-table');
+      if (!btnGrid || !btnTable) return;
+
+      if (currentViewMode === 'grid') {
+        btnGrid.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm';
+        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900';
+      } else {
+        btnGrid.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 hover:text-slate-900';
+        btnTable.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white text-brand-600 shadow-sm';
+      }
+    }
+
+    /*************************************************************************
+     * 3. SEARCH & FILTER HANDLERS
+     *************************************************************************/
+    function handleSearchInput(e) {
+      currentSearchKeyword = e.target.value.trim();
+      const clearBtn = document.getElementById('btn-clear-search');
+      if (clearBtn) {
+        clearBtn.classList.toggle('hidden', !currentSearchKeyword);
+      }
+      renderMaterials();
+    }
+
+    function clearSearch() {
+      const input = document.getElementById('search-input');
+      if (input) input.value = '';
+      currentSearchKeyword = '';
+      document.getElementById('btn-clear-search').classList.add('hidden');
+      renderMaterials();
+    }
+
+    function handleFilterChange() {
+      const deptEl = document.getElementById('dept-filter');
+      currentDepartment = deptEl ? deptEl.value : 'ALL';
+      renderMaterials();
+    }
+
+    function clearSearchAndFilters() {
+      currentCategory = 'ALL';
+      currentDepartment = 'ALL';
+      currentSearchKeyword = '';
+      const input = document.getElementById('search-input');
+      if (input) input.value = '';
+      const deptEl = document.getElementById('dept-filter');
+      if (deptEl) deptEl.value = 'ALL';
+      document.getElementById('btn-clear-search').classList.add('hidden');
+      renderAll();
+    }
+
+    /*************************************************************************
+     * 4. DETAIL MODAL HANDLERS
+     *************************************************************************/
+    function openDetailModal(itemId) {
+      const item = materialsData.find(m => String(m.id) === String(itemId));
+      if (!item) return;
+      currentDetailItem = item;
+
+      // Populate header info (카테고리만 표시)
+      const badgeClass = getCategoryBadgeClass(item.category);
+      const catBadge = document.getElementById('detail-category-badge');
+      catBadge.className = `px-2.5 py-0.5 rounded-full text-xs font-bold ${badgeClass}`;
+      catBadge.textContent = item.category;
+
+      document.getElementById('detail-title').textContent = item.title;
+
+      // Author profile ("부서 이름 직급명" 형식 예: IT부 윤지훈 책임)
+      const deptName = item.department || item.nm_dept || '';
+      const authorRank = formatAuthorDisplay(item);
+      const authorDisplayStr = [deptName, authorRank].filter(Boolean).join(' ');
+
+      document.getElementById('detail-author-avatar').textContent = (item.author || '익')[0] || '?';
+      document.getElementById('detail-author-name').textContent = authorDisplayStr;
+
+      // 등록일자 (YYYY-MM-DD 형식으로 표시)
+      const detailDateEl = document.getElementById('detail-date-display');
+      if (detailDateEl) {
+        detailDateEl.textContent = formatDateYYYYMMDD(item.created_at || '');
+      }
+
+      // Content text
+      document.getElementById('detail-content').textContent = item.content || '';
+
+      // Attached files
+      const files = item.files || [];
+      document.getElementById('detail-files-count').textContent = files.length;
+      const filesList = document.getElementById('detail-files-list');
+      filesList.innerHTML = '';
+
+      if (files.length === 0) {
+        filesList.innerHTML = `<div class="col-span-full py-4 text-xs text-slate-400 italic bg-slate-50 rounded-xl text-center">첨부된 파일이 없습니다.</div>`;
+      } else {
+        const inlineSupportedExts = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'txt'];
+        files.forEach(f => {
+          const ext = (f.name || '').split('.').pop().toLowerCase();
+          const isInlineSupported = inlineSupportedExts.includes(ext);
+
+          const openBtnHtml = isInlineSupported ? `
+              <button onclick="openFileInNewWindow('${f.name.replace(/'/g, "\\'")}', '${f.url || ''}')" title="새 탭에서 열기"
+                class="p-2 text-slate-400 hover:text-brand-600 hover:bg-white rounded-lg transition-colors">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+              </button>` : '';
+
+          const fileEl = document.createElement('div');
+          fileEl.className = 'flex items-center justify-between p-3 bg-slate-50 border border-slate-200/80 rounded-xl hover:border-brand-500/50 transition-all group';
+          fileEl.innerHTML = `
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-brand-600 shrink-0">
+                <i data-lucide="file" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 truncate">${f.name}</div>
+                <div class="text-[11px] text-slate-400">${f.size || '1.0 MB'}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              ${openBtnHtml}
+              <button onclick="downloadFileWithSavePicker('${f.name.replace(/'/g, "\\'")}', null, '${f.url || ''}')" title="다운로드"
+                class="p-2 text-slate-400 hover:text-brand-600 hover:bg-white rounded-lg transition-colors">
+                <i data-lucide="download" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `;
+          filesList.appendChild(fileEl);
+        });
+      }
+
+      // Reference URLs
+      const urls = item.urls || [];
+      document.getElementById('detail-urls-count').textContent = urls.length;
+      const urlsList = document.getElementById('detail-urls-list');
+      urlsList.innerHTML = '';
+
+      if (urls.length === 0) {
+        urlsList.innerHTML = `<div class="py-4 text-xs text-slate-400 italic bg-slate-50 rounded-xl text-center">등록된 참고 URL이 없습니다.</div>`;
+      } else {
+        urls.forEach(u => {
+          const urlEl = document.createElement('a');
+          urlEl.href = u.url;
+          urlEl.target = '_blank';
+          urlEl.className = 'flex items-center justify-between p-3 bg-slate-50 hover:bg-brand-50/50 border border-slate-200/80 hover:border-brand-500/50 rounded-xl transition-all group';
+          urlEl.innerHTML = `
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-indigo-600 shrink-0">
+                <i data-lucide="link-2" class="w-4 h-4"></i>
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 group-hover:text-brand-600 transition-colors truncate">${u.title || u.url}</div>
+                <div class="text-[11px] text-slate-400 truncate">${u.url}</div>
+              </div>
+            </div>
+            <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-brand-600 shrink-0 mr-1"></i>
+          `;
+          urlsList.appendChild(urlEl);
+        });
+      }
+
+      // Show modal
+      const modal = document.getElementById('detail-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeDetailModal() {
+      const modal = document.getElementById('detail-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      currentDetailItem = null;
+    }
+
+    function editFromDetail() {
+      if (!currentDetailItem) return;
+      const itemToEdit = currentDetailItem;
+      if (itemToEdit.password) {
+        const inputPw = prompt(`'${itemToEdit.title}' 자료를 수정하려면 등록 시 설정한 비밀번호를 입력하세요.`);
+        if (inputPw === null) return;
+        if (inputPw !== itemToEdit.password) {
+          alert('비밀번호가 일치하지 않습니다.');
+          return;
+        }
+      }
+      closeDetailModal();
+      openFormModal(itemToEdit.id);
+    }
+
+    function deleteFromDetail() {
+      if (!currentDetailItem) return;
+      const itemId = currentDetailItem.id;
+      if (currentDetailItem.password) {
+        const inputPw = prompt(`'${currentDetailItem.title}' 자료를 삭제하려면 등록 시 설정한 비밀번호를 입력하세요.`);
+        if (inputPw === null) return;
+        if (inputPw !== currentDetailItem.password) {
+          alert('비밀번호가 일치하지 않습니다.');
+          return;
+        }
+      }
+      if (confirm(`'${currentDetailItem.title}' 자료를 정말 삭제하시겠습니까?`)) {
+        materialsData = materialsData.filter(m => String(m.id) !== String(itemId));
+        saveData();
+        if (supabaseClient && !isNaN(Number(itemId))) {
+          const targetId = Number(itemId);
+          supabaseClient.from('archive').delete().eq('id', targetId).then(({ error }) => {
+            if (error) console.warn('Supabase delete fail:', error);
+          });
+        }
+        closeDetailModal();
+        renderAll();
+        showToast('자료가 삭제되었습니다.');
+      }
+    }
+
+    // Base64 Data URL을 Blob 객체로 변환하는 헬퍼 함수 (업로드된 실제 파일 영구 보존/열람용)
+    function dataUrlToBlob(dataUrl) {
+      const parts = dataUrl.split(',');
+      const match = parts[0].match(/:(.*?);/);
+      const mime = match ? match[1] : 'application/octet-stream';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    }
+
+    async function downloadFileWithSavePicker(fileName, fileObj = null, fileUrl = null) {
+      try {
+        if ('showSaveFilePicker' in window) {
+          const fileExtension = fileName.split('.').pop() || 'txt';
+          const options = {
+            suggestedName: fileName,
+            types: [{
+              description: 'Attachment File',
+              accept: {
+                '*/*': ['.' + fileExtension]
+              }
+            }]
+          };
+
+          const handle = await window.showSaveFilePicker(options);
+          const writable = await handle.createWritable();
+
+          let blob;
+          if (fileObj instanceof Blob) {
+            blob = fileObj;
+          } else if (fileUrl && fileUrl.startsWith('data:')) {
+            blob = dataUrlToBlob(fileUrl);
+          } else if (fileUrl && fileUrl.startsWith('blob:')) {
+            const res = await fetch(fileUrl);
+            blob = await res.blob();
+          } else {
+            blob = new Blob([`Hansoll AI Gallery - Downloaded File: ${fileName}\n\nThis is a prototype attachment file download.`], { type: 'application/octet-stream' });
+          }
+
+          await writable.write(blob);
+          await writable.close();
+
+          showToast(`'${fileName}' 파일이 지정하신 위치에 저장되었습니다.`);
+          return;
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          return; // 사용자가 저장 창 취소
+        }
+        console.warn('showSaveFilePicker error or unsupported:', err);
+      }
+
+      // showSaveFilePicker 미지원 또는 예외 시 기본 다운로드 fallback
+      let downloadUrl = fileUrl;
+      let revokeAfter = false;
+      if (!downloadUrl) {
+        const blob = new Blob([`Hansoll AI Gallery - Downloaded File: ${fileName}\n\nThis is a prototype attachment file download.`], { type: 'application/octet-stream' });
+        downloadUrl = URL.createObjectURL(blob);
+        revokeAfter = true;
+      }
+
+      const a = document.createElement('a');
+      a.href = downloadUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      if (revokeAfter) {
+        setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+      }
+
+      showToast(`'${fileName}' 다운로드가 완료되었습니다.`);
+    }
+
+    function openFileInNewWindow(fileName, fileUrl = '') {
+      // 1. Base64 Data URL (업로드된 실제 파일 데이터)인 경우 실제 바이너리 Blob으로 변환하여 브라우저 내장 뷰어로 새 탭 열람!
+      if (fileUrl && fileUrl.startsWith('data:')) {
+        try {
+          const blob = dataUrlToBlob(fileUrl);
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+          return;
+        } catch (e) {
+          console.error('Data URL blob conversion failed:', e);
+        }
+      }
+      // 2. 이미 blob: URL이거나 일반 http/https 웹 URL인 경우
+      if (fileUrl && (fileUrl.startsWith('blob:') || fileUrl.startsWith('http'))) {
+        window.open(fileUrl, '_blank');
+        return;
+      }
+      // 프로토타입 첨부파일: 브라우저 새 탭(New Tab)에서 안정적으로 열람할 수 있도록 HTML Blob 생성 후 새 탭 열기
+      const docHtml = [
+        '<!DOCTYPE html>',
+        '<html lang="ko">',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '  <title>' + fileName + ' - 미리보기</title>',
+        '  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">',
+        '  <style>',
+        '    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background-color: #1e293b; color: #f8fafc; margin: 0; padding: 0; display: flex; flex-direction: column; min-height: 100vh; }',
+        '    .header { background-color: #0f172a; border-bottom: 1px solid #334155; padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }',
+        '    .header-left { display: flex; align-items: center; gap: 12px; }',
+        '    .badge { width: 36px; height: 36px; border-radius: 8px; background-color: #2563eb; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; color: white; }',
+        '    .title-area h1 { font-size: 16px; font-weight: 700; margin: 0; color: #f1f5f9; }',
+        '    .title-area p { font-size: 12px; color: #94a3b8; margin: 2px 0 0 0; }',
+        '    .btn-close { background-color: #334155; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }',
+        '    .btn-close:hover { background-color: #475569; }',
+        '    .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px; }',
+        '    .doc-card { background-color: #ffffff; color: #1e293b; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); padding: 40px; width: 100%; max-width: 680px; min-height: 520px; display: flex; flex-direction: column; justify-content: space-between; }',
+        '    .doc-header { border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; }',
+        '    .doc-tag { font-size: 12px; font-weight: 700; color: #2563eb; text-transform: uppercase; letter-spacing: 0.05em; }',
+        '    .doc-meta { font-size: 12px; color: #64748b; font-family: monospace; }',
+        '    .doc-title { font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 16px 0; }',
+        '    .doc-body { font-size: 14px; color: #475569; line-height: 1.6; }',
+        '    .doc-footer { border-top: 1px solid #f1f5f9; padding-top: 24px; margin-top: 32px; display: flex; justify-content: space-between; font-size: 12px; color: #94a3b8; }',
+        '  </style>',
+        '</head>',
+        '<body>',
+        '  <header class="header">',
+        '    <div class="header-left">',
+        '      <div class="badge">FILE</div>',
+        '      <div class="title-area">',
+        '        <h1>' + fileName + '</h1>',
+        '        <p>Hansoll AI Gallery 첨부파일 브라우저 새 탭 뷰어</p>',
+        '      </div>',
+        '    </div>',
+        '    <button onclick="window.close()" class="btn-close">탭 닫기</button>',
+        '  </header>',
+        '  <main class="main">',
+        '    <div class="doc-card">',
+        '      <div>',
+        '        <div class="doc-header">',
+        '          <span class="doc-tag">ATTACHMENT DOCUMENT</span>',
+        '          <span class="doc-meta">' + fileName + '</span>',
+        '        </div>',
+        '        <h2 class="doc-title">' + fileName + '</h2>',
+        '        <p class="doc-body">',
+        '          본 창은 Hansoll Gallery Archive 시스템에 등록된 첨부파일 <strong>\'' + fileName + '\'</strong>의 내용을 보여주는 <strong>브라우저 새 탭 뷰어</strong>입니다.<br><br>',
+        '          실제 파일 첨부 시에는 업로드된 파일(PDF, 이미지 등)의 바이너리 객체가 브라우저 내장 뷰어를 통해 새 탭에서 바로 표시되며, 현재 프로토타입 샘플 환경에서는 이와 같이 안전하고 빠르게 문서를 열람할 수 있습니다.',
+        '        </p>',
+        '      </div>',
+        '      <div class="doc-footer">',
+        '        <span>Hansoll AI Portal - Document Viewer</span>',
+        '        <span>Page 1 / 1</span>',
+        '      </div>',
+        '    </div>',
+        '  </main>',
+        '<' + '/body>',
+        '<' + '/html>'
+      ].join('\n');
+
+      const blob = new Blob([docHtml], { type: 'text/html;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    }
+
+    function togglePasswordVisibility() {
+      const pwInput = document.getElementById('form-password');
+      const eyeIcon = document.getElementById('pw-eye-icon');
+      if (!pwInput || !eyeIcon) return;
+      if (pwInput.type === 'password') {
+        pwInput.type = 'text';
+        eyeIcon.setAttribute('data-lucide', 'eye-off');
+      } else {
+        pwInput.type = 'password';
+        eyeIcon.setAttribute('data-lucide', 'eye');
+      }
+      lucide.createIcons();
+    }
+
+    /*************************************************************************
+     * 5. CREATE & EDIT FORM MODAL HANDLERS (현재 로그인 정보 자동 조회)
+     *************************************************************************/
+    async function fetchLoginUserInfo() {
+      const getStorage = (key) => {
+        let v = sessionStorage.getItem(key);
+        if (!v && window.parent && window.parent.sessionStorage) {
+          try { v = window.parent.sessionStorage.getItem(key); } catch(e){}
+        }
+        return v;
+      };
+
+      let cdDept = getStorage('ms_cd_dept') || getStorage('cd_dept') || 'IT';
+      let nmDept = getStorage('ms_department') || getStorage('nm_dept') || 'IT부';
+      let empNo = getStorage('ms_emp_no') || getStorage('emp_no') || '202401';
+      let empNm = getStorage('ms_displayName') || getStorage('userName') || getStorage('emp_nm') || '윤지훈';
+      let occpCd = getStorage('ms_occp_grd_cd') || getStorage('occp_grd_cd') || 'M2';
+      let occpNm = getStorage('ms_occp_grd_nm') || getStorage('occp_grd_nm') || '책임';
+
+      const uid = getStorage('userNameId');
+      if (supabaseClient && uid) {
+        try {
+          const { data: dbUser, error } = await supabaseClient
+            .from('user_info')
+            .select('emp_no, emp_nm, cd_dept, nm_dept, occp_grd_cd, occp_grd_nm')
+            .or(`nm_email.ilike.%${uid}%,emp_no.eq.${uid}`)
+            .limit(1)
+            .single();
+
+          if (!error && dbUser) {
+            if (dbUser.cd_dept) cdDept = dbUser.cd_dept;
+            if (dbUser.nm_dept) nmDept = dbUser.nm_dept;
+            if (dbUser.emp_no) empNo = dbUser.emp_no;
+            if (dbUser.emp_nm) empNm = dbUser.emp_nm;
+            if (dbUser.occp_grd_cd) occpCd = dbUser.occp_grd_cd;
+            if (dbUser.occp_grd_nm) occpNm = dbUser.occp_grd_nm;
+
+            sessionStorage.setItem('ms_cd_dept', cdDept);
+            sessionStorage.setItem('ms_department', nmDept);
+            sessionStorage.setItem('ms_emp_no', empNo);
+            sessionStorage.setItem('ms_displayName', empNm);
+            sessionStorage.setItem('ms_occp_grd_cd', occpCd);
+            sessionStorage.setItem('ms_occp_grd_nm', occpNm);
+          }
+        } catch (err) {
+          console.warn('user_info 테이블 조회 실패, 캐시/기본값 사용:', err);
+        }
+      }
+
+      return { cdDept, nmDept, empNo, empNm, occpCd, occpNm };
+    }
+
+    async function openFormModal(editItemId = null) {
+      const form = document.getElementById('material-form');
+      form.reset();
+      currentFormFiles = [];
+      currentFormUrls = [];
+
+      const modalTitle = document.getElementById('form-modal-title');
+      const modalDesc = document.getElementById('form-modal-desc');
+      const idInput = document.getElementById('form-item-id');
+
+      if (editItemId) {
+        // Edit Mode
+        const item = materialsData.find(m => String(m.id) === String(editItemId));
+        if (!item) return;
+
+        idInput.value = item.id;
+        modalTitle.textContent = '자료 수정';
+        modalDesc.textContent = `'${item.title}' 자료 정보를 수정합니다.`;
+
+        document.getElementById('form-category').value = item.category || '참고 자료';
+        document.getElementById('form-cd-dept').value = item.cd_dept || 'IT';
+        document.getElementById('form-department').value = item.department || 'IT부';
+        document.getElementById('form-emp-no').value = item.emp_no || '202401';
+        document.getElementById('form-author').value = item.author || '';
+        document.getElementById('form-occp-cd').value = item.occp_grd_cd || 'M2';
+        document.getElementById('form-occp-nm').value = item.occp_grd_nm || '책임';
+        document.getElementById('form-title').value = item.title || '';
+        document.getElementById('form-content').value = item.content || '';
+        document.getElementById('form-password').value = item.password || '';
+
+        currentFormFiles = [...(item.files || [])];
+        currentFormUrls = [...(item.urls || [])];
+      } else {
+        // Create Mode - 로그인된 정보(부서코드, 부서명, 사번, 성명, 직급코드, 직급명)를 자동 조회하여 셋업
+        idInput.value = '';
+        modalTitle.textContent = '신규 자료 등록';
+        modalDesc.textContent = '현재 로그인된 정보를 바탕으로 자료를 등록합니다.';
+
+        document.getElementById('form-category').value = '참고 자료';
+        document.getElementById('form-password').value = '';
+        document.getElementById('form-title').value = '';
+        document.getElementById('form-content').value = '';
+
+        const loginInfo = await fetchLoginUserInfo();
+        document.getElementById('form-cd-dept').value = loginInfo.cdDept;
+        document.getElementById('form-department').value = loginInfo.nmDept;
+        document.getElementById('form-emp-no').value = loginInfo.empNo;
+        document.getElementById('form-author').value = loginInfo.empNm;
+        document.getElementById('form-occp-cd').value = loginInfo.occpCd;
+        document.getElementById('form-occp-nm').value = loginInfo.occpNm;
+
+        // One empty URL row by default
+        currentFormUrls = [{ title: '', url: '' }];
+      }
+
+      renderFormFilesPreview();
+      renderFormUrlsList();
+
+      const modal = document.getElementById('form-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      lucide.createIcons();
+    }
+
+    function closeFormModal(skipConfirm = false) {
+      const modal = document.getElementById('form-modal');
+      if (modal && !modal.classList.contains('hidden') && !skipConfirm) {
+        if (!confirm("작성 중인 내용이 저장되지 않고 사라집니다.\n정말 창을 닫으시겠습니까?")) {
+          return;
+        }
+      }
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // 5-1. File Selection & Drag and Drop Handler
+    function addFormFiles(fileList) {
+      const files = Array.from(fileList);
+      if (!files.length) return;
+
+      files.forEach(file => {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        const displaySize = sizeMb > 0.1 ? `${sizeMb} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          currentFormFiles.push({
+            name: file.name,
+            size: displaySize,
+            type: file.name.split('.').pop() || 'file',
+            url: e.target.result, // Base64 Data URL로 저장 (새로고침 후에도 영구 보존 및 실제 파일 새 탭 열람 가능)
+            blob: file
+          });
+          renderFormFilesPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function handleFileSelect(e) {
+      addFormFiles(e.target.files);
+      e.target.value = ''; // Reset input
+    }
+
+    function resetDropZoneStyle() {
+      const dropZone = document.getElementById('file-drop-zone');
+      if (!dropZone) return;
+      dropZone.classList.remove('border-brand-500', 'bg-brand-50/50');
+      dropZone.classList.add('border-slate-200', 'bg-slate-50/50');
+    }
+
+    function handleDragEnter(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropZone = document.getElementById('file-drop-zone');
+      if (dropZone) {
+        dropZone.classList.add('border-brand-500', 'bg-brand-50/50');
+        dropZone.classList.remove('border-slate-200', 'bg-slate-50/50');
+      }
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'copy';
+      }
+      const dropZone = document.getElementById('file-drop-zone');
+      if (dropZone) {
+        dropZone.classList.add('border-brand-500', 'bg-brand-50/50');
+        dropZone.classList.remove('border-slate-200', 'bg-slate-50/50');
+      }
+    }
+
+    function handleDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const dropZone = document.getElementById('file-drop-zone');
+      if (e.target === dropZone) {
+        resetDropZoneStyle();
+      }
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      resetDropZoneStyle();
+
+      const dt = e.dataTransfer;
+      if (!dt || !dt.files || dt.files.length === 0) return;
+
+      addFormFiles(dt.files);
+    }
+
+    function removeFormFile(index) {
+      currentFormFiles.splice(index, 1);
+      renderFormFilesPreview();
+    }
+
+    function renderFormFilesPreview() {
+      const container = document.getElementById('form-files-preview');
+      container.innerHTML = '';
+
+      currentFormFiles.forEach((f, idx) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs';
+        item.innerHTML = `
+          <div class="flex items-center gap-2 min-w-0">
+            <i data-lucide="paperclip" class="w-4 h-4 text-brand-600 shrink-0"></i>
+            <span class="font-bold text-slate-800 truncate">${f.name}</span>
+            <span class="text-slate-400">(${f.size})</span>
+          </div>
+          <button type="button" onclick="removeFormFile(${idx})" class="text-slate-400 hover:text-rose-500 p-1">
+            <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+      lucide.createIcons();
+    }
+
+    // 5-2. URL Row Management
+    function addUrlInputRow() {
+      currentFormUrls.push({ title: '', url: '' });
+      renderFormUrlsList();
+    }
+
+    function removeUrlInputRow(index) {
+      currentFormUrls.splice(index, 1);
+      renderFormUrlsList();
+    }
+
+    function renderFormUrlsList() {
+      const container = document.getElementById('url-inputs-container');
+      container.innerHTML = '';
+
+      currentFormUrls.forEach((u, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex flex-col sm:flex-row items-center gap-2 bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80';
+        row.innerHTML = `
+          <input type="text" placeholder="링크 이름 (예: 매뉴얼 문서)" value="${u.title || ''}"
+            oninput="currentFormUrls[${idx}].title = this.value"
+            class="w-full sm:w-1/3 h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500">
+          
+          <div class="flex items-center gap-2 w-full sm:w-2/3">
+            <input type="url" placeholder="https://..." value="${u.url || ''}"
+              oninput="currentFormUrls[${idx}].url = this.value"
+              class="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs outline-none focus:border-brand-500 font-mono">
+            
+            <button type="button" onclick="removeUrlInputRow(${idx})"
+              class="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors shrink-0">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+      lucide.createIcons();
+    }
+
+    // 5-3. Form Submit Handler (Save to LocalStorage prototype)
+    function handleFormSubmit(e) {
+      e.preventDefault();
+
+      const idVal = document.getElementById('form-item-id').value;
+      const category = document.getElementById('form-category').value;
+      const cd_dept = document.getElementById('form-cd-dept').value.trim() || 'IT';
+      const department = document.getElementById('form-department').value.trim() || 'IT부';
+      const emp_no = document.getElementById('form-emp-no').value.trim() || '202401';
+      const title = document.getElementById('form-title').value.trim();
+      const author = document.getElementById('form-author').value.trim();
+      const occp_grd_cd = document.getElementById('form-occp-cd').value.trim() || 'M2';
+      const occp_grd_nm = document.getElementById('form-occp-nm').value.trim() || '책임';
+      const content = document.getElementById('form-content').value.trim();
+      const password = document.getElementById('form-password').value.trim();
+
+      // Filter out empty URL rows
+      const cleanUrls = currentFormUrls
+        .filter(u => u.url.trim() !== '')
+        .map(u => {
+          let urlStr = u.url.trim();
+          if (!urlStr.startsWith('http://') && !urlStr.startsWith('https://')) {
+            urlStr = 'https://' + urlStr;
+          }
+          return {
+            title: u.title.trim() || urlStr,
+            url: urlStr
+          };
+        });
+
+      const today = new Date().toISOString().slice(0, 10);
+
+      if (idVal) {
+        // Update Existing Item
+        const idx = materialsData.findIndex(m => String(m.id) === String(idVal));
+        if (idx !== -1) {
+          materialsData[idx] = normalizeItem({
+            ...materialsData[idx],
+            category,
+            cd_dept,
+            nm_dept: department,
+            emp_no,
+            emp_nm: author,
+            occp_grd_cd,
+            occp_grd_nm,
+            title,
+            contents: content,
+            password,
+            files: [...currentFormFiles],
+            links: cleanUrls,
+            updated_at: new Date().toISOString().slice(0, 10)
+          });
+          showToast('자료 수정이 완료되었습니다.');
+
+          if (supabaseClient && !isNaN(Number(idVal))) {
+            const targetId = Number(idVal);
+            supabaseClient.from('archive').update(toDbRow(materialsData[idx])).eq('id', targetId).then(({ error }) => {
+              if (error) console.warn('Supabase update fail:', error);
+            });
+          }
+        }
+      } else {
+        // Create New Item
+        const newItem = normalizeItem({
+          id: 'mat-' + (Date.now() % 100000),
+          cd_dept,
+          nm_dept: department,
+          emp_no,
+          emp_nm: author,
+          occp_grd_cd,
+          occp_grd_nm,
+          category,
+          title,
+          contents: content,
+          password,
+          created_at: today,
+          files: [...currentFormFiles],
+          links: cleanUrls
+        });
+        materialsData.unshift(newItem); // Add to top
+        showToast('신규 자료가 등록되었습니다.');
+
+        if (supabaseClient) {
+          supabaseClient.from('archive').insert(toDbRow(newItem)).then(({ error }) => {
+            if (error) console.warn('Supabase insert fail:', error);
+          });
+        }
+      }
+
+      saveData();
+      closeFormModal(true);
+      renderAll();
+    }
+
+    /*************************************************************************
+     * 6. TOAST NOTIFICATION UTILITY
+     *************************************************************************/
+    let toastTimeout = null;
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+
+    /*************************************************************************
+     * 7. INITIALIZE PAGE
+     *************************************************************************/
+    document.addEventListener('DOMContentLoaded', () => {
+      initData();
+
+      // ESC 키로 팝업/모달 창 닫기 지원 (신규/수정 자료 등록 모달, 상세 내용 조회 창)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.keyCode === 27) {
+          const formModal = document.getElementById('form-modal');
+          if (formModal && !formModal.classList.contains('hidden')) {
+            closeFormModal(); // 닫기 전 데이터 소실 경고 알림 표시
+            return;
+          }
+          const detailModal = document.getElementById('detail-modal');
+          if (detailModal && !detailModal.classList.contains('hidden')) {
+            closeDetailModal();
+            return;
+          }
+        }
+      });
+
+      // 브라우저 기본 드래그 앤 드롭 동작 차단 (영역 밖으로 드롭 시 파일이 브라우저 탭에서 새 창으로 열리는 현상 방지)
+      window.addEventListener('dragover', (e) => e.preventDefault(), false);
+      window.addEventListener('drop', (e) => e.preventDefault(), false);
+    });
+  </script>
+</body>
+
+</html>

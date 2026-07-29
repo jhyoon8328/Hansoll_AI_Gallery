@@ -497,7 +497,7 @@
         `;
 
         const subContainer = document.createElement('div');
-        subContainer.className = `overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`;
+        subContainer.className = `transition-all duration-300 ease-in-out ${isOpen ? 'max-h-[2000px] opacity-100 overflow-y-auto custom-scrollbar' : 'max-h-0 opacity-0 overflow-hidden'}`;
 
         const subList = document.createElement('div');
         subList.className = "mt-1 flex flex-col space-y-1 pl-11 pr-3 pb-2 pt-1";
@@ -530,7 +530,7 @@
 
             if (children && children.length > 0) {
               const childrenContainer = document.createElement('div');
-              childrenContainer.className = `flex flex-col space-y-1 pl-4 mt-1 overflow-hidden transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`;
+              childrenContainer.className = `flex flex-col space-y-1 pl-4 mt-1 transition-all duration-300 ease-in-out ${isSubOpen ? 'max-h-[2000px] opacity-100 overflow-y-auto custom-scrollbar' : 'max-h-0 opacity-0 overflow-hidden'}`;
 
               children.forEach(child => {
                 const childTitle = child.title;
@@ -635,8 +635,8 @@
         const currentUser = sessionStorage.getItem('ms_displayName') || '';
         const currentDept = sessionStorage.getItem('ms_department') || '';
         const userClCompany = (sessionStorage.getItem('user_cl_company') || '').trim();
-        const isOverseasUser = userClCompany && !['HQ', '본사', 'Guest', '게스트'].includes(userClCompany);
-        const canToggleCompany = (isOverseasUser || currentDept === 'IT부' || currentUser === '윤정호' || currentUser === '한희택');
+        // const isOverseasUser = userClCompany && !['HQ', '본사', 'Guest', '게스트'].includes(userClCompany);
+        const canToggleCompany = currentUser !== '';
 
         totalCountDisplay.innerHTML = `
           <div class="flex items-center justify-between mb-1">
@@ -1556,16 +1556,38 @@
       return `${kst.getFullYear()}-${pad(kst.getMonth() + 1)}-${pad(kst.getDate())} ${pad(kst.getHours())}:${pad(kst.getMinutes())}:${pad(kst.getSeconds())}`;
     }
 
+    async function findUserInfoByEmail(emailId, selectFields = '*') {
+      if (!window.supabaseClient || !emailId) return { data: null, error: null, matchedBy: null };
+      let matchedBy = null;
+      let { data, error } = await window.supabaseClient
+        .from('user_info')
+        .select(selectFields)
+        .ilike('nm_email', `%${emailId}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (data) {
+        matchedBy = 'nm_email';
+      } else {
+        // 1차(nm_email)에서 없을 시 2차(nm_email_sf)로 조회
+        const res2 = await window.supabaseClient
+          .from('user_info')
+          .select(selectFields)
+          .ilike('nm_email_sf', `%${emailId}%`)
+          .limit(1)
+          .maybeSingle();
+        data = res2.data;
+        error = res2.error;
+        if (data) matchedBy = 'nm_email_sf';
+      }
+      return { data, error, matchedBy };
+    }
+
     async function recordLoginHistory(userNameId) {
       try {
         if (!window.supabaseClient) return;
         
-        const { data: userInfo, error: fetchErr } = await window.supabaseClient
-          .from('user_info')
-          .select('*')
-          .ilike('nm_email', `%${userNameId}%`)
-          .limit(1)
-          .single();
+        const { data: userInfo, error: fetchErr } = await findUserInfoByEmail(userNameId, '*');
 
         if (fetchErr || !userInfo) {
           console.warn("로그인 이력 기록 실패: 해당 사용자 정보를 찾을 수 없습니다.");
@@ -1758,32 +1780,29 @@
           if (name === 'null' || name === 'undefined') name = '';
           else name = name || (session.user && session.user.user_metadata && session.user.user_metadata.full_name) || '';
 
-          // [추가] 부서 정보가 없는 경우 (새 탭 복원 시 Graph API 미작동) DB에서 정보 복구 시도
-          if (!dep) {
-            const uid = sessionStorage.getItem('userNameId');
-            if (uid) {
-              try {
-                const { data: dbUser } = await window.supabaseClient
-                  .from('user_info')
-                  .select('*')
-                  .ilike('nm_email', `%${uid}%`)
-                  .limit(1)
-                  .single();
-                if (dbUser) {
-                  const dbDep = dbUser.nm_dept || dbUser.lvduty_nm || dbUser.department;
-                  const dbName = dbUser.emp_nm || dbUser.nm_kor || dbUser.name || dbUser.displayName;
-                  if (dbDep) {
-                    sessionStorage.setItem('ms_department', dbDep);
-                    dep = dbDep;
-                  }
-                  if (dbName) {
-                    sessionStorage.setItem('ms_displayName', dbName);
-                    name = dbName;
-                  }
+          // [수정] 1순위: nm_email 통과자 -> MS Entra ID 부서 우선 (!dep 시 DB 복구)
+          //        2순위: nm_email_sf 통과자 -> Entra ID 부서 무시하고 DB nm_dept 1순위 적용
+          const uid = sessionStorage.getItem('userNameId');
+          if (uid) {
+            try {
+              const { data: dbUser, matchedBy } = await findUserInfoByEmail(uid, '*');
+              if (dbUser) {
+                const dbDep = dbUser.nm_dept || dbUser.lvduty_nm || dbUser.department;
+                const dbName = dbUser.emp_nm || dbUser.nm_kor || dbUser.name || dbUser.displayName;
+                if (matchedBy === 'nm_email_sf' && dbDep) {
+                  sessionStorage.setItem('ms_department', dbDep);
+                  dep = dbDep;
+                } else if (!dep && dbDep) {
+                  sessionStorage.setItem('ms_department', dbDep);
+                  dep = dbDep;
                 }
-              } catch (e) {
-                console.warn("DB에서 부서 정보 복구 실패:", e);
+                if (!name && dbName) {
+                  sessionStorage.setItem('ms_displayName', dbName);
+                  name = dbName;
+                }
               }
+            } catch (e) {
+              console.warn("DB에서 부서 정보 복구 실패:", e);
             }
           }
 
@@ -1832,12 +1851,7 @@
                 sessionStorage.setItem('ynOpenFetched', 'true');
                 sessionStorage.setItem('user_cl_company', 'FETCHING');
                 try {
-                  const { data: userInfoData, error } = await window.supabaseClient
-                    .from('user_info')
-                    .select('yn_open, cl_company')
-                    .ilike('nm_email', `%${finalUserNameId}%`)
-                    .limit(1)
-                    .maybeSingle();
+                  const { data: userInfoData, error } = await findUserInfoByEmail(finalUserNameId, 'yn_open, cl_company');
 
                   if (error || !userInfoData) {
                     console.error("사용자 정보 조회 실패 또는 미등록 사용자입니다:", error);
@@ -2253,6 +2267,19 @@
         </div>
 
         <!-- Section 5 -->
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-1.5 text-blue-600"><span
+              class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mr-1">5</span> 현재 업무 적용단계</label>
+          <select id="edit-use-scope"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-shadow bg-white">
+            <option value="A">개인 사용</option>
+            <option value="B">팀내 사용</option>
+            <option value="C">사내 사용</option>
+            <option value="D">준비중</option>
+          </select>
+        </div>
+
+        <!-- Section 6 (Password) -->
         <div id="edit-pw-section" class="pt-5 border-t border-slate-100">
           <label class="block text-sm font-bold text-slate-700 mb-1.5">비밀번호 설정 <span
               class="text-xs font-normal text-slate-500 ml-1">(4~8자)</span></label>
@@ -2289,14 +2316,24 @@
         </div>
 
         <div class="mb-6">
-          <div class="font-medium mb-2">이 기능을 만든 이유는</div>
-          <strong id="detail-reason" class="text-indigo-700 text-[15px] block whitespace-pre-wrap mb-1"></strong>
-          <div class="font-medium">이고요.</div>
+          <div class="font-medium mb-2">개발 목적</div>
+          <div class="border border-slate-200 rounded-lg p-3.5 bg-slate-50/50">
+            <strong id="detail-reason" class="text-indigo-700 text-[15px] block whitespace-pre-wrap"></strong>
+          </div>
         </div>
 
         <div class="mb-6">
-          <div class="font-medium mb-3">사용 방법은 이렇습니다.</div>
-          <div id="detail-desc" class="whitespace-pre-wrap text-[15px] font-bold text-indigo-700 leading-relaxed"></div>
+          <div class="font-medium mb-3">사용 방법</div>
+          <div class="border border-slate-200 rounded-lg p-3.5 bg-slate-50/50">
+            <div id="detail-desc" class="whitespace-pre-wrap text-[15px] font-bold text-indigo-700 leading-relaxed"></div>
+          </div>
+        </div>
+
+        <div class="mb-6">
+          <div class="font-medium mb-3">현재 업무 적용단계</div>
+          <select class="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-[15px] font-bold text-indigo-700 outline-none bg-white pointer-events-none">
+            <option id="detail-use-scope" value="" selected></option>
+          </select>
         </div>
       </div>
 
@@ -2332,6 +2369,8 @@
               reason: manualEntry.Reason,
               description: manualEntry.HowToUse,
               keywords: manualEntry.KeyWord,
+              useScopeCode: manualEntry.UseScopeCode,
+              useScope: manualEntry.UseScope,
               password: manualEntry.PassWord
             };
           }
@@ -2374,10 +2413,19 @@
       const displayTitle = title;
       const displayReason = data.reason || "(등록된 이유가 없습니다)";
       const displayDesc = data.description || currentDefaultDesc || "(등록된 설명이 없습니다)";
+      const displayUseScope = data.useScope || "개인 사용";
 
       document.getElementById('detail-title').textContent = displayTitle;
       document.getElementById('detail-reason').textContent = displayReason;
       document.getElementById('detail-desc').textContent = displayDesc;
+      const useScopeEl = document.getElementById('detail-use-scope');
+      if (useScopeEl) useScopeEl.textContent = displayUseScope;
+
+      const dep = sessionStorage.getItem('ms_department') || '';
+      const detailEditBtn = document.getElementById('detail-edit-btn');
+      if (detailEditBtn) {
+        detailEditBtn.style.display = (dep.trim() === 'IT부') ? '' : 'none';
+      }
 
       document.getElementById('tooltip-detail-modal').classList.remove('hidden');
       lucide.createIcons();
@@ -2417,6 +2465,7 @@
       document.getElementById('edit-reason').value = data.reason || "";
       document.getElementById('edit-desc').value = data.description || currentDefaultDesc || "";
       document.getElementById('edit-keywords').value = data.keywords || "";
+      document.getElementById('edit-use-scope').value = data.useScopeCode || "A";
       document.getElementById('edit-pw').value = data.password || "1234";
 
       document.getElementById('tooltip-edit-modal').classList.remove('hidden');
@@ -2473,6 +2522,9 @@
       const reason = document.getElementById('edit-reason').value.trim();
       const desc = document.getElementById('edit-desc').value.trim();
       const keywords = document.getElementById('edit-keywords').value.trim();
+      const useScopeSelect = document.getElementById('edit-use-scope');
+      const useScopeCode = useScopeSelect.value;
+      const useScopeText = useScopeSelect.options[useScopeSelect.selectedIndex].text;
       const pw = document.getElementById('edit-pw').value.trim();
 
       if (pw.length < 4 || pw.length > 8) {
@@ -2486,6 +2538,8 @@
         Reason: reason,
         HowToUse: desc,
         KeyWord: keywords,
+        UseScopeCode: useScopeCode,
+        UseScope: useScopeText,
         PassWord: pw
       };
 
@@ -2528,6 +2582,8 @@
         reason: reason,
         description: desc,
         keywords: keywords,
+        useScopeCode: useScopeCode,
+        useScope: useScopeText,
         password: pw
       });
 

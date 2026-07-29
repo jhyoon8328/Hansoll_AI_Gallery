@@ -442,13 +442,14 @@
                                 <th class="p-4">직급</th>
                                 <th class="p-4">직책명</th>
                                 <th class="p-4">이메일</th>
+                                <th class="p-4">Guest 계정</th>
                                 <th class="p-4 text-center">공개여부(Y/N)</th>
                                 <th class="p-4 text-center">소속</th>
                             </tr>
                         </thead>
                         <tbody id="user-info-tbody" class="divide-y divide-slate-100 text-sm text-slate-700">
                             <tr>
-                                <td colspan="8" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td>
+                                <td colspan="9" class="p-8 text-center text-slate-500">데이터를 불러오는 중입니다...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -2504,6 +2505,8 @@
                             occp_grd_nm: row['OCCP_GRD_NM'] || '',
                             nm_email: row['NM_EMAIL'] || '',
                             nm_email_full: row['NM_EMAIL_FULL'] || '',
+                            nm_email_sf: row['NM_EMAIL_SF'] || '',
+                            nm_email_full_sf: row['NM_EMAIL_FULL_SF'] || '',
                             lvduty_cd: row['LVDUTY_CD'] || '',
                             lvduty_nm: row['LVDUTY_NM'] || '',
                             yn_open: (row['YN_OPEN'] === 'Y' || row['YN_OPEN'] === true || row['YN_OPEN'] === 'true') ? 'Y' : 'N',
@@ -2564,6 +2567,7 @@
                 "직급": user.occp_grd_nm || "",
                 "직책": user.lvduty_nm || "",
                 "이메일": user.nm_email || "",
+                "Guest 계정": user.nm_email_full_sf || "",
                 "공개여부": user.yn_open || ""
             }));
 
@@ -2606,7 +2610,7 @@
             if (empNm) query = query.like('emp_nm', `%${empNm}%`);
             if (deptNm) query = query.like('nm_dept', `%${deptNm}%`);
             if (lvdutyNm) query = query.like('lvduty_nm', `%${lvdutyNm}%`);
-            if (email) query = query.like('nm_email', `%${email}%`);
+            if (email) query = query.or(`nm_email.ilike.%${email}%,nm_email_sf.ilike.%${email}%`);
             if (ynOpen !== 'all') query = query.eq('yn_open', ynOpen);
             if (clCompany !== 'all') query = query.eq('cl_company', clCompany);
             
@@ -2650,6 +2654,13 @@
                     <td class="p-4">${user.occp_grd_nm || ''}</td>
                     <td class="p-4">${user.lvduty_nm || ''}</td>
                     <td class="p-4 text-slate-500">${user.nm_email || ''}</td>
+                    <td class="p-4">
+                        <input type="text" value="${user.nm_email_full_sf || ''}" 
+                            data-origin="${user.nm_email_full_sf || ''}"
+                            placeholder="Guest 계정"
+                            onchange="updateUserExternalEmail('${user.emp_no}', this)"
+                            class="border border-slate-200 hover:border-slate-300 focus:border-blue-500 rounded px-2 py-1 text-sm w-52 outline-none transition-colors bg-transparent focus:bg-white text-slate-700">
+                    </td>
                     <td class="p-4 text-center">${selectHtml}</td>
                     <td class="p-4 text-center">${user.cl_company || "-"}</td>
                 `;
@@ -2735,6 +2746,50 @@
                 alert("상태 변경 중 오류가 발생했습니다.");
                 // 롤백 처리를 위해 목록 다시 불러오기
                 fetchUserInfoList();
+            }
+        }
+
+        // --- 사용자 외부 이메일(NM_EMAIL_FULL_SF) 및 ID(NM_EMAIL_SF) 수정 ---
+        async function updateUserExternalEmail(empNo, inputEl) {
+            const val = inputEl.value ? inputEl.value.trim() : '';
+            const originVal = inputEl.getAttribute('data-origin') || '';
+
+            // 1. 공백 입력 허용 (빈 문자열이 아닐 경우에만 이메일 형식 검사)
+            if (val !== '') {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(val)) {
+                    alert("잘못된 이메일 형식입니다.");
+                    inputEl.value = originVal;
+                    return;
+                }
+            }
+
+            const userNameId = sessionStorage.getItem('userNameId') || 'admin';
+            const nowIso = new Date().toISOString();
+            const sfId = val ? (val.includes('@') ? val.split('@')[0] : val) : '';
+            
+            const { error } = await supabaseClient
+                .from('user_info')
+                .update({ 
+                    nm_email_full_sf: val,
+                    nm_email_sf: sfId,
+                    updated_at: nowIso,
+                    updated_by: userNameId
+                })
+                .eq('emp_no', empNo);
+                
+            if (error) {
+                console.error("updateUserExternalEmail Error:", error);
+                alert("Guest 계정 변경 중 오류가 발생했습니다.");
+                inputEl.value = originVal;
+                fetchUserInfoList();
+            } else {
+                inputEl.setAttribute('data-origin', val);
+                const target = currentFetchedUsers.find(u => u.emp_no === empNo);
+                if (target) {
+                    target.nm_email_full_sf = val;
+                    target.nm_email_sf = sfId;
+                }
             }
         }
         // ==========================================
