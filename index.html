@@ -1562,7 +1562,7 @@
       let { data, error } = await window.supabaseClient
         .from('user_info')
         .select(selectFields)
-        .ilike('nm_email', `%${emailId}%`)
+        .ilike('nm_email', emailId)
         .limit(1)
         .maybeSingle();
 
@@ -1573,7 +1573,7 @@
         const res2 = await window.supabaseClient
           .from('user_info')
           .select(selectFields)
-          .ilike('nm_email_sf', `%${emailId}%`)
+          .ilike('nm_email_sf', emailId)
           .limit(1)
           .maybeSingle();
         data = res2.data;
