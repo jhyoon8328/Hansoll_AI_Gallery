@@ -1200,11 +1200,21 @@
       if (confirm(`'${currentDetailItem.title}' 자료를 정말 삭제하시겠습니까?`)) {
         materialsData = materialsData.filter(m => String(m.id) !== String(itemId));
         saveData();
-        if (supabaseClient && !isNaN(Number(itemId))) {
-          const targetId = Number(itemId);
-          supabaseClient.from('archive').delete().eq('id', targetId).then(({ error }) => {
-            if (error) console.warn('Supabase delete fail:', error);
-          });
+        if (supabaseClient) {
+          if (!isNaN(Number(itemId))) {
+            const targetId = Number(itemId);
+            supabaseClient.from('archive').delete().eq('id', targetId).then(({ error }) => {
+              if (error) console.warn('Supabase delete fail:', error);
+            });
+          } else {
+            supabaseClient.from('archive').delete()
+              .eq('title', currentDetailItem.title)
+              .eq('emp_no', currentDetailItem.emp_no)
+              .eq('created_at', currentDetailItem.created_at)
+              .then(({ error }) => {
+                if (error) console.warn('Supabase delete fail (fallback):', error);
+              });
+          }
         }
         closeDetailModal();
         renderAll();
@@ -1715,11 +1725,21 @@
           });
           showToast('자료 수정이 완료되었습니다.');
 
-          if (supabaseClient && !isNaN(Number(idVal))) {
-            const targetId = Number(idVal);
-            supabaseClient.from('archive').update(toDbRow(materialsData[idx])).eq('id', targetId).then(({ error }) => {
-              if (error) console.warn('Supabase update fail:', error);
-            });
+          if (supabaseClient) {
+            if (!isNaN(Number(idVal))) {
+              const targetId = Number(idVal);
+              supabaseClient.from('archive').update(toDbRow(materialsData[idx])).eq('id', targetId).then(({ error }) => {
+                if (error) console.warn('Supabase update fail:', error);
+              });
+            } else {
+              supabaseClient.from('archive').update(toDbRow(materialsData[idx]))
+                .eq('title', materialsData[idx].title)
+                .eq('emp_no', materialsData[idx].emp_no)
+                .eq('created_at', materialsData[idx].created_at)
+                .then(({ error }) => {
+                  if (error) console.warn('Supabase update fail (fallback):', error);
+                });
+            }
           }
         }
       } else {
@@ -1744,8 +1764,13 @@
         showToast('신규 자료가 등록되었습니다.');
 
         if (supabaseClient) {
-          supabaseClient.from('archive').insert(toDbRow(newItem)).then(({ error }) => {
-            if (error) console.warn('Supabase insert fail:', error);
+          supabaseClient.from('archive').insert(toDbRow(newItem)).select().single().then(({ data, error }) => {
+            if (error) {
+              console.warn('Supabase insert fail:', error);
+            } else if (data && data.id) {
+              newItem.id = data.id;
+              saveData();
+            }
           });
         }
       }
