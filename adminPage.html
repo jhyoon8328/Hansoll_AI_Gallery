@@ -2529,7 +2529,9 @@
                     const chunkSize = 1000;
                     for (let i = 0; i < parsedData.length; i += chunkSize) {
                         const chunk = parsedData.slice(i, i + chunkSize);
-                        const { error: insertError } = await supabaseClient.from('user_info').insert(chunk);
+                        const { error: insertError } = await supabaseClient
+                            .from('user_info')
+                            .upsert(chunk, { onConflict: 'emp_no' });
                         if (insertError) throw insertError;
                     }
 
